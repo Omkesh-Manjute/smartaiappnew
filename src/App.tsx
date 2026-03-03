@@ -60,13 +60,65 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 };
 
+const getDashboardRoute = (role: string) => {
+  switch (role) {
+    case 'student':
+    case 'teacher':
+    case 'admin':
+    case 'parent':
+      return `/${role}/dashboard`;
+    default:
+      return '/login';
+  }
+};
+
+const AuthRedirect = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Navigate to={getDashboardRoute(user.role)} replace />;
+};
+
+const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to={getDashboardRoute(user.role)} replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={
+            <PublicOnlyRoute>
+              <LoginPage />
+            </PublicOnlyRoute>
+          } />
           <Route path="/register" element={<RegisterPage />} />
           
           {/* Student Routes */}
@@ -190,8 +242,8 @@ function App() {
           } />
 
           {/* Default Routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<AuthRedirect />} />
+          <Route path="*" element={<AuthRedirect />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
