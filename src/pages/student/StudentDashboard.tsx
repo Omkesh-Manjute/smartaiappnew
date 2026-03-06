@@ -32,6 +32,20 @@ import {
 } from 'lucide-react';
 import type { GamificationData, Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
 
+const buildDefaultGamification = (studentId: string): GamificationData => ({
+  studentId,
+  xp: 0,
+  level: 1,
+  streak: 0,
+  lastStudyDate: new Date(),
+  totalStudyTime: 0,
+  badges: [],
+  unlockedAvatars: ['default'],
+  unlockedThemes: ['default'],
+  currentAvatar: 'default',
+  coins: 0,
+});
+
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -59,8 +73,14 @@ const StudentDashboard = () => {
     if (!user) return;
     
     try {
-      const gamificationData = await gamificationDB.getByStudent(user.id);
-      if (gamificationData) {
+      let gamificationData = await gamificationDB.getByStudent(user.id);
+      if (!gamificationData) {
+        gamificationData = buildDefaultGamification(user.id);
+        setGamification(gamificationData);
+        void gamificationDB.create(gamificationData).catch(() => {
+          // Ignore create failures (RLS/duplicate); local default keeps dashboard usable.
+        });
+      } else {
         setGamification(gamificationData);
       }
 
@@ -86,6 +106,7 @@ const StudentDashboard = () => {
       setHomeworkSubmissions(submissions);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      setGamification((prev) => prev ?? buildDefaultGamification(user.id));
     }
   };
 

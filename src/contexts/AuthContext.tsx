@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { User, UserRole } from '@/types';
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
@@ -86,6 +86,7 @@ const parseLoginError = (message?: string): string => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const profileSyncQueueRef = useRef<Promise<User | null>>(Promise.resolve(null));
 
   const fetchUserProfile = async (
     authUserId: string
@@ -110,7 +111,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fallbackRole: UserRole = 'student',
     fallbackName?: string
   ): Promise<User | null> => {
-    const existingProfile = await fetchUserProfile(authUser.id);
+    const fallbackUser = buildFallbackUser(authUser, fallbackRole, fallbackName);
+
+    let existingProfile: Record<string, unknown> | null = null;
+    try {
+      existingProfile = await fetchUserProfile(authUser.id);
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      setUser(fallbackUser);
+      return fallbackUser;
+    }
 
     if (existingProfile) {
       const mappedUser = mapToUser(existingProfile);
@@ -118,23 +128,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return mappedUser;
     }
 
-    const fallbackUser = buildFallbackUser(authUser, fallbackRole, fallbackName);
-
     // Auto-create missing public.users profile for accounts created from Supabase Auth dashboard.
-    const { data: createdProfile, error: createError } = await supabase
-      .from('users')
-      .upsert(
-        {
-          id: fallbackUser.id,
-          email: fallbackUser.email,
-          name: fallbackUser.name,
-          role: fallbackUser.role,
-          avatar: fallbackUser.avatar ?? null,
-        },
-        { onConflict: 'id' }
-      )
-      .select('*')
-      .maybeSingle();
+    let createdProfile: Record<string, unknown> | null = null;
+    let createError: { message?: string } | null = null;
+
+    try {
+      const result = await supabase
+        .from('users')
+        .upsert(
+          {
+            id: fallbackUser.id,
+            email: fallbackUser.email,
+            name: fallbackUser.name,
+            role: fallbackUser.role,
+            avatar: fallbackUser.avatar ?? null,
+          },
+          { onConflict: 'id' }
+        )
+        .select('*')
+        .maybeSingle();
+
+      createdProfile = (result.data as Record<string, unknown> | null) ?? null;
+      createError = result.error ? { message: result.error.message } : null;
+    } catch (error) {
+      createError = {
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
 
     if (createError || !createdProfile) {
       console.error('Failed to auto-create user profile:', createError?.message);
@@ -147,6 +167,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return mappedUser;
   };
 
+  const queueProfileSync = (
+    authUser: SupabaseAuthUser,
+    fallbackRole: UserRole = 'student',
+    fallbackName?: string
+  ): Promise<User | null> => {
+    const runSync = async () => {
+      try {
+        return await ensureUserProfile(authUser, fallbackRole, fallbackName);
+      } catch (error) {
+        console.error('Failed to sync user profile:', error);
+        const fallbackUser = buildFallbackUser(authUser, fallbackRole, fallbackName);
+        setUser(fallbackUser);
+        return fallbackUser;
+      }
+    };
+
+    // Serialize profile sync calls to avoid concurrent auth lock contention.
+    profileSyncQueueRef.current = profileSyncQueueRef.current
+      .catch(() => null)
+      .then(runSync);
+
+    return profileSyncQueueRef.current;
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -157,8 +201,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } = await supabase.auth.getSession();
 
         if (session?.user && isMounted) {
-          await ensureUserProfile(session.user);
+          await queueProfileSync(session.user);
         }
+      } catch (error) {
+        console.error('Failed to initialize auth session:', error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -170,16 +216,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_, session) => {
+    } = supabase.auth.onAuthStateChange((_, session) => {
       if (!isMounted) return;
 
       if (session?.user) {
-        await ensureUserProfile(session.user);
+        void queueProfileSync(session.user).finally(() => {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        });
       } else {
         setUser(null);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     });
 
     return () => {
@@ -209,19 +258,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ? data.user.user_metadata.name
         : undefined;
 
-    const profile = await ensureUserProfile(
+    void queueProfileSync(
       data.user,
       roleFromMetadata,
       nameFromMetadata
     );
-
-    if (!profile) {
-      await supabase.auth.signOut();
-      return {
-        success: false,
-        error: 'Unable to load your profile. Please try again',
-      };
-    }
 
     return { success: true };
   };
@@ -279,7 +320,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     }
 
-    await ensureUserProfile(authData.user, role, name);
+    void queueProfileSync(authData.user, role, name);
     return true;
   };
 
