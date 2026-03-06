@@ -42,11 +42,11 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
+      const result = await login(email, password);
+      if (result.success) {
         toast.success('Login successful');
       } else {
-        toast.error('Invalid email or password');
+        toast.error(result.error);
       }
     } catch (error) {
       console.error('Login exception:', error);
