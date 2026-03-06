@@ -1,29 +1,68 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
-import { subjectDB, voicePracticeDB, gamificationDB } from '@/services/supabaseDB';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { gamificationDB, voicePracticeDB } from '@/services/supabaseDB';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   ChevronLeft,
   Mic,
   MicOff,
-  RotateCcw,
-  Volume2,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
   Square,
+  Volume2,
+  RefreshCw,
+  Gauge,
+  CheckCircle2,
+  AlertTriangle,
+  Type,
+  BookText,
+  AudioLines,
+  Sparkles,
 } from 'lucide-react';
-import type { Subject, MCQ } from '@/types';
 
-// Type declarations for Web Speech API
+type PracticeMode = 'word' | 'sentence' | 'paragraph';
+
+type PromptItem = {
+  id: string;
+  mode: PracticeMode;
+  text: string;
+  hint: string;
+  targetWpm: number;
+};
+
+type FeedbackResult = {
+  overall: number;
+  pronunciation: number;
+  completeness: number;
+  fluency: number;
+  wpm: number;
+  message: string;
+  tips: string[];
+  missedWords: string[];
+  extraWords: string[];
+};
+
+type PracticeRecord = {
+  id: string;
+  studentId: string;
+  questionId: string;
+  question: string;
+  recordedAnswer: string;
+  score: number;
+  feedback: string;
+  practicedAt: Date;
+};
+
 declare global {
   interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
+    SpeechRecognition?: new () => SpeechRecognition;
+    webkitSpeechRecognition?: new () => SpeechRecognition;
   }
 }
 
@@ -31,7 +70,7 @@ interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
-  onresult: ((event: { resultIndex: number; results: { isFinal: boolean; 0: { transcript: string } }[] }) => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
   onstart: (() => void) | null;
@@ -40,201 +79,426 @@ interface SpeechRecognition extends EventTarget {
   abort(): void;
 }
 
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: Array<{
+    isFinal: boolean;
+    0: { transcript: string };
+  }>;
+}
+
+const PROMPTS: Record<PracticeMode, PromptItem[]> = {
+  word: [
+    { id: 'w1', mode: 'word', text: 'comfortable', hint: 'Say clearly: com-for-ta-ble', targetWpm: 50 },
+    { id: 'w2', mode: 'word', text: 'entrepreneur', hint: 'Break into parts: on-truh-pruh-nur', targetWpm: 50 },
+    { id: 'w3', mode: 'word', text: 'responsibility', hint: 'Speak each syllable slowly', targetWpm: 50 },
+    { id: 'w4', mode: 'word', text: 'opportunity', hint: 'Stress: op-por-TU-ni-ty', targetWpm: 50 },
+    { id: 'w5', mode: 'word', text: 'pronunciation', hint: 'Focus on clear vowel sounds', targetWpm: 50 },
+    { id: 'w6', mode: 'word', text: 'communication', hint: 'Stress: com-mu-ni-CA-tion', targetWpm: 50 },
+  ],
+  sentence: [
+    { id: 's1', mode: 'sentence', text: 'I am improving my English speaking skills every day.', hint: 'Keep a steady pace and clear endings.', targetWpm: 95 },
+    { id: 's2', mode: 'sentence', text: 'Practice makes progress, so I speak confidently in class.', hint: 'Emphasize confidence and pauses.', targetWpm: 95 },
+    { id: 's3', mode: 'sentence', text: 'Could you please explain this concept in a simple way?', hint: 'Use polite tone and natural rhythm.', targetWpm: 95 },
+    { id: 's4', mode: 'sentence', text: 'Technology helps students learn faster and smarter.', hint: 'Don’t rush the final words.', targetWpm: 95 },
+    { id: 's5', mode: 'sentence', text: 'My goal is to speak fluently in interviews and presentations.', hint: 'Stress keywords: goal, fluently, interviews.', targetWpm: 95 },
+  ],
+  paragraph: [
+    {
+      id: 'p1',
+      mode: 'paragraph',
+      text: 'Good communication is an essential life skill. When we speak clearly, people understand our ideas better. Regular practice, active listening, and confidence can improve pronunciation and fluency over time.',
+      hint: 'Pause naturally after each sentence.',
+      targetWpm: 120,
+    },
+    {
+      id: 'p2',
+      mode: 'paragraph',
+      text: 'Learning English becomes easier when you practice daily. You can read short articles aloud, record your voice, and compare your speech with native pronunciation. Small improvements each day lead to strong long-term results.',
+      hint: 'Maintain a consistent speaking speed.',
+      targetWpm: 120,
+    },
+    {
+      id: 'p3',
+      mode: 'paragraph',
+      text: 'During public speaking, your voice should be clear, calm, and expressive. Use pauses to separate ideas and maintain eye contact to connect with your audience. A confident voice creates a strong and lasting impression.',
+      hint: 'Avoid very fast speaking in the middle sentence.',
+      targetWpm: 120,
+    },
+  ],
+};
+
+const modeMeta: Record<PracticeMode, { label: string; icon: typeof Type }> = {
+  word: { label: 'Word Drill', icon: Type },
+  sentence: { label: 'Sentence Drill', icon: AudioLines },
+  paragraph: { label: 'Paragraph Drill', icon: BookText },
+};
+
+const normalizeText = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const tokenize = (text: string): string[] => normalizeText(text).split(' ').filter(Boolean);
+
+const levenshteinDistance = (a: string, b: string): number => {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const dp: number[][] = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+  for (let i = 0; i < rows; i++) dp[i][0] = i;
+  for (let j = 0; j < cols; j++) dp[0][j] = j;
+
+  for (let i = 1; i < rows; i++) {
+    for (let j = 1; j < cols; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[a.length][b.length];
+};
+
+const pickRandomPrompt = (mode: PracticeMode, previousId?: string): PromptItem => {
+  const pool = PROMPTS[mode];
+  if (pool.length === 1) return pool[0];
+  const filtered = pool.filter((item) => item.id !== previousId);
+  return filtered[Math.floor(Math.random() * filtered.length)];
+};
+
+const evaluateSpeech = (
+  expectedText: string,
+  spokenText: string,
+  mode: PracticeMode,
+  durationSeconds: number,
+  targetWpm: number
+): FeedbackResult => {
+  const expectedNorm = normalizeText(expectedText);
+  const spokenNorm = normalizeText(spokenText);
+  const expectedWords = tokenize(expectedText);
+  const spokenWords = tokenize(spokenText);
+
+  const maxLen = Math.max(expectedNorm.length, spokenNorm.length, 1);
+  const editDistance = levenshteinDistance(expectedNorm, spokenNorm);
+  const pronunciation = Math.max(0, Math.round((1 - editDistance / maxLen) * 100));
+
+  const expectedCounts = new Map<string, number>();
+  expectedWords.forEach((word) => {
+    expectedCounts.set(word, (expectedCounts.get(word) ?? 0) + 1);
+  });
+
+  let matched = 0;
+  spokenWords.forEach((word) => {
+    const count = expectedCounts.get(word) ?? 0;
+    if (count > 0) {
+      matched += 1;
+      expectedCounts.set(word, count - 1);
+    }
+  });
+
+  const missedWords: string[] = [];
+  expectedCounts.forEach((count, word) => {
+    for (let i = 0; i < count; i++) missedWords.push(word);
+  });
+
+  const spokenCounts = new Map<string, number>();
+  spokenWords.forEach((word) => {
+    spokenCounts.set(word, (spokenCounts.get(word) ?? 0) + 1);
+  });
+  expectedWords.forEach((word) => {
+    const count = spokenCounts.get(word) ?? 0;
+    if (count > 0) spokenCounts.set(word, count - 1);
+  });
+  const extraWords: string[] = [];
+  spokenCounts.forEach((count, word) => {
+    for (let i = 0; i < count; i++) extraWords.push(word);
+  });
+
+  const completeness = expectedWords.length
+    ? Math.round((matched / expectedWords.length) * 100)
+    : 0;
+
+  const safeDuration = Math.max(durationSeconds, 1);
+  const wpm = Math.round((spokenWords.length / safeDuration) * 60);
+  const fluencyPenalty = Math.min(100, Math.round(Math.abs(wpm - targetWpm) * 1.2));
+  const fluency = Math.max(0, 100 - fluencyPenalty);
+
+  const modeWeight = mode === 'word' ? 0.55 : mode === 'sentence' ? 0.5 : 0.45;
+  const overall = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        pronunciation * modeWeight +
+          completeness * 0.35 +
+          fluency * (1 - modeWeight - 0.35)
+      )
+    )
+  );
+
+  const tips: string[] = [];
+  if (pronunciation < 75) tips.push('Speak slower and exaggerate vowel sounds.');
+  if (completeness < 80) tips.push('Try to include all words from the prompt.');
+  if (fluency < 70) tips.push(`Aim for a natural pace near ${targetWpm} WPM.`);
+  if (missedWords.length > 0) tips.push(`Repeat missed words: ${missedWords.slice(0, 5).join(', ')}.`);
+  if (tips.length === 0) tips.push('Excellent delivery. Now try the next challenge.');
+
+  const message =
+    overall >= 90
+      ? 'Outstanding pronunciation and fluency!'
+      : overall >= 75
+      ? 'Great attempt. You are improving well.'
+      : overall >= 60
+      ? 'Good effort. Focus on clarity and full sentence coverage.'
+      : 'Keep practicing. Slow down and pronounce each word clearly.';
+
+  return {
+    overall,
+    pronunciation,
+    completeness,
+    fluency,
+    wpm,
+    message,
+    tips,
+    missedWords,
+    extraWords,
+  };
+};
+
 const VoicePracticePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<MCQ | null>(null);
-  const [isListening, setIsListening] = useState(false);
+  const { speak, stop: stopSpeech, supported: ttsSupported } = useTextToSpeech();
+
+  const [mode, setMode] = useState<PracticeMode>('word');
+  const [currentPrompt, setCurrentPrompt] = useState<PromptItem>(() => pickRandomPrompt('word'));
+  const [customText, setCustomText] = useState('');
+  const [useCustomText, setUseCustomText] = useState(false);
+
   const [isSupported, setIsSupported] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
-  const [feedback, setFeedback] = useState<{ score: number; message: string } | null>(null);
-  const [practiceHistory, setPracticeHistory] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackResult | null>(null);
+  const [history, setHistory] = useState<PracticeRecord[]>([]);
+
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const finalTranscriptRef = useRef('');
+  const interimRef = useRef('');
+  const pendingEvaluationRef = useRef(false);
+  const sessionStartRef = useRef<number | null>(null);
+
+  const activePromptText = useMemo(() => {
+    const text = customText.trim();
+    return useCustomText && text ? text : currentPrompt.text;
+  }, [customText, useCustomText, currentPrompt.text]);
+
+  const activeTargetWpm = useMemo(() => {
+    if (useCustomText && customText.trim()) {
+      return mode === 'word' ? 55 : mode === 'sentence' ? 95 : 120;
+    }
+    return currentPrompt.targetWpm;
+  }, [useCustomText, customText, currentPrompt.targetWpm, mode]);
+
+  const stats = useMemo(() => {
+    const total = history.length;
+    const avg = total
+      ? Math.round(history.reduce((sum, item) => sum + item.score, 0) / total)
+      : 0;
+    const best = total ? Math.max(...history.map((item) => item.score)) : 0;
+    return { total, avg, best };
+  }, [history]);
 
   useEffect(() => {
-    loadData();
-    
-    // Check if speech recognition is supported
-    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
-      setIsSupported(false);
-      toast.error('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
-    }
+    if (!user) return;
+    (async () => {
+      try {
+        const records = await voicePracticeDB.getByStudent(user.id);
+        const normalized: PracticeRecord[] = records.map((item: any) => ({
+          ...item,
+          practicedAt: new Date(item.practicedAt),
+        }));
+        setHistory(normalized);
+      } catch (error) {
+        console.error('Failed to load voice practice history:', error);
+      }
+    })();
   }, [user]);
 
-  const loadData = async () => {
-    if (!user) return;
-    
-    try {
-      const allSubjects = await subjectDB.getAll();
-      setSubjects(allSubjects);
-      
-      const history = await voicePracticeDB.getByStudent(user.id);
-      setPracticeHistory(history);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-  };
-
   useEffect(() => {
-    if (isSupported && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onstart = () => {
-        setIsListening(true);
-        setInterimTranscript('');
-      };
-
-      recognitionRef.current.onresult = (event) => {
-        let interim = '';
-        let final = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            final += transcript;
-          } else {
-            interim += transcript;
-          }
-        }
-        
-        if (interim) {
-          setInterimTranscript(interim);
-        }
-        
-        if (final) {
-          setTranscript((prev) => prev + ' ' + final);
-          setInterimTranscript('');
-        }
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error !== 'aborted') {
-          toast.error(`Speech recognition error: ${event.error}`);
-        }
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
+    const RecognitionCtor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!RecognitionCtor) {
+      setIsSupported(false);
+      toast.error('Speech recognition not supported. Please use Chrome or Edge.');
+      return;
     }
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
+    const recognition = new RecognitionCtor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
+      let finalChunk = '';
+      let interimChunk = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalChunk += `${text} `;
+        } else {
+          interimChunk += `${text} `;
+        }
+      }
+
+      if (finalChunk.trim()) {
+        finalTranscriptRef.current = `${finalTranscriptRef.current} ${finalChunk}`.trim();
+        setTranscript(finalTranscriptRef.current);
+      }
+
+      interimRef.current = interimChunk.trim();
+      setInterimTranscript(interimRef.current);
+    };
+
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      if (event.error !== 'aborted') {
+        toast.error(`Microphone error: ${event.error}`);
       }
     };
-  }, [isSupported]);
 
-  const startPractice = (subject: Subject) => {
-    setSelectedSubject(subject);
-    const allQuestions: MCQ[] = [];
-    subject.chapters.forEach((ch) => {
-      allQuestions.push(...ch.mcqs);
-    });
-    const randomQuestion = allQuestions[Math.floor(Math.random() * allQuestions.length)];
-    setCurrentQuestion(randomQuestion);
+    recognition.onend = () => {
+      setIsListening(false);
+      if (!pendingEvaluationRef.current) return;
+
+      pendingEvaluationRef.current = false;
+      const spoken = `${finalTranscriptRef.current} ${interimRef.current}`.trim();
+      if (!spoken) {
+        toast.error('No speech detected. Please try again.');
+        return;
+      }
+      void evaluateAttempt(spoken);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.abort();
+      stopSpeech();
+    };
+  }, [stopSpeech]);
+
+  const resetAttemptState = () => {
     setTranscript('');
     setInterimTranscript('');
     setFeedback(null);
+    finalTranscriptRef.current = '';
+    interimRef.current = '';
+    pendingEvaluationRef.current = false;
+    sessionStartRef.current = null;
+  };
+
+  const changeMode = (nextMode: PracticeMode) => {
+    setMode(nextMode);
+    setCurrentPrompt(pickRandomPrompt(nextMode));
+    setUseCustomText(false);
+    setCustomText('');
+    resetAttemptState();
+    stopSpeech();
+  };
+
+  const nextPrompt = () => {
+    setCurrentPrompt((prev) => pickRandomPrompt(mode, prev.id));
+    resetAttemptState();
+    stopSpeech();
+  };
+
+  const playPrompt = () => {
+    if (!ttsSupported) {
+      toast.error('Text-to-speech is not supported in this browser');
+      return;
+    }
+    speak(activePromptText);
   };
 
   const startListening = () => {
     if (!recognitionRef.current) {
-      toast.error('Speech recognition not supported');
+      toast.error('Speech recognition not available');
+      return;
+    }
+    if (!activePromptText.trim()) {
+      toast.error('Please enter prompt text first');
       return;
     }
 
+    resetAttemptState();
+    sessionStartRef.current = Date.now();
+
     try {
-      setTranscript('');
-      setInterimTranscript('');
       recognitionRef.current.start();
     } catch (error) {
-      console.error('Error starting recognition:', error);
-      toast.error('Could not start microphone. Please try again.');
+      console.error('Failed to start recognition:', error);
+      toast.error('Could not start microphone. Allow mic access and retry.');
     }
   };
 
   const stopListening = () => {
-    if (!recognitionRef.current) return;
-
-    try {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      
-      // Evaluate the answer after stopping
-      if (transcript.trim() || interimTranscript.trim()) {
-        const finalAnswer = (transcript + ' ' + interimTranscript).trim();
-        evaluateAnswer(finalAnswer);
-      }
-    } catch (error) {
-      console.error('Error stopping recognition:', error);
-    }
+    if (!recognitionRef.current || !isListening) return;
+    pendingEvaluationRef.current = true;
+    recognitionRef.current.stop();
   };
 
-  const evaluateAnswer = async (answer: string) => {
-    if (!currentQuestion || !user) return;
+  const evaluateAttempt = async (spokenText: string) => {
+    if (!user) return;
 
-    const correctAnswer = currentQuestion.options[currentQuestion.correctAnswer].toLowerCase();
-    const userAnswer = answer.toLowerCase();
+    const durationSeconds = sessionStartRef.current
+      ? (Date.now() - sessionStartRef.current) / 1000
+      : 1;
 
-    // Simple similarity check
-    const isCorrect = userAnswer.includes(correctAnswer) || 
-                      correctAnswer.includes(userAnswer) ||
-                      userAnswer.includes(currentQuestion.options[currentQuestion.correctAnswer].split(' ')[0].toLowerCase()) ||
-                      userAnswer.includes(String.fromCharCode(65 + currentQuestion.correctAnswer).toLowerCase());
+    const result = evaluateSpeech(
+      activePromptText,
+      spokenText,
+      mode,
+      durationSeconds,
+      activeTargetWpm
+    );
+    setFeedback(result);
 
-    const score = isCorrect ? 100 : Math.floor(Math.random() * 40) + 30;
-    const message = isCorrect 
-      ? 'Great job! Your answer is correct.' 
-      : `Not quite. The correct answer is: ${currentQuestion.options[currentQuestion.correctAnswer]}`;
-
-    setFeedback({ score, message });
-
-    // Save practice
-    await voicePracticeDB.create({
+    const record: PracticeRecord = {
       id: `voice_${Date.now()}`,
       studentId: user.id,
-      questionId: currentQuestion.id,
-      question: currentQuestion.question,
-      recordedAnswer: answer,
-      score,
-      feedback: message,
+      questionId: useCustomText ? `custom_${mode}` : currentPrompt.id,
+      question: activePromptText,
+      recordedAnswer: spokenText,
+      score: result.overall,
+      feedback: result.message,
       practicedAt: new Date(),
-    });
+    };
 
-    if (isCorrect) {
-      await gamificationDB.addXP(user.id, 30);
-      toast.success('+30 XP earned!');
+    setHistory((prev) => [...prev, record]);
+
+    try {
+      await voicePracticeDB.create(record);
+    } catch (error) {
+      console.error('Failed to save voice practice record:', error);
     }
-  };
 
-  const nextQuestion = () => {
-    if (selectedSubject) {
-      startPractice(selectedSubject);
-    }
-  };
-
-  const readQuestion = () => {
-    if (!currentQuestion) return;
-    
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Stop any ongoing speech
-      const text = `${currentQuestion.question}. Options: ${currentQuestion.options.map((opt, i) => `${String.fromCharCode(65 + i)}: ${opt}`).join(', ')}`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9; // Slightly slower for clarity
-      window.speechSynthesis.speak(utterance);
-    } else {
-      toast.error('Text-to-speech not supported');
+    const xp = result.overall >= 85 ? 40 : result.overall >= 70 ? 25 : 10;
+    try {
+      await gamificationDB.addXP(user.id, xp);
+      toast.success(`Practice complete. +${xp} XP`);
+    } catch {
+      toast.success('Practice complete');
     }
   };
 
@@ -242,87 +506,15 @@ const VoicePracticePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center p-8">
-          <MicOff className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Browser Not Supported</h2>
+          <MicOff className="w-14 h-14 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Voice Practice Not Supported</h2>
           <p className="text-gray-500 max-w-md">
-            Speech recognition is not supported in your browser. Please use Google Chrome or Microsoft Edge for the best experience.
+            Your browser does not support speech recognition. Use latest Chrome or Edge for this feature.
           </p>
-          <Button onClick={() => navigate('/student/dashboard')} className="mt-4">
-            Go Back
+          <Button onClick={() => navigate('/student/dashboard')} className="mt-5">
+            Back to Dashboard
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  if (!selectedSubject) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-2">
-                <button onClick={() => navigate('/student/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg">
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <Mic className="w-6 h-6 text-green-500" />
-                <span className="text-xl font-bold">Voice Practice</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-              <Mic className="w-10 h-10 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Practice Speaking Your Answers</h2>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Improve your communication skills by answering questions verbally. 
-              Our AI will evaluate your responses.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subjects.map((subject) => (
-              <motion.button
-                key={subject.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => startPractice(subject)}
-                className="p-6 rounded-xl border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all text-left"
-              >
-                <div className={`w-14 h-14 rounded-xl ${subject.color} flex items-center justify-center text-3xl mb-4`}>
-                  {subject.icon}
-                </div>
-                <h3 className="font-semibold text-lg">{subject.name}</h3>
-                <p className="text-sm text-gray-500">{subject.chapters.length} chapters</p>
-              </motion.button>
-            ))}
-          </div>
-
-          {practiceHistory.length > 0 && (
-            <div className="mt-8">
-              <h3 className="font-semibold mb-4">Recent Practice</h3>
-              <div className="space-y-3">
-                {practiceHistory.slice(-5).reverse().map((practice) => (
-                  <div key={practice.id} className="flex items-center justify-between p-4 bg-white rounded-xl border">
-                    <div>
-                      <p className="font-medium truncate max-w-md">{practice.question}</p>
-                      <p className="text-sm text-gray-500">{new Date(practice.practicedAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      practice.score >= 70 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                    }`}>
-                      {practice.score}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </main>
       </div>
     );
   }
@@ -330,163 +522,302 @@ const VoicePracticePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <button onClick={() => setSelectedSubject(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+              <button
+                onClick={() => navigate('/student/dashboard')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className={`w-10 h-10 rounded-xl ${selectedSubject.color} flex items-center justify-center text-xl`}>
-                {selectedSubject.icon}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                <Mic className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold">{selectedSubject.name}</span>
+              <div>
+                <h1 className="text-lg font-bold">Voice Practice Lab</h1>
+                <p className="text-xs text-gray-500">Pronunciation, fluency, and confidence trainer</p>
+              </div>
             </div>
-            <button onClick={readQuestion} className="p-2 hover:bg-gray-100 rounded-lg" title="Read question aloud">
-              <Volume2 className="w-5 h-5" />
-            </button>
+            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+              {modeMeta[mode].label}
+            </Badge>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentQuestion && (
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
-            <CardContent className="p-6">
-              <div className="text-center mb-8">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm mb-4">
-                  <Sparkles className="w-4 h-4" />
-                  Question
-                </span>
-                <h2 className="text-xl font-medium">{currentQuestion.question}</h2>
-              </div>
+            <CardContent className="p-4">
+              <p className="text-sm text-gray-500">Total Attempts</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-gray-500">Average Score</p>
+              <p className="text-2xl font-bold">{stats.avg}%</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-gray-500">Best Score</p>
+              <p className="text-2xl font-bold">{stats.best}%</p>
+            </CardContent>
+          </Card>
+        </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {currentQuestion.options.map((option, index) => (
-                  <div
-                    key={index}
-                    className="p-4 rounded-xl border-2 border-gray-200 bg-gray-50"
+        <Card>
+          <CardHeader>
+            <CardTitle>Choose Practice Mode</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {(['word', 'sentence', 'paragraph'] as PracticeMode[]).map((item) => {
+                const Icon = modeMeta[item].icon;
+                const active = mode === item;
+                return (
+                  <button
+                    key={item}
+                    onClick={() => changeMode(item)}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      active
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
-                    {option}
-                  </div>
-                ))}
-              </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className="w-5 h-5" />
+                      <span className="font-semibold">{modeMeta[item].label}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                      {item === 'word'
+                        ? 'Focus on single-word clarity.'
+                        : item === 'sentence'
+                        ? 'Practice rhythm and sentence pacing.'
+                        : 'Train long-form fluency and breath control.'}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Voice Input Controls */}
-              <div className="text-center">
-                {!isListening ? (
-                  <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-600" />
+                    Practice Prompt
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={nextPrompt}>
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      New Prompt
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={playPrompt}>
+                      <Volume2 className="w-4 h-4 mr-1" />
+                      Listen
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-lg leading-relaxed">{activePromptText}</p>
+                <p className="text-sm text-gray-500">{currentPrompt.hint}</p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={useCustomText ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setUseCustomText((prev) => !prev);
+                      resetAttemptState();
+                    }}
+                  >
+                    {useCustomText ? 'Using Custom Text' : 'Use Custom Text'}
+                  </Button>
+                  <span className="text-xs text-gray-500">Target pace: {activeTargetWpm} WPM</span>
+                </div>
+
+                {useCustomText && (
+                  <Input
+                    placeholder="Type your own word/sentence/paragraph prompt..."
+                    value={customText}
+                    onChange={(e) => setCustomText(e.target.value)}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Record Your Voice</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  {!isListening ? (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={startListening}
-                      disabled={!!feedback}
-                      className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                        feedback
-                          ? 'bg-gray-300 cursor-not-allowed'
-                          : 'bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30'
-                      }`}
+                      className="w-24 h-24 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30"
                     >
                       <Mic className="w-10 h-10 text-white" />
                     </motion.button>
-                    <p className="text-gray-500">
-                      {feedback ? 'Answer recorded' : 'Tap microphone to start'}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
+                  ) : (
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={stopListening}
-                      className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30"
+                      className="w-24 h-24 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/30"
                     >
                       <Square className="w-8 h-8 text-white" />
                     </motion.button>
-                    <p className="text-red-500 font-medium">
-                      Recording... Tap to stop
+                  )}
+                  <p className={`mt-3 font-medium ${isListening ? 'text-rose-600' : 'text-gray-600'}`}>
+                    {isListening ? 'Recording... tap to stop' : 'Tap to start speaking'}
+                  </p>
+                </div>
+
+                {(transcript || interimTranscript) && (
+                  <div className="mt-5 p-4 rounded-xl bg-gray-50 border">
+                    <p className="text-xs text-gray-500 mb-1">Transcript</p>
+                    <p className="leading-relaxed">
+                      {transcript}
+                      {interimTranscript && <span className="text-gray-400"> {interimTranscript}</span>}
                     </p>
-                    
-                    {/* Recording Animation */}
-                    <div className="flex justify-center gap-1 mt-4">
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <motion.div
-                          key={i}
-                          animate={{ 
-                            height: [10, 30, 10],
-                          }}
-                          transition={{ 
-                            repeat: Infinity, 
-                            duration: 0.5,
-                            delay: i * 0.1,
-                          }}
-                          className="w-2 bg-red-400 rounded-full"
-                        />
-                      ))}
-                    </div>
                   </div>
                 )}
+              </CardContent>
+            </Card>
 
-                {/* Transcript Display */}
-                {(transcript || interimTranscript) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4 p-4 bg-gray-100 rounded-xl"
-                  >
-                    <p className="text-sm text-gray-500 mb-1">You said:</p>
-                    <p className="font-medium">
-                      "{transcript}
-                      {interimTranscript && (
-                        <span className="text-gray-400">{interimTranscript}</span>
-                      )}"
-                    </p>
-                  </motion.div>
-                )}
+            {feedback && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Gauge className="w-5 h-5" />
+                    Pronunciation Report
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-emerald-600">{feedback.overall}%</p>
+                    <p className="text-sm text-gray-600 mt-1">{feedback.message}</p>
+                  </div>
 
-                {/* Feedback */}
-                {feedback && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`mt-6 p-6 rounded-xl ${
-                      feedback.score >= 70 ? 'bg-green-100' : 'bg-orange-100'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      {feedback.score >= 70 ? (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      ) : (
-                        <AlertCircle className="w-6 h-6 text-orange-600" />
-                      )}
-                      <span className={`text-2xl font-bold ${
-                        feedback.score >= 70 ? 'text-green-600' : 'text-orange-600'
-                      }`}>
-                        {feedback.score}%
-                      </span>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Pronunciation</span>
+                        <span>{feedback.pronunciation}%</span>
+                      </div>
+                      <Progress value={feedback.pronunciation} />
                     </div>
-                    <p className={feedback.score >= 70 ? 'text-green-700' : 'text-orange-700'}>
-                      {feedback.message}
-                    </p>
-                  </motion.div>
-                )}
-              </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Completeness</span>
+                        <span>{feedback.completeness}%</span>
+                      </div>
+                      <Progress value={feedback.completeness} />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Fluency</span>
+                        <span>{feedback.fluency}%</span>
+                      </div>
+                      <Progress value={feedback.fluency} />
+                    </div>
+                  </div>
 
-              {/* Action Buttons */}
-              {feedback && (
-                <div className="flex gap-3 mt-6">
-                  <Button variant="outline" onClick={() => setSelectedSubject(null)} className="flex-1">
-                    Change Subject
-                  </Button>
-                  <Button onClick={nextQuestion} className="flex-1">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Next Question
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                  <div className="p-3 rounded-lg bg-blue-50 text-sm text-blue-700">
+                    Detected pace: <span className="font-semibold">{feedback.wpm} WPM</span>
+                  </div>
+
+                  {feedback.missedWords.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Missed words</p>
+                      <div className="flex flex-wrap gap-2">
+                        {feedback.missedWords.slice(0, 12).map((word, index) => (
+                          <Badge key={`${word}_${index}`} className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                            {word}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {feedback.extraWords.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Extra words</p>
+                      <div className="flex flex-wrap gap-2">
+                        {feedback.extraWords.slice(0, 12).map((word, index) => (
+                          <Badge key={`${word}_${index}`} className="bg-slate-100 text-slate-700 hover:bg-slate-100">
+                            {word}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Practice tips</p>
+                    {feedback.tips.map((tip, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                        {feedback.overall >= 75 ? (
+                          <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-600" />
+                        ) : (
+                          <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-600" />
+                        )}
+                        <span>{tip}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Attempts</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {history.length === 0 && (
+                  <p className="text-sm text-gray-500">No attempts yet. Start your first practice.</p>
+                )}
+                {history
+                  .slice()
+                  .sort((a, b) => b.practicedAt.getTime() - a.practicedAt.getTime())
+                  .slice(0, 8)
+                  .map((item) => (
+                    <div key={item.id} className="p-3 border rounded-lg">
+                      <p className="text-sm font-medium line-clamp-2">{item.question}</p>
+                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                        <span>{item.practicedAt.toLocaleDateString()}</span>
+                        <Badge
+                          className={`${
+                            item.score >= 80
+                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                              : item.score >= 60
+                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-100'
+                              : 'bg-amber-100 text-amber-700 hover:bg-amber-100'
+                          }`}
+                        >
+                          {item.score}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
