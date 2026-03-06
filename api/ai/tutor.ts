@@ -258,18 +258,27 @@ export default async function handler(req: any, res: any) {
     process.env.GEMINI_API_KEY ||
     process.env.GEMINI_KEY ||
     process.env.GEMINI ||
+    process.env.gemini_api_key ||
+    process.env.gemini_key ||
+    process.env.gemini ||
     process.env.VITE_GEMINI_API_KEY ||
     '';
   const groqKey =
     process.env.GROQ_API_KEY ||
     process.env.GROQ_KEY ||
     process.env.GROQ ||
+    process.env.groq_api_key ||
+    process.env.groq_key ||
+    process.env.groq ||
     process.env.VITE_GROQ_API_KEY ||
     '';
   const sarvamKey =
     process.env.SARVAM_API_KEY ||
     process.env.SARVAM_KEY ||
     process.env.SARVAM ||
+    process.env.sarvam_api_key ||
+    process.env.sarvam_key ||
+    process.env.sarvam ||
     process.env.VITE_SARVAM_API_KEY ||
     '';
 
