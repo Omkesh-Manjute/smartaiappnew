@@ -4,7 +4,9 @@ import type { User, UserRole } from '@/types';
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
 
-type AuthResult = { success: true } | { success: false; error: string };
+type AuthResult =
+  | { success: true; role: UserRole }
+  | { success: false; error: string };
 
 interface AuthContextType {
   user: User | null;
@@ -258,13 +260,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ? data.user.user_metadata.name
         : undefined;
 
-    void queueProfileSync(
+    const resolvedUser = await queueProfileSync(
       data.user,
       roleFromMetadata,
       nameFromMetadata
     );
 
-    return { success: true };
+    return { success: true, role: resolvedUser?.role ?? roleFromMetadata };
   };
 
   const register = async (

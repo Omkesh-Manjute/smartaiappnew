@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Eye, EyeOff } from 'lucide-react';
+import { BookOpen, Eye, EyeOff, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import type { UserRole } from '@/types';
 
-const getDashboardPath = (role: string): string => {
+const getDashboardPath = (role: UserRole): string => {
   switch (role) {
     case 'student':
       return '/student/dashboard';
@@ -25,17 +26,11 @@ const getDashboardPath = (role: string): string => {
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login, logout, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      navigate(getDashboardPath(user.role), { replace: true });
-    }
-  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,12 +40,25 @@ const LoginPage = () => {
       const result = await login(email, password);
       if (result.success) {
         toast.success('Login successful');
+        navigate(getDashboardPath(result.role), { replace: true });
       } else {
         toast.error(result.error);
       }
     } catch (error) {
       console.error('Login exception:', error);
       toast.error('Unable to login right now');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSwitchAccount = async () => {
+    setIsLoading(true);
+    try {
+      await logout();
+      setEmail('');
+      setPassword('');
+      toast.success('Signed out. Please login with another account');
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +83,33 @@ const LoginPage = () => {
             <CardDescription>Use your account credentials to login</CardDescription>
           </CardHeader>
           <CardContent>
+            {user && (
+              <div className="mb-4 rounded-lg border bg-blue-50 p-4">
+                <p className="text-sm text-blue-900">
+                  You are logged in as <span className="font-semibold">{user.email}</span> ({user.role}).
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => navigate(getDashboardPath(user.role), { replace: true })}
+                    className="h-9 bg-blue-600 hover:bg-blue-700"
+                  >
+                    Go to Dashboard
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSwitchAccount}
+                    disabled={isLoading}
+                    className="h-9"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Use Another Account
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

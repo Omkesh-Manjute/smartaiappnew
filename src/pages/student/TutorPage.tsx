@@ -52,13 +52,18 @@ const TutorPage = () => {
     if (!user) return;
     
     try {
-      const history = await tutorMessageDB.getByStudent(user.id);
-      setMessages(history);
-      
       const allSubjects = await subjectDB.getAll();
       setSubjects(allSubjects);
     } catch (error) {
-      console.error('Error loading tutor data:', error);
+      console.error('Error loading subjects for tutor:', error);
+    }
+
+    try {
+      const history = await tutorMessageDB.getByStudent(user.id);
+      setMessages(history);
+    } catch (error) {
+      console.error('Error loading tutor history:', error);
+      setMessages([]);
     }
   };
 
@@ -108,23 +113,22 @@ const TutorPage = () => {
       });
 
       const updatedMessage = { ...userMessage, response: aiResponse };
-      
-      // Save to database
-      await tutorMessageDB.create(updatedMessage);
-      
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
       );
+
+      // Persist history in background; chat should still work even if DB write fails.
+      void tutorMessageDB.create(updatedMessage).catch((error) => {
+        console.error('Failed to save tutor message:', error);
+      });
     } catch (error) {
       console.error('Error getting AI response:', error);
-      toast.error('Failed to get response. Please try again.');
-      
-      // Add fallback response
       const fallbackResponse = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
       const updatedMessage = { ...userMessage, response: fallbackResponse };
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
       );
+      toast.error('AI service is unavailable right now');
     } finally {
       setIsTyping(false);
     }

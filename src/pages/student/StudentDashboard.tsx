@@ -29,6 +29,7 @@ import {
   FileText,
   AlertCircle,
   Clock3,
+  LogOut,
 } from 'lucide-react';
 import type { GamificationData, Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
 
@@ -48,7 +49,7 @@ const buildDefaultGamification = (studentId: string): GamificationData => ({
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [gamification, setGamification] = useState<GamificationData | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [recentTests, setRecentTests] = useState<TestAttempt[]>([]);
@@ -162,6 +163,16 @@ const StudentDashboard = () => {
             </div>
 
             <div className="flex items-center gap-4">
+              <button
+                onClick={async () => {
+                  await logout();
+                  navigate('/login', { replace: true });
+                }}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                title="Switch account"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
               <button 
                 onClick={() => navigate('/student/notifications')}
                 className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full"
