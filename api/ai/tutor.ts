@@ -169,6 +169,67 @@ const callGroqTutor = async (
   return String(text).trim();
 };
 
+const callSarvamTutor = async (
+  apiKey: string,
+  prompt: string,
+  previousMessages: PreviousMessage[] = []
+): Promise<string> => {
+  const endpoint =
+    process.env.SARVAM_API_URL || 'https://api.sarvam.ai/v1/chat/completions';
+  const model = process.env.SARVAM_MODEL || 'sarvam-m';
+
+  const messages = [
+    {
+      role: 'system',
+      content:
+        'You are EduAI, a concise and supportive tutor. Explain clearly and provide actionable learning guidance.',
+    },
+    ...previousMessages.slice(-5).map((msg) => ({
+      role: msg.role === 'model' ? 'assistant' : 'user',
+      content: msg.content,
+    })),
+    {
+      role: 'user',
+      content: prompt,
+    },
+  ];
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'api-subscription-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.2,
+      max_tokens: 1024,
+    }),
+  });
+
+  const raw = await response.text();
+  let data: any = {};
+  if (raw) {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      throw new Error('Sarvam returned invalid JSON');
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `Sarvam error ${response.status}`);
+  }
+
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) {
+    throw new Error('Sarvam returned empty response');
+  }
+
+  return String(text).trim();
+};
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -194,9 +255,23 @@ export default async function handler(req: any, res: any) {
   const prompt = buildTutorPrompt(message, context);
 
   const geminiKey =
-    process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+    process.env.GEMINI_API_KEY ||
+    process.env.GEMINI_KEY ||
+    process.env.GEMINI ||
+    process.env.VITE_GEMINI_API_KEY ||
+    '';
   const groqKey =
-    process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || '';
+    process.env.GROQ_API_KEY ||
+    process.env.GROQ_KEY ||
+    process.env.GROQ ||
+    process.env.VITE_GROQ_API_KEY ||
+    '';
+  const sarvamKey =
+    process.env.SARVAM_API_KEY ||
+    process.env.SARVAM_KEY ||
+    process.env.SARVAM ||
+    process.env.VITE_SARVAM_API_KEY ||
+    '';
 
   let lastError: string | null = null;
 
@@ -220,9 +295,19 @@ export default async function handler(req: any, res: any) {
     }
   }
 
+  if (sarvamKey) {
+    try {
+      const text = await callSarvamTutor(sarvamKey, prompt, previousMessages);
+      return res.status(200).json({ provider: 'sarvam', text });
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      console.error('Sarvam tutor call failed:', lastError);
+    }
+  }
+
   return res.status(500).json({
     error:
       lastError ||
-      'No AI provider configured. Set GEMINI_API_KEY or GROQ_API_KEY in Vercel.',
+      'No AI provider configured. Set GEMINI_API_KEY, GROQ_API_KEY, or SARVAM_API_KEY in Vercel.',
   });
 }
