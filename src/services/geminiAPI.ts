@@ -148,50 +148,37 @@ export const getTutorResponse = async (
   }
 ): Promise<string> => {
   try {
-    let prompt = `You are an expert AI tutor named "EduAI" helping students learn. `;
-    
-    if (context?.subject) {
-      prompt += `The student is asking about ${context.subject}`;
-      if (context.chapter) {
-        prompt += `, specifically the chapter "${context.chapter}"`;
-      }
-      prompt += `. `;
-    }
-    
-    prompt += `
-Your role is to:
-1. Explain concepts clearly and concisely
-2. Use examples when helpful
-3. Encourage critical thinking
-4. Be supportive and encouraging
-5. If the student seems confused, break down the explanation further
-6. Use appropriate formatting (bullet points, bold text) for clarity
-
-Respond in a friendly, educational tone. Keep responses concise but informative (2-4 paragraphs maximum).
-
-Student's message: ${message}
-`;
-
-    // Include conversation history if available
-    const contents: any[] = [];
-    if (context?.previousMessages && context.previousMessages.length > 0) {
-      for (const msg of context.previousMessages.slice(-5)) { // Last 5 messages for context
-        contents.push({
-          role: msg.role,
-          parts: [{ text: msg.content }],
-        });
-      }
-    }
-    
-    contents.push({
-      role: 'user',
-      parts: [{ text: prompt }],
+    const response = await fetch('/api/ai/tutor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        context,
+      }),
     });
 
-    return await callGemini(contents, {
-      temperature: 0.8,
-      maxOutputTokens: 2048,
-    });
+    const raw = await response.text();
+    let data: any = {};
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error('Invalid AI tutor response format');
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || `AI tutor API error: ${response.status}`);
+    }
+
+    const text = typeof data?.text === 'string' ? data.text : '';
+    if (!text.trim()) {
+      throw new Error('No response generated');
+    }
+
+    return text.trim();
   } catch (error) {
     console.error('Error getting tutor response:', error);
     return getFallbackTutorResponse(message);
