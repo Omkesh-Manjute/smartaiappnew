@@ -21,6 +21,27 @@ export interface TestGenerationParams {
   questionTypes?: ('mcq' | 'truefalse' | 'fillblank')[];
 }
 
+export interface PromptBasedTestGenerationParams {
+  subject: string;
+  chapter?: string;
+  prompt: string;
+  numQuestions: number;
+  difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
+}
+
+export interface SubjectBlueprint {
+  subjects: Array<{
+    name: string;
+    description: string;
+    grade: number;
+    chapters: Array<{
+      name: string;
+      description: string;
+      content: string;
+    }>;
+  }>;
+}
+
 export interface TutorMessage {
   role: 'user' | 'model';
   content: string;
@@ -135,6 +156,155 @@ Important: Return ONLY the JSON array, no markdown formatting, no additional tex
     console.error('Error generating test questions:', error);
     // Return fallback questions if API fails
     return generateFallbackQuestions(params.numQuestions);
+  }
+};
+
+export const generateTestQuestionsFromPrompt = async (
+  params: PromptBasedTestGenerationParams
+): Promise<GeneratedQuestion[]> => {
+  try {
+    const prompt = `
+You are an expert school teacher. Generate ${params.numQuestions} MCQs based on this teacher instruction:
+"${params.prompt}"
+
+Context:
+Subject: ${params.subject}
+Chapter: ${params.chapter || 'Not specified'}
+Difficulty: ${params.difficulty}
+
+Return a strict JSON array only:
+[
+  {
+    "question": "Question text",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": 0,
+    "explanation": "Why this answer is correct",
+    "difficulty": "easy"
+  }
+]
+
+Rules:
+- Exactly 4 options per question
+- correctAnswer must be 0,1,2,3
+- Keep language classroom-friendly
+- No markdown, no extra text, JSON only
+`;
+
+    const text = await callGemini(
+      [{ parts: [{ text: prompt }] }],
+      {
+        temperature: 0.6,
+        maxOutputTokens: 8192,
+      }
+    );
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error('Could not parse prompt-based generated questions');
+    }
+
+    const questions: GeneratedQuestion[] = JSON.parse(jsonMatch[0]);
+    return questions.map((q, index) => ({
+      question: q.question || `Question ${index + 1}`,
+      options: q.options?.length === 4 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
+      correctAnswer:
+        typeof q.correctAnswer === 'number' && q.correctAnswer >= 0 && q.correctAnswer <= 3
+          ? q.correctAnswer
+          : 0,
+      explanation: q.explanation || 'No explanation provided',
+      difficulty: ['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : 'medium',
+    }));
+  } catch (error) {
+    console.error('Error generating prompt-based test questions:', error);
+    return generateFallbackQuestions(params.numQuestions);
+  }
+};
+
+export const generateSubjectBlueprint = async (
+  params: { prompt: string; sourceText?: string }
+): Promise<SubjectBlueprint> => {
+  try {
+    const prompt = `
+You are an academic curriculum designer.
+
+Teacher/Admin instruction:
+${params.prompt}
+
+Reference text extracted from uploaded material:
+${params.sourceText?.slice(0, 12000) || 'No extra source text provided.'}
+
+Generate a JSON object in this exact structure:
+{
+  "subjects": [
+    {
+      "name": "Subject Name",
+      "description": "Short description",
+      "grade": 10,
+      "chapters": [
+        {
+          "name": "Chapter Name",
+          "description": "Chapter description",
+          "content": "High-level summary content"
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- 1 to 5 subjects
+- Each subject should have 3 to 12 chapters
+- Return JSON only, no markdown
+`;
+
+    const text = await callGemini(
+      [{ parts: [{ text: prompt }] }],
+      {
+        temperature: 0.5,
+        maxOutputTokens: 8192,
+      }
+    );
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Could not parse subject blueprint JSON');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]) as SubjectBlueprint;
+    if (!parsed.subjects || !Array.isArray(parsed.subjects) || parsed.subjects.length === 0) {
+      throw new Error('Blueprint did not contain subjects');
+    }
+
+    return {
+      subjects: parsed.subjects.map((subject, subjectIndex) => ({
+        name: subject.name || `Subject ${subjectIndex + 1}`,
+        description: subject.description || 'Generated subject',
+        grade: typeof subject.grade === 'number' ? Math.min(12, Math.max(1, subject.grade)) : 10,
+        chapters: (subject.chapters || []).map((chapter, chapterIndex) => ({
+          name: chapter.name || `Chapter ${chapterIndex + 1}`,
+          description: chapter.description || 'Generated chapter',
+          content: chapter.content || chapter.description || 'Generated content',
+        })),
+      })),
+    };
+  } catch (error) {
+    console.error('Error generating subject blueprint:', error);
+    return {
+      subjects: [
+        {
+          name: 'Generated Subject',
+          description: 'Auto-generated subject outline',
+          grade: 10,
+          chapters: [
+            {
+              name: 'Chapter 1',
+              description: 'Auto-generated chapter',
+              content: params.prompt || 'Generated content',
+            },
+          ],
+        },
+      ],
+    };
   }
 };
 
@@ -381,6 +551,8 @@ const generateFallbackWeakAreaAnalysis = (testResults: any[]) => {
 
 export default {
   generateTestQuestions,
+  generateTestQuestionsFromPrompt,
+  generateSubjectBlueprint,
   getTutorResponse,
   generateStudyPlan,
   analyzeWeakAreas,

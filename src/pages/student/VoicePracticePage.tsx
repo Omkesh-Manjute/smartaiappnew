@@ -293,6 +293,8 @@ const VoicePracticePage = () => {
   const interimRef = useRef('');
   const pendingEvaluationRef = useRef(false);
   const sessionStartRef = useRef<number | null>(null);
+  const hadSpeechRef = useRef(false);
+  const evaluationTimeoutRef = useRef<number | null>(null);
 
   const activePromptText = useMemo(() => {
     const text = customText.trim();
@@ -362,11 +364,15 @@ const VoicePracticePage = () => {
       }
 
       if (finalChunk.trim()) {
+        hadSpeechRef.current = true;
         finalTranscriptRef.current = `${finalTranscriptRef.current} ${finalChunk}`.trim();
         setTranscript(finalTranscriptRef.current);
       }
 
       interimRef.current = interimChunk.trim();
+      if (interimRef.current) {
+        hadSpeechRef.current = true;
+      }
       setInterimTranscript(interimRef.current);
     };
 
@@ -382,23 +388,39 @@ const VoicePracticePage = () => {
       if (!pendingEvaluationRef.current) return;
 
       pendingEvaluationRef.current = false;
-      const spoken = `${finalTranscriptRef.current} ${interimRef.current}`.trim();
-      if (!spoken) {
-        toast.error('No speech detected. Please try again.');
-        return;
+      if (evaluationTimeoutRef.current) {
+        window.clearTimeout(evaluationTimeoutRef.current);
       }
-      void evaluateAttempt(spoken);
+      evaluationTimeoutRef.current = window.setTimeout(() => {
+        const spoken = `${finalTranscriptRef.current} ${interimRef.current}`.trim();
+        if (!spoken) {
+          toast.error(
+            hadSpeechRef.current
+              ? 'Speech capture was unclear. Please speak a bit louder and retry.'
+              : 'No speech detected. Please allow microphone access and try again.'
+          );
+          return;
+        }
+        void evaluateAttempt(spoken);
+      }, 300);
     };
 
     recognitionRef.current = recognition;
 
     return () => {
+      if (evaluationTimeoutRef.current) {
+        window.clearTimeout(evaluationTimeoutRef.current);
+      }
       recognition.abort();
       stopSpeech();
     };
   }, [stopSpeech]);
 
   const resetAttemptState = () => {
+    if (evaluationTimeoutRef.current) {
+      window.clearTimeout(evaluationTimeoutRef.current);
+      evaluationTimeoutRef.current = null;
+    }
     setTranscript('');
     setInterimTranscript('');
     setFeedback(null);
@@ -406,6 +428,7 @@ const VoicePracticePage = () => {
     interimRef.current = '';
     pendingEvaluationRef.current = false;
     sessionStartRef.current = null;
+    hadSpeechRef.current = false;
   };
 
   const changeMode = (nextMode: PracticeMode) => {
@@ -431,7 +454,7 @@ const VoicePracticePage = () => {
     speak(activePromptText);
   };
 
-  const startListening = () => {
+  const startListening = async () => {
     if (!recognitionRef.current) {
       toast.error('Speech recognition not available');
       return;
@@ -445,10 +468,14 @@ const VoicePracticePage = () => {
     sessionStartRef.current = Date.now();
 
     try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      }
       recognitionRef.current.start();
     } catch (error) {
       console.error('Failed to start recognition:', error);
-      toast.error('Could not start microphone. Allow mic access and retry.');
+      toast.error('Could not start microphone. Please allow mic access and retry.');
     }
   };
 

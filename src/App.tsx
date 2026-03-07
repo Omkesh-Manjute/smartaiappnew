@@ -20,6 +20,7 @@ import HeatmapPage from '@/pages/student/HeatmapPage';
 import StudyPlannerPage from '@/pages/student/StudyPlannerPage';
 import LeaderboardPage from '@/pages/student/LeaderboardPage';
 import ProfilePage from '@/pages/student/ProfilePage';
+import StudentHomeworkPage from '@/pages/student/StudentHomeworkPage';
 
 // Teacher Pages
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard';
@@ -140,9 +141,24 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           } />
+          <Route path="/student/homework" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentHomeworkPage />
+            </ProtectedRoute>
+          } />
 
           {/* Teacher Routes */}
           <Route path="/teacher/dashboard" element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/teacher/homework" element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/teacher/analytics" element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherDashboard />
             </ProtectedRoute>

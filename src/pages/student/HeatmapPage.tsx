@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subjectDB, conceptMasteryDB } from '@/services/database';
+import { subjectDB, conceptMasteryDB } from '@/services/supabaseDB';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -25,10 +26,21 @@ const HeatmapPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
 
   useEffect(() => {
-    setSubjects(subjectDB.getAll());
-    if (user) {
-      setMasteryData(conceptMasteryDB.getByStudent(user.id));
-    }
+    if (!user) return;
+    const loadData = async () => {
+      try {
+        const [allSubjects, mastery] = await Promise.all([
+          subjectDB.getAll(),
+          conceptMasteryDB.getByStudent(user.id),
+        ]);
+        setSubjects(allSubjects);
+        setMasteryData(mastery);
+      } catch (error) {
+        console.error('Failed to load brain map data:', error);
+        toast.error('Unable to load brain map right now');
+      }
+    };
+    void loadData();
   }, [user]);
 
   const getMasteryColor = (level: number) => {

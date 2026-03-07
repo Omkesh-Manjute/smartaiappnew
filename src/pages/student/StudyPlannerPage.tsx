@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { studyPlanDB, subjectDB, gamificationDB } from '@/services/database';
+import { studyPlanDB, subjectDB, gamificationDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,13 +37,24 @@ const StudyPlannerPage = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      setPlans(studyPlanDB.getByStudent(user.id));
-    }
-    setSubjects(subjectDB.getAll());
+    if (!user) return;
+    const loadData = async () => {
+      try {
+        const [studentPlans, allSubjects] = await Promise.all([
+          studyPlanDB.getByStudent(user.id),
+          subjectDB.getAll(),
+        ]);
+        setPlans(studentPlans);
+        setSubjects(allSubjects);
+      } catch (error) {
+        console.error('Failed to load study planner data:', error);
+        toast.error('Failed to load study planner data');
+      }
+    };
+    void loadData();
   }, [user]);
 
-  const generateStudyPlan = () => {
+  const generateStudyPlan = async () => {
     if (!user) return;
 
     const selectedSubjects = subjects.filter((s) => newPlan.subjects.includes(s.id));
@@ -91,14 +102,19 @@ const StudyPlannerPage = () => {
       isActive: true,
     };
 
-    studyPlanDB.create(plan);
-    setPlans([...plans, plan]);
-    setShowCreateForm(false);
-    setNewPlan({ title: '', description: '', duration: 7, subjects: [] });
-    toast.success('Study plan created!');
+    try {
+      await studyPlanDB.create(plan);
+      setPlans((prev) => [...prev, plan]);
+      setShowCreateForm(false);
+      setNewPlan({ title: '', description: '', duration: 7, subjects: [] });
+      toast.success('Study plan created!');
+    } catch (error) {
+      console.error('Failed to create study plan:', error);
+      toast.error('Could not create study plan');
+    }
   };
 
-  const toggleTask = (planId: string, dayIndex: number, taskId: string) => {
+  const toggleTask = async (planId: string, dayIndex: number, taskId: string) => {
     const plan = plans.find((p) => p.id === planId);
     if (!plan) return;
 
@@ -109,20 +125,30 @@ const StudyPlannerPage = () => {
       updatedGoals[dayIndex].completed = updatedGoals[dayIndex].tasks.every((t) => t.completed);
 
       const updatedPlan = { ...plan, dailyGoals: updatedGoals };
-      studyPlanDB.update(planId, updatedPlan);
-      setPlans(plans.map((p) => (p.id === planId ? updatedPlan : p)));
+      try {
+        await studyPlanDB.update(planId, updatedPlan);
+        setPlans((prev) => prev.map((p) => (p.id === planId ? updatedPlan : p)));
 
-      if (task.completed) {
-        gamificationDB.addXP(user!.id, 10);
-        toast.success('+10 XP for completing a task!');
+        if (task.completed) {
+          await gamificationDB.addXP(user!.id, 10);
+          toast.success('+10 XP for completing a task!');
+        }
+      } catch (error) {
+        console.error('Failed to update task state:', error);
+        toast.error('Could not update task status');
       }
     }
   };
 
-  const deletePlan = (planId: string) => {
-    studyPlanDB.delete(planId);
-    setPlans(plans.filter((p) => p.id !== planId));
-    toast.success('Study plan deleted');
+  const deletePlan = async (planId: string) => {
+    try {
+      await studyPlanDB.delete(planId);
+      setPlans((prev) => prev.filter((p) => p.id !== planId));
+      toast.success('Study plan deleted');
+    } catch (error) {
+      console.error('Failed to delete plan:', error);
+      toast.error('Could not delete study plan');
+    }
   };
 
   const getTaskTypeIcon = (type: string) => {

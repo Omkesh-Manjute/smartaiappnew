@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { testDB, testAttemptDB, homeworkDB, teacherAnalyticsDB, storageDB } from '@/services/supabaseDB';
@@ -43,9 +43,11 @@ import {
 } from 'lucide-react';
 import type { Test, TestAttempt, Homework, Subject, TeacherAnalytics } from '@/types';
 import { subjectDB } from '@/services/supabaseDB';
+import { subjectDB as localSubjectDB } from '@/services/database';
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [tests, setTests] = useState<Test[]>([]);
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
@@ -77,6 +79,18 @@ const TeacherDashboard = () => {
     }
   }, [user]);
 
+  const routeTab = useMemo(() => {
+    if (location.pathname === '/teacher/homework') return 'homework';
+    if (location.pathname === '/teacher/analytics') return 'analytics';
+    return 'tests';
+  }, [location.pathname]);
+
+  const [activeTab, setActiveTab] = useState<'tests' | 'homework' | 'analytics'>(routeTab);
+
+  useEffect(() => {
+    setActiveTab(routeTab);
+  }, [routeTab]);
+
   const loadData = async () => {
     if (!user) return;
     
@@ -97,9 +111,26 @@ const TeacherDashboard = () => {
       const teacherHomework = await homeworkDB.getByTeacher(user.id);
       setHomework(teacherHomework);
 
-      // Load subjects
-      const allSubjects = await subjectDB.getAll();
-      setSubjects(allSubjects);
+      // Load subjects (fallback to local seed if remote fetch fails)
+      let loadedSubjects: Subject[] = [];
+      try {
+        loadedSubjects = await subjectDB.getAll();
+      } catch (subjectError) {
+        console.warn('Falling back to local subjects:', subjectError);
+        loadedSubjects = localSubjectDB.getAll();
+        toast.error('Could not load cloud subjects. Using local subjects.');
+      }
+
+      const normalizedSubjects = loadedSubjects.map((subject) => ({
+        ...subject,
+        id: String(subject.id),
+        chapters: (subject.chapters || []).map((chapter) => ({
+          ...chapter,
+          id: String(chapter.id),
+          subjectId: String(chapter.subjectId),
+        })),
+      }));
+      setSubjects(normalizedSubjects);
 
       // Load analytics
       const teacherAnalytics = await teacherAnalyticsDB.getAnalytics(user.id);
@@ -131,6 +162,20 @@ const TeacherDashboard = () => {
     await logout();
     navigate('/login');
     toast.success('Logged out successfully');
+  };
+
+  const handleTabChange = (value: string) => {
+    const tab = value as 'tests' | 'homework' | 'analytics';
+    setActiveTab(tab);
+    if (tab === 'homework') {
+      navigate('/teacher/homework');
+      return;
+    }
+    if (tab === 'analytics') {
+      navigate('/teacher/analytics');
+      return;
+    }
+    navigate('/teacher/dashboard');
   };
 
   const handleCreateHomework = async () => {
@@ -191,7 +236,7 @@ const TeacherDashboard = () => {
     }
   };
 
-  const selectedSubject = subjects.find(s => s.id === newHomework.subjectId);
+  const selectedSubject = subjects.find((s) => String(s.id) === String(newHomework.subjectId));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -220,21 +265,28 @@ const TeacherDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1 py-2">
             {[
-              { label: 'Dashboard', path: '/teacher/dashboard', active: true },
+              { label: 'Dashboard', path: '/teacher/dashboard' },
               { label: 'Create Test', path: '/teacher/create-test' },
               { label: 'Homework', path: '/teacher/homework' },
               { label: 'Analytics', path: '/teacher/analytics' },
-            ].map((item) => (
+            ].map((item) => {
+              const isActive =
+                location.pathname === item.path ||
+                (item.path === '/teacher/dashboard' &&
+                  !['/teacher/homework', '/teacher/analytics', '/teacher/create-test'].includes(
+                    location.pathname
+                  ));
+              return (
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  item.active ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50'
+                  isActive ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 {item.label}
               </button>
-            ))}
+            )})}
           </div>
         </div>
       </nav>
@@ -323,7 +375,7 @@ const TeacherDashboard = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {subjects.map((subject) => (
-                          <SelectItem key={subject.id} value={subject.id}>
+                          <SelectItem key={String(subject.id)} value={String(subject.id)}>
                             {subject.name}
                           </SelectItem>
                         ))}
@@ -342,7 +394,7 @@ const TeacherDashboard = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {selectedSubject?.chapters.map((chapter) => (
-                          <SelectItem key={chapter.id} value={chapter.id}>
+                          <SelectItem key={String(chapter.id)} value={String(chapter.id)}>
                             {chapter.name}
                           </SelectItem>
                         ))}
@@ -364,10 +416,17 @@ const TeacherDashboard = () => {
                     <Input
                       type="number"
                       value={newHomework.maxMarks}
-                      onChange={(e) => setNewHomework({ ...newHomework, maxMarks: parseInt(e.target.value) })}
-                    />
-                  </div>
+                    onChange={(e) =>
+                      setNewHomework({
+                        ...newHomework,
+                        maxMarks: Number.isFinite(Number.parseInt(e.target.value, 10))
+                          ? Number.parseInt(e.target.value, 10)
+                          : 0,
+                      })
+                    }
+                  />
                 </div>
+              </div>
                 <div>
                   <Label>Attachment (Optional)</Label>
                   <Input
@@ -408,7 +467,7 @@ const TeacherDashboard = () => {
         </div>
 
         {/* Tabs for Tests and Homework */}
-        <Tabs defaultValue="tests" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList>
             <TabsTrigger value="tests">Tests ({tests.length})</TabsTrigger>
             <TabsTrigger value="homework">Homework ({homework.length})</TabsTrigger>
@@ -508,7 +567,7 @@ const TeacherDashboard = () => {
                             <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                               <span className="flex items-center gap-1">
                                 <BookOpen className="w-4 h-4" />
-                                {subjects.find(s => s.id === hw.subjectId)?.name || 'Unknown'}
+                                {subjects.find((s) => String(s.id) === String(hw.subjectId))?.name || 'Unknown'}
                               </span>
                               <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-500' : ''}`}>
                                 <Calendar className="w-4 h-4" />

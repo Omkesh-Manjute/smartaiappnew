@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { tutorMessageDB, subjectDB } from '@/services/supabaseDB';
 import { getTutorResponse } from '@/services/geminiAPI';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +21,8 @@ import {
   FlaskConical,
   Loader2,
   Trash2,
+  Volume2,
+  Square,
 } from 'lucide-react';
 import type { TutorMessage, Subject } from '@/types';
 
@@ -41,6 +44,7 @@ const TutorPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { speak, stop: stopSpeech, supported: ttsSupported, isSpeaking } = useTextToSpeech();
 
   useEffect(() => {
     if (user) {
@@ -329,8 +333,37 @@ const TutorPage = () => {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
-                      <div className="bg-white border rounded-2xl rounded-tl-sm px-4 py-2">
+                      <div className="bg-white border rounded-2xl rounded-tl-sm px-4 py-2 space-y-2">
                         <p className="text-gray-700 whitespace-pre-wrap">{msg.response}</p>
+                        <div className="flex">
+                          <button
+                            onClick={() => {
+                              if (!ttsSupported) {
+                                toast.error('Text-to-speech is not supported in this browser');
+                                return;
+                              }
+                              if (isSpeaking) {
+                                stopSpeech();
+                                return;
+                              }
+                              speak(msg.response);
+                            }}
+                            className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700"
+                            type="button"
+                          >
+                            {isSpeaking ? (
+                              <>
+                                <Square className="w-3 h-3" />
+                                Stop
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3 h-3" />
+                                Listen
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

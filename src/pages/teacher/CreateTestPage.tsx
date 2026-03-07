@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { testDB, subjectDB } from '@/services/supabaseDB';
-import { generateTestQuestions } from '@/services/geminiAPI';
+import { subjectDB as localSubjectDB } from '@/services/database';
+import { generateTestQuestions, generateTestQuestionsFromPrompt } from '@/services/geminiAPI';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -24,6 +26,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   ChevronLeft,
   Plus,
@@ -45,6 +55,7 @@ const CreateTestPage = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [testData, setTestData] = useState({
     title: '',
@@ -72,28 +83,59 @@ const CreateTestPage = () => {
   }, []);
 
   const loadSubjects = async () => {
-    const data = await subjectDB.getAll();
-    setSubjects(data);
+    try {
+      const data = await subjectDB.getAll();
+      setSubjects(
+        data.map((subject) => ({
+          ...subject,
+          id: String(subject.id),
+          chapters: (subject.chapters || []).map((chapter) => ({
+            ...chapter,
+            id: String(chapter.id),
+            subjectId: String(chapter.subjectId),
+          })),
+        }))
+      );
+    } catch (error) {
+      console.warn('Falling back to local subjects for Create Test:', error);
+      setSubjects(localSubjectDB.getAll());
+      toast.error('Could not load cloud subjects. Using local subject list.');
+    }
   };
 
-  const selectedSubject = subjects.find(s => s.id === testData.subjectId);
-  const selectedChapter = selectedSubject?.chapters.find(c => c.id === testData.chapterId);
+  const selectedSubject = subjects.find((s) => String(s.id) === String(testData.subjectId));
+  const selectedChapter = selectedSubject?.chapters.find((c) => String(c.id) === String(testData.chapterId));
 
   const generateQuestionsWithAI = async () => {
-    if (!testData.subjectId || !testData.topic) {
-      toast.error('Please select a subject and enter a topic');
+    if (!testData.subjectId) {
+      toast.error('Please select a subject first');
+      return;
+    }
+
+    const trimmedPrompt = aiPrompt.trim();
+    const trimmedTopic = testData.topic.trim();
+    if (!trimmedPrompt && !trimmedTopic) {
+      toast.error('Please enter either AI prompt or topic');
       return;
     }
 
     setIsGenerating(true);
     try {
-      const generatedQuestions = await generateTestQuestions({
-        subject: selectedSubject?.name || '',
-        chapter: selectedChapter?.name || '',
-        topic: testData.topic,
-        numQuestions: testData.numQuestions,
-        difficulty: testData.difficulty,
-      });
+      const generatedQuestions = trimmedPrompt
+        ? await generateTestQuestionsFromPrompt({
+            subject: selectedSubject?.name || '',
+            chapter: selectedChapter?.name,
+            prompt: trimmedPrompt,
+            numQuestions: testData.numQuestions,
+            difficulty: testData.difficulty,
+          })
+        : await generateTestQuestions({
+            subject: selectedSubject?.name || '',
+            chapter: selectedChapter?.name || '',
+            topic: trimmedTopic,
+            numQuestions: testData.numQuestions,
+            difficulty: testData.difficulty,
+          });
 
       const formattedQuestions: TestQuestion[] = generatedQuestions.map((q, index) => ({
         id: `q_${Date.now()}_${index}`,
@@ -107,6 +149,9 @@ const CreateTestPage = () => {
       setQuestions(formattedQuestions);
       toast.success(`Generated ${formattedQuestions.length} questions!`);
       setShowAIGenerator(false);
+      if (trimmedPrompt && !testData.topic.trim()) {
+        setTestData((prev) => ({ ...prev, topic: trimmedPrompt }));
+      }
     } catch (error) {
       console.error('Error generating questions:', error);
       toast.error('Failed to generate questions. Please try again.');
@@ -223,7 +268,7 @@ const CreateTestPage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {subjects.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          <SelectItem key={String(s.id)} value={String(s.id)}>{s.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -240,7 +285,7 @@ const CreateTestPage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {selectedSubject?.chapters.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          <SelectItem key={String(c.id)} value={String(c.id)}>{c.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -310,7 +355,15 @@ const CreateTestPage = () => {
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
-                    <Label>Topic/Concept</Label>
+                    <Label>Teacher Prompt (Recommended)</Label>
+                    <Textarea
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder='e.g., "Chapter 1 ka test bana do with 10 MCQs and medium difficulty"'
+                    />
+                  </div>
+                  <div>
+                    <Label>Topic/Concept (Optional)</Label>
                     <Input
                       value={testData.topic}
                       onChange={(e) => setTestData({ ...testData, topic: e.target.value })}
@@ -346,7 +399,7 @@ const CreateTestPage = () => {
                   </div>
                   <Button 
                     onClick={generateQuestionsWithAI} 
-                    disabled={isGenerating || !testData.topic}
+                    disabled={isGenerating || (!aiPrompt.trim() && !testData.topic.trim())}
                     className="w-full"
                   >
                     {isGenerating ? (
@@ -535,6 +588,36 @@ const CreateTestPage = () => {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {questions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Test Table Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Question</TableHead>
+                        <TableHead>Correct</TableHead>
+                        <TableHead>Difficulty</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {questions.map((question, index) => (
+                        <TableRow key={`table_${question.id}`}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell className="max-w-md whitespace-normal">{question.question}</TableCell>
+                          <TableCell>{String.fromCharCode(65 + question.correctAnswer)}</TableCell>
+                          <TableCell className="capitalize">{question.difficulty}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             )}
