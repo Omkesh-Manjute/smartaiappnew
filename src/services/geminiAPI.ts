@@ -42,6 +42,15 @@ export interface SubjectBlueprint {
   }>;
 }
 
+const extractJsonObject = (text: string): any => {
+  const cleaned = text.replace(/```json|```/gi, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error('Could not parse JSON object from AI response');
+  }
+  return JSON.parse(match[0]);
+};
+
 export interface TutorMessage {
   role: 'user' | 'model';
   content: string;
@@ -223,7 +232,48 @@ Rules:
 export const generateSubjectBlueprint = async (
   params: { prompt: string; sourceText?: string }
 ): Promise<SubjectBlueprint> => {
+  const normalizeBlueprint = (parsed: SubjectBlueprint): SubjectBlueprint => {
+    if (!parsed.subjects || !Array.isArray(parsed.subjects) || parsed.subjects.length === 0) {
+      throw new Error('Blueprint did not contain subjects');
+    }
+    return {
+      subjects: parsed.subjects.map((subject, subjectIndex) => ({
+        name: subject.name || `Subject ${subjectIndex + 1}`,
+        description: subject.description || 'Generated subject',
+        grade: typeof subject.grade === 'number' ? Math.min(12, Math.max(1, subject.grade)) : 10,
+        chapters: (subject.chapters || []).map((chapter, chapterIndex) => ({
+          name: chapter.name || `Chapter ${chapterIndex + 1}`,
+          description: chapter.description || 'Generated chapter',
+          content: chapter.content || chapter.description || 'Generated content',
+        })),
+      })),
+    };
+  };
+
   try {
+    // Prefer server endpoint so deployment secrets can be used even without VITE_GEMINI_API_KEY.
+    try {
+      const response = await fetch('/api/ai/subject-blueprint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: params.prompt,
+          sourceText: params.sourceText,
+        }),
+      });
+
+      if (response.ok) {
+        const raw = await response.text();
+        const data = raw ? JSON.parse(raw) : {};
+        const parsed = extractJsonObject(String(data?.text || ''));
+        return normalizeBlueprint(parsed as SubjectBlueprint);
+      }
+    } catch (serverError) {
+      console.warn('Server AI subject generation failed, falling back to client Gemini:', serverError);
+    }
+
     const prompt = `
 You are an academic curriculum designer.
 
@@ -265,28 +315,8 @@ Rules:
       }
     );
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Could not parse subject blueprint JSON');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]) as SubjectBlueprint;
-    if (!parsed.subjects || !Array.isArray(parsed.subjects) || parsed.subjects.length === 0) {
-      throw new Error('Blueprint did not contain subjects');
-    }
-
-    return {
-      subjects: parsed.subjects.map((subject, subjectIndex) => ({
-        name: subject.name || `Subject ${subjectIndex + 1}`,
-        description: subject.description || 'Generated subject',
-        grade: typeof subject.grade === 'number' ? Math.min(12, Math.max(1, subject.grade)) : 10,
-        chapters: (subject.chapters || []).map((chapter, chapterIndex) => ({
-          name: chapter.name || `Chapter ${chapterIndex + 1}`,
-          description: chapter.description || 'Generated chapter',
-          content: chapter.content || chapter.description || 'Generated content',
-        })),
-      })),
-    };
+    const parsed = extractJsonObject(text) as SubjectBlueprint;
+    return normalizeBlueprint(parsed);
   } catch (error) {
     console.error('Error generating subject blueprint:', error);
     return {

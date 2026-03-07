@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { chapterDB, subjectDB, testDB } from '@/services/supabaseDB';
+import { subjectDB as localSubjectDB, testDB as localTestDB } from '@/services/database';
 import { generateSubjectBlueprint } from '@/services/geminiAPI';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,14 +72,49 @@ const SubjectManagementPage = () => {
     [subjects]
   );
 
+  const upsertLocalChapter = (subjectId: string, chapter: Chapter) => {
+    const localSubject = localSubjectDB.getById(subjectId);
+    if (!localSubject) return false;
+    const nextChapters = [...(localSubject.chapters || []), chapter];
+    const updated = localSubjectDB.update(subjectId, { chapters: nextChapters });
+    return Boolean(updated);
+  };
+
+  const createSubjectWithFallback = async (subject: Subject): Promise<'cloud' | 'local'> => {
+    try {
+      await subjectDB.create(subject);
+      return 'cloud';
+    } catch (error) {
+      console.warn('Cloud subject create failed. Falling back to local:', error);
+      localSubjectDB.create(subject);
+      return 'local';
+    }
+  };
+
+  const createChapterWithFallback = async (chapter: Chapter): Promise<'cloud' | 'local'> => {
+    try {
+      await chapterDB.create(chapter);
+      return 'cloud';
+    } catch (error) {
+      console.warn('Cloud chapter create failed. Falling back to local:', error);
+      const ok = upsertLocalChapter(chapter.subjectId, chapter);
+      if (!ok) {
+        throw error;
+      }
+      return 'local';
+    }
+  };
+
   const loadSubjects = async () => {
     setIsLoading(true);
     try {
       const data = await subjectDB.getAll();
       setSubjects(data.map(normalizeSubject));
     } catch (error) {
-      console.error('Failed to load subjects:', error);
-      toast.error('Failed to load subjects');
+      console.error('Failed to load cloud subjects:', error);
+      const localSubjects = localSubjectDB.getAll();
+      setSubjects(localSubjects.map(normalizeSubject));
+      toast.error('Cloud subject load failed. Showing local data.');
     } finally {
       setIsLoading(false);
     }
@@ -105,25 +141,32 @@ const SubjectManagementPage = () => {
     };
 
     try {
-      await subjectDB.create(subject);
+      const mode = await createSubjectWithFallback(subject);
       setSubjects((prev) => [...prev, normalizeSubject(subject)]);
       setShowAddForm(false);
       setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
-      toast.success('Subject added');
+      toast.success(mode === 'cloud' ? 'Subject added' : 'Subject added (local fallback)');
     } catch (error) {
       console.error('Failed to add subject:', error);
-      toast.error('Could not add subject');
+      const message = error instanceof Error ? error.message : 'Could not add subject';
+      toast.error(message);
     }
   };
 
   const deleteSubject = async (id: string) => {
     try {
-      await subjectDB.delete(id);
+      try {
+        await subjectDB.delete(id);
+      } catch (error) {
+        console.warn('Cloud subject delete failed. Falling back to local:', error);
+        localSubjectDB.delete(id);
+      }
       setSubjects((prev) => prev.filter((subject) => subject.id !== id));
       toast.success('Subject deleted');
     } catch (error) {
       console.error('Failed to delete subject:', error);
-      toast.error('Could not delete subject');
+      const message = error instanceof Error ? error.message : 'Could not delete subject';
+      toast.error(message);
     }
   };
 
@@ -145,7 +188,7 @@ const SubjectManagementPage = () => {
     };
 
     try {
-      await chapterDB.create(chapter);
+      const mode = await createChapterWithFallback(chapter);
       setSubjects((prev) =>
         prev.map((item) =>
           item.id === subject.id
@@ -157,10 +200,11 @@ const SubjectManagementPage = () => {
         ...prev,
         [subject.id]: { name: '', description: '' },
       }));
-      toast.success('Chapter added');
+      toast.success(mode === 'cloud' ? 'Chapter added' : 'Chapter added (local fallback)');
     } catch (error) {
       console.error('Failed to add chapter:', error);
-      toast.error('Could not add chapter');
+      const message = error instanceof Error ? error.message : 'Could not add chapter';
+      toast.error(message);
     }
   };
 
@@ -191,8 +235,21 @@ const SubjectManagementPage = () => {
         sourceText,
       });
 
+      const isFallbackBlueprint =
+        blueprint.subjects.length === 1 &&
+        blueprint.subjects[0]?.name === 'Generated Subject' &&
+        blueprint.subjects[0]?.chapters?.[0]?.name === 'Chapter 1';
+
+      if (isFallbackBlueprint) {
+        toast.error(
+          'AI provider response unavailable. Configure GEMINI_API_KEY/GROQ_API_KEY and try again.'
+        );
+        return;
+      }
+
       let createdSubjects = 0;
       let createdChapters = 0;
+      let usedLocalFallback = false;
       for (const generatedSubject of blueprint.subjects) {
         const subject: Subject = {
           id: `subject_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -203,7 +260,10 @@ const SubjectManagementPage = () => {
           grade: generatedSubject.grade,
           chapters: [],
         };
-        await subjectDB.create(subject);
+        const subjectSaveMode = await createSubjectWithFallback(subject);
+        if (subjectSaveMode === 'local') {
+          usedLocalFallback = true;
+        }
         createdSubjects += 1;
 
         let order = 1;
@@ -217,19 +277,27 @@ const SubjectManagementPage = () => {
             order,
             mcqs: [],
           };
-          await chapterDB.create(chapter);
+          const chapterSaveMode = await createChapterWithFallback(chapter);
+          if (chapterSaveMode === 'local') {
+            usedLocalFallback = true;
+          }
           order += 1;
           createdChapters += 1;
         }
       }
 
-      toast.success(`AI generated ${createdSubjects} subjects and ${createdChapters} chapters`);
+      toast.success(
+        usedLocalFallback
+          ? `AI generated ${createdSubjects} subjects and ${createdChapters} chapters (saved locally)`
+          : `AI generated ${createdSubjects} subjects and ${createdChapters} chapters`
+      );
       setAiPrompt('');
       setAiFile(null);
       await loadSubjects();
     } catch (error) {
       console.error('AI subject generation failed:', error);
-      toast.error('AI generation failed');
+      const message = error instanceof Error ? error.message : 'AI generation failed';
+      toast.error(message);
     } finally {
       setIsAiGenerating(false);
     }
@@ -248,6 +316,7 @@ const SubjectManagementPage = () => {
       const tests = Array.isArray(parsed) ? parsed : [parsed];
 
       let uploaded = 0;
+      let localFallbackUsed = false;
       for (let i = 0; i < tests.length; i++) {
         const item = tests[i];
         if (!item?.title || !item?.subjectId || !Array.isArray(item?.questions)) {
@@ -274,19 +343,30 @@ const SubjectManagementPage = () => {
           createdAt: new Date(),
           isActive: item.isActive ?? true,
         };
-        await testDB.create(normalizedTest);
+        try {
+          await testDB.create(normalizedTest);
+        } catch (error) {
+          console.warn('Cloud test upload failed. Falling back to local:', error);
+          localTestDB.create(normalizedTest);
+          localFallbackUsed = true;
+        }
         uploaded += 1;
       }
 
       if (uploaded === 0) {
         toast.error('No valid tests found in file');
       } else {
-        toast.success(`${uploaded} test(s) uploaded successfully`);
+        toast.success(
+          localFallbackUsed
+            ? `${uploaded} test(s) uploaded locally`
+            : `${uploaded} test(s) uploaded successfully`
+        );
         setTestUploadFile(null);
       }
     } catch (error) {
       console.error('Test upload failed:', error);
-      toast.error('Failed to upload tests. Use valid JSON.');
+      const message = error instanceof Error ? error.message : 'Failed to upload tests. Use valid JSON.';
+      toast.error(message);
     } finally {
       setIsUploadingTests(false);
     }
