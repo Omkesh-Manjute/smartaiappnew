@@ -2,9 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
 
+// Layout
+import StudentLayout from '@/components/layout/StudentLayout';
+
 // Pages
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
+import LandingPage from '@/pages/LandingPage';
 
 // Student Pages
 import StudentDashboard from '@/pages/student/StudentDashboard';
@@ -67,85 +71,34 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          
-          {/* Student Routes */}
-          <Route path="/student/dashboard" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/subjects" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <SubjectsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/subject/:subjectId" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <SubjectsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/chapter/:chapterId" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ChapterPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/tests" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <TestPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/test/:testId" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <TestAttemptPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/groups" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <GroupsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/battle" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <BattlePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/tutor" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <TutorPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/voice" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <VoicePracticePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/heatmap" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <HeatmapPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/planner" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudyPlannerPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/leaderboard" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <LeaderboardPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/profile" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/homework" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentHomeworkPage />
-            </ProtectedRoute>
-          } />
+
+          {/* Student Routes — wrapped in StudentLayout */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/subjects" element={<SubjectsPage />} />
+            <Route path="/student/subject/:subjectId" element={<SubjectsPage />} />
+            <Route path="/student/chapter/:chapterId" element={<ChapterPage />} />
+            <Route path="/student/tests" element={<TestPage />} />
+            <Route path="/student/test/:testId" element={<TestAttemptPage />} />
+            <Route path="/student/groups" element={<GroupsPage />} />
+            <Route path="/student/battle" element={<BattlePage />} />
+            <Route path="/student/tutor" element={<TutorPage />} />
+            <Route path="/student/voice" element={<VoicePracticePage />} />
+            <Route path="/student/heatmap" element={<HeatmapPage />} />
+            <Route path="/student/planner" element={<StudyPlannerPage />} />
+            <Route path="/student/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/student/profile" element={<ProfilePage />} />
+            <Route path="/student/homework" element={<StudentHomeworkPage />} />
+          </Route>
 
           {/* Teacher Routes */}
           <Route path="/teacher/dashboard" element={
@@ -205,9 +158,8 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Default Routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />

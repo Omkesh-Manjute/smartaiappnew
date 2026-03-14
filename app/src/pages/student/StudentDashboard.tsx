@@ -2,25 +2,22 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { gamificationDB, subjectDB, testAttemptDB, notificationDB, homeworkDB, homeworkSubmissionDB } from '@/services/supabaseDB';
+import { gamificationDB, subjectDB, testAttemptDB, homeworkDB, homeworkSubmissionDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import XPBar from '@/components/gamification/XPBar';
 import BadgesDisplay from '@/components/gamification/BadgesDisplay';
 import DailyQuote from '@/components/gamification/DailyQuote';
 import AchievementNotification from '@/components/gamification/AchievementNotification';
 import {
-  BookOpen,
   Trophy,
   Target,
   TrendingUp,
   Clock,
   Flame,
   ChevronRight,
-  Bell,
   Gamepad2,
   Mic,
   Brain,
@@ -29,7 +26,6 @@ import {
   FileText,
   AlertCircle,
   Clock3,
-  LogOut,
 } from 'lucide-react';
 import type { GamificationData, Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
 
@@ -49,13 +45,12 @@ const buildDefaultGamification = (studentId: string): GamificationData => ({
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [gamification, setGamification] = useState<GamificationData | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [recentTests, setRecentTests] = useState<TestAttempt[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [homeworkSubmissions, setHomeworkSubmissions] = useState<HomeworkSubmission[]>([]);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showAchievement, setShowAchievement] = useState(false);
   const [achievementData] = useState({
     type: 'badge' as const,
@@ -72,7 +67,7 @@ const StudentDashboard = () => {
 
   const loadData = async () => {
     if (!user) return;
-    
+
     try {
       let gamificationData = await gamificationDB.getByStudent(user.id);
       if (!gamificationData) {
@@ -90,9 +85,6 @@ const StudentDashboard = () => {
 
       const attempts = await testAttemptDB.getByStudent(user.id);
       setRecentTests(attempts.slice(-5).reverse());
-
-      const unreadCount = await notificationDB.getUnreadCount(user.id);
-      setUnreadNotifications(unreadCount);
 
       // Load homework for student's subjects
       const allHomework: Homework[] = [];
@@ -148,86 +140,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Smart Learning
-              </span>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                onClick={async () => {
-                  await logout();
-                  navigate('/login', { replace: true });
-                }}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-                title="Switch account"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => navigate('/student/notifications')}
-                className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full"
-              >
-                <Bell className="w-5 h-5" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadNotifications}
-                  </span>
-                )}
-              </button>
-              <div className="flex items-center gap-3">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-gray-500">Level {gamification.level}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1 overflow-x-auto py-2">
-            {[
-              { label: 'Dashboard', path: '/student/dashboard', active: true },
-              { label: 'Subjects', path: '/student/subjects' },
-              { label: 'Tests', path: '/student/tests' },
-              { label: 'Groups', path: '/student/groups' },
-              { label: 'Battle', path: '/student/battle' },
-              { label: 'Tutor', path: '/student/tutor' },
-              { label: 'Homework', path: '/student/homework' },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-                  item.active
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
+    <div className="bg-gray-50/50">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -474,8 +387,8 @@ const StudentDashboard = () => {
                     </Badge>
                   </div>
                 </div>
-                <Button 
-                  className="w-full mt-4" 
+                <Button
+                  className="w-full mt-4"
                   variant="outline"
                   onClick={() => navigate('/student/homework')}
                 >
