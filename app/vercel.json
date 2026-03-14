@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/proxy/:path*",
+      "destination": "https://ihcnwuaxcylbivuvzubz.supabase.co/:path*"
+    },
+    {
+      "source": "/api/ai/:path*",
+      "destination": "/api/ai/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
