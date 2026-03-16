@@ -1,3 +1,4 @@
+// Forced redeploy trigger - Vercel build stability fix
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
