@@ -135,6 +135,7 @@ const TutorPage = () => {
         mode: selectedMode,
       });
 
+      setApiError(null);
       const updatedMessage = { ...userMessage, response: aiResponse };
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
@@ -143,14 +144,21 @@ const TutorPage = () => {
       void tutorMessageDB.create(updatedMessage).catch((error) => {
         console.error('Failed to save tutor message:', error);
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting AI response:', error);
-      const fallbackResponse = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
-      const updatedMessage = { ...userMessage, response: fallbackResponse };
+      const errText = error?.message || '';
+      let friendlyMsg = '❌ Could not reach AI. Please try again.';
+      if (errText.includes('API key') || errText.includes('403') || errText.includes('401')) {
+        friendlyMsg = '🔑 Invalid or missing Gemini API key. Get a free key at https://aistudio.google.com/apikey and set VITE_GEMINI_API_KEY in your .env file.';
+        setApiError('invalid_key');
+      } else if (errText.includes('quota') || errText.includes('429')) {
+        friendlyMsg = '⏳ Gemini API quota exceeded. Please wait a moment and try again.';
+      }
+      const updatedMessage = { ...userMessage, response: friendlyMsg };
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
       );
-      toast.error('AI service is unavailable right now');
+      toast.error('AI Tutor: ' + friendlyMsg.slice(0, 60));
     } finally {
       setIsTyping(false);
     }

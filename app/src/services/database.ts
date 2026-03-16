@@ -4,6 +4,7 @@ import type {
   ConceptMastery, VoicePractice, TutorMessage, ParentChild,
   School, Notification, Badge
 } from '@/types';
+import { class5Subjects, class5Tests } from '@/data/class5Data';
 
 const DB_KEYS = {
   USERS: 'smart_learning_users',
@@ -402,7 +403,28 @@ export const notificationDB = {
 // Initialize sample data
 export const initializeSampleData = () => {
   // Check if already initialized
-  if (localStorage.getItem(DB_KEYS.SUBJECTS)) return;
+  if (localStorage.getItem(DB_KEYS.SUBJECTS)) {
+    // Merge Class 5 data if not already present
+    const existingSubjects = getAll<Subject>(DB_KEYS.SUBJECTS);
+    const existingTests = getAll<Test>(DB_KEYS.TESTS);
+    let subjectsUpdated = false;
+    let testsUpdated = false;
+    class5Subjects.forEach(s => {
+      if (!existingSubjects.find(e => e.id === s.id)) {
+        existingSubjects.push(s);
+        subjectsUpdated = true;
+      }
+    });
+    class5Tests.forEach(t => {
+      if (!existingTests.find(e => e.id === t.id)) {
+        existingTests.push(t);
+        testsUpdated = true;
+      }
+    });
+    if (subjectsUpdated) localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(existingSubjects));
+    if (testsUpdated) localStorage.setItem(DB_KEYS.TESTS, JSON.stringify(existingTests));
+    return;
+  }
 
   // Sample Subjects
   const subjects: Subject[] = [
@@ -554,25 +576,27 @@ export const initializeSampleData = () => {
     },
   ];
 
-  localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(subjects));
+  // Merge Class 5 subjects
+  const allSubjects = [...subjects, ...class5Subjects];
+  localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(allSubjects));
 
   // Sample Users
   const users: User[] = [
     {
       id: 'student1',
-      name: 'Rahul Sharma',
-      email: 'rahul@example.com',
-      password: 'password123',
+      name: 'Demo Student',
+      email: 'student@demo.com',
+      password: 'Demo@12345',
       role: 'student',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=rahul',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=student',
       createdAt: new Date(),
       isPremium: true,
     },
     {
       id: 'student2',
       name: 'Priya Patel',
-      email: 'priya@example.com',
-      password: 'password123',
+      email: 'priya@demo.com',
+      password: 'Demo@12345',
       role: 'student',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=priya',
       createdAt: new Date(),
@@ -580,27 +604,27 @@ export const initializeSampleData = () => {
     },
     {
       id: 'teacher1',
-      name: 'Mr. Kumar',
-      email: 'kumar@example.com',
-      password: 'password123',
+      name: 'Demo Teacher',
+      email: 'teacher@demo.com',
+      password: 'Demo@12345',
       role: 'teacher',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kumar',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=teacher',
       createdAt: new Date(),
     },
     {
       id: 'admin1',
-      name: 'Admin User',
-      email: 'admin@example.com',
-      password: 'password123',
+      name: 'Demo Admin',
+      email: 'admin@demo.com',
+      password: 'Demo@12345',
       role: 'admin',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
       createdAt: new Date(),
     },
     {
       id: 'parent1',
-      name: 'Mr. Sharma',
-      email: 'parent@example.com',
-      password: 'password123',
+      name: 'Demo Parent',
+      email: 'parent@demo.com',
+      password: 'Demo@12345',
       role: 'parent',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=parent',
       createdAt: new Date(),
@@ -647,7 +671,22 @@ export const initializeSampleData = () => {
   ];
 
   localStorage.setItem(DB_KEYS.PARENT_CHILDREN, JSON.stringify(parentChildren));
+
+  // Seed Class 5 Tests
+  localStorage.setItem(DB_KEYS.TESTS, JSON.stringify(class5Tests));
 };
+
+// Force reset and reinitialize (call from browser console: window.__resetDB())
+export const resetAndReinitialize = () => {
+  Object.values(DB_KEYS).forEach(key => localStorage.removeItem(key));
+  initializeSampleData();
+  window.location.reload();
+};
+
+// Expose globally for easy console access
+if (typeof window !== 'undefined') {
+  (window as any).__resetDB = resetAndReinitialize;
+}
 
 export default {
   userDB,
