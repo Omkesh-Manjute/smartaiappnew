@@ -1,20 +1,20 @@
 {
-    "$schema": "https://openapi.vercel.sh/vercel.json",
-    "installCommand": "cd app && npm install",
-    "buildCommand": "cd app && npm run build",
-    "outputDirectory": "app/dist",
-    "rewrites": [
-        {
-            "source": "/api/proxy/:path*",
-            "destination": "https://ihcnwuaxcylbivuvzubz.supabase.co/:path*"
-        },
-        {
-            "source": "/api/ai/:path*",
-            "destination": "/api/ai/:path*"
-        },
-        {
-            "source": "/:path*",
-            "destination": "/index.html"
-        }
-    ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install --prefix app",
+  "buildCommand": "npm run build --prefix app",
+  "outputDirectory": "app/dist",
+  "rewrites": [
+    {
+      "source": "/api/proxy/:path*",
+      "destination": "https://ihcnwuaxcylbivuvzubz.supabase.co/:path*"
+    },
+    {
+      "source": "/api/ai/:path*",
+      "destination": "/app/api/ai/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/app/index.html"
+    }
+  ]
 }

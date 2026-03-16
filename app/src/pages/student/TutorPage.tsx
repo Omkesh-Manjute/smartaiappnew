@@ -135,7 +135,6 @@ const TutorPage = () => {
         mode: selectedMode,
       });
 
-      setApiError(null);
       const updatedMessage = { ...userMessage, response: aiResponse };
       setMessages((prev) =>
         prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
@@ -150,7 +149,6 @@ const TutorPage = () => {
       let friendlyMsg = '❌ Could not reach AI. Please try again.';
       if (errText.includes('API key') || errText.includes('403') || errText.includes('401')) {
         friendlyMsg = '🔑 Invalid or missing Gemini API key. Get a free key at https://aistudio.google.com/apikey and set VITE_GEMINI_API_KEY in your .env file.';
-        setApiError('invalid_key');
       } else if (errText.includes('quota') || errText.includes('429')) {
         friendlyMsg = '⏳ Gemini API quota exceeded. Please wait a moment and try again.';
       }
