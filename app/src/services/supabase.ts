@@ -8,6 +8,8 @@ const supabaseUrl = import.meta.env.PROD
   ? `${window.location.origin}/api/proxy`
   : 'https://ihcnwuaxcylbivuvzubz.supabase.co';
 
+console.log('Supabase initialized with URL:', supabaseUrl, 'Mode:', import.meta.env.MODE);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabase = createClient<any>(supabaseUrl, SUPABASE_ANON_KEY);
 export default supabase;
