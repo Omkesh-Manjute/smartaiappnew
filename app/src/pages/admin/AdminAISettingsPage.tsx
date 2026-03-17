@@ -248,6 +248,52 @@ const AdminAISettingsPage = () => {
           </Card>
         </section>
 
+        {/* --- DATABASE MANAGEMENT --- */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+              <RefreshCcw className="w-4 h-4" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">System & Database</h2>
+          </div>
+
+          <Card className="border-red-100 shadow-sm border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">Database Synchronization</CardTitle>
+              <CardDescription>Restore missing subjects and tests by syncing sample data to Supabase.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-red-50/50 rounded-xl border border-red-100">
+                <div className="space-y-1">
+                  <p className="font-bold text-red-900">Restore Sample Data</p>
+                  <p className="text-xs text-red-700">This will push the initial Class 5 Subjects and Tests to your database.</p>
+                </div>
+                <Button 
+                  variant="destructive" 
+                  className="w-full sm:w-auto font-bold shadow-md"
+                  onClick={async () => {
+                    const confirm = window.confirm('Bhai, kya aap sure ho? Ye sabhi sample subjects aur tests ko Supabase me sync kar dega.');
+                    if (!confirm) return;
+                    
+                    const loadingToast = toast.loading('Syncing sample data to Supabase...');
+                    try {
+                      const { seedSampleData } = await import('@/services/supabaseDB');
+                      await seedSampleData();
+                      toast.success('Sample data restored successfully!', { id: loadingToast });
+                    } catch (error) {
+                      console.error('Seed error:', error);
+                      toast.error('Failed to restore sample data.', { id: loadingToast });
+                    }
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Restore Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* --- ACTIONS --- */}
         <div className="flex items-center justify-between p-6 bg-white rounded-2xl border shadow-lg sticky bottom-4 z-10">
           <div className="flex items-center gap-3">

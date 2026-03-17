@@ -6,6 +6,7 @@ import type {
   School, Notification, Badge, TeacherAnalytics,
   StudentProgress, StudyPlan, ConceptMastery, ParentChild
 } from '@/types';
+import { class5Subjects, class5Tests } from '@/data/class5Data';
 
 // Helper type
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -2041,4 +2042,73 @@ export default {
   studyPlanDB,
   conceptMasteryDB,
   parentChildDB,
+};
+
+export const seedSampleData = async () => {
+  console.log('Starting Supabase seed process...');
+  
+  // 1. Seed Subjects, Chapters, and MCQs
+  for (const subject of class5Subjects) {
+     const { error: sError } = await supabase.from('subjects').upsert({
+       id: subject.id,
+       name: subject.name,
+       description: subject.description,
+       icon: subject.icon,
+       color: subject.color,
+       grade: subject.grade,
+       updated_at: new Date().toISOString(),
+     });
+     if (sError) console.error(`Error seeding subject ${subject.id}:`, sError);
+
+     for (const chapter of subject.chapters) {
+       const { error: chError } = await supabase.from('chapters').upsert({
+         id: chapter.id,
+         subject_id: chapter.subjectId,
+         name: chapter.name,
+         description: chapter.description,
+         order: chapter.order,
+         content: chapter.content,
+         updated_at: new Date().toISOString(),
+       });
+       if (chError) console.error(`Error seeding chapter ${chapter.id}:`, chError);
+
+       if (chapter.mcqs && chapter.mcqs.length > 0) {
+         for (const mcq of chapter.mcqs) {
+           const { error: mcqError } = await supabase.from('mcqs').upsert({
+             id: mcq.id,
+             chapter_id: chapter.id,
+             question: mcq.question,
+             options: mcq.options,
+             correct_answer: mcq.correctAnswer,
+             explanation: mcq.explanation,
+             difficulty: mcq.difficulty,
+             updated_at: new Date().toISOString(),
+           });
+           if (mcqError) console.error(`Error seeding MCQ ${mcq.id}:`, mcqError);
+         }
+       }
+     }
+  }
+
+  // 2. Seed Tests
+  for (const test of class5Tests) {
+    const { error: tError } = await supabase.from('tests').upsert({
+      id: test.id,
+      title: test.title,
+      description: test.description,
+      subject_id: test.subjectId,
+      chapter_ids: test.chapterIds,
+      questions: test.questions,
+      duration: test.duration,
+      total_marks: test.totalMarks,
+      passing_marks: test.passingMarks,
+      created_by: test.createdBy,
+      is_active: test.isActive,
+      updated_at: new Date().toISOString(),
+    });
+    if (tError) console.error(`Error seeding test ${test.id}:`, tError);
+  }
+
+  console.log('Supabase seed process completed.');
+  return true;
 };
