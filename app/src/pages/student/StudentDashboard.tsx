@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { gamificationDB, subjectDB, testAttemptDB, homeworkDB, homeworkSubmissionDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
+import { subjectDB, testAttemptDB, homeworkDB, homeworkSubmissionDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import XPBar from '@/components/gamification/XPBar';
 import BadgesDisplay from '@/components/gamification/BadgesDisplay';
 import DailyQuote from '@/components/gamification/DailyQuote';
-import AchievementNotification from '@/components/gamification/AchievementNotification';
 import {
   Trophy,
   Target,
@@ -27,37 +27,17 @@ import {
   AlertCircle,
   Clock3,
 } from 'lucide-react';
-import type { GamificationData, Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
+import type { Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
 
-const buildDefaultGamification = (studentId: string): GamificationData => ({
-  studentId,
-  xp: 0,
-  level: 1,
-  streak: 0,
-  lastStudyDate: new Date(),
-  totalStudyTime: 0,
-  badges: [],
-  unlockedAvatars: ['default'],
-  unlockedThemes: ['default'],
-  currentAvatar: 'default',
-  coins: 0,
-});
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [gamification, setGamification] = useState<GamificationData | null>(null);
+  const { gamification, checkAchievements } = useGamification();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [recentTests, setRecentTests] = useState<TestAttempt[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [homeworkSubmissions, setHomeworkSubmissions] = useState<HomeworkSubmission[]>([]);
-  const [showAchievement, setShowAchievement] = useState(false);
-  const [achievementData] = useState({
-    type: 'badge' as const,
-    title: '',
-    message: '',
-    icon: '',
-  });
 
   useEffect(() => {
     if (user) {
@@ -69,16 +49,8 @@ const StudentDashboard = () => {
     if (!user) return;
 
     try {
-      let gamificationData = await gamificationDB.getByStudent(user.id);
-      if (!gamificationData) {
-        gamificationData = buildDefaultGamification(user.id);
-        setGamification(gamificationData);
-        void gamificationDB.create(gamificationData).catch(() => {
-          // Ignore create failures (RLS/duplicate); local default keeps dashboard usable.
-        });
-      } else {
-        setGamification(gamificationData);
-      }
+      // Check for time-based/study achievements on load
+      checkAchievements('study');
 
       const allSubjects = await subjectDB.getAll();
       setSubjects(allSubjects);
@@ -99,7 +71,6 @@ const StudentDashboard = () => {
       setHomeworkSubmissions(submissions);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      setGamification((prev) => prev ?? buildDefaultGamification(user.id));
     }
   };
 
@@ -417,15 +388,6 @@ const StudentDashboard = () => {
         </div>
       </main>
 
-      {/* Achievement Notification */}
-      <AchievementNotification
-        isOpen={showAchievement}
-        onClose={() => setShowAchievement(false)}
-        type={achievementData.type}
-        title={achievementData.title}
-        message={achievementData.message}
-        icon={achievementData.icon}
-      />
     </div>
   );
 };

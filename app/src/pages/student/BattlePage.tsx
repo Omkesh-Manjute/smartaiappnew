@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { battleDB, subjectDB, gamificationDB, userDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
+import { battleDB, subjectDB, userDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,7 @@ const DIFFICULTY_CONFIG: Record<AIDifficulty, { label: string; color: string; ic
 const BattlePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { checkAchievements } = useGamification();
   const [activeTab, setActiveTab] = useState<BattleTab>('ai');
   const [waitingBattles, setWaitingBattles] = useState<Battle[]>([]);
   const [activeBattle, setActiveBattle] = useState<Battle | null>(null);
@@ -309,17 +311,8 @@ const BattlePage = () => {
     let earnedXp = 0;
     if (result === 'win') {
       earnedXp = battleType === 'practice' ? 20 : 150;
-      await gamificationDB.addXP(user.id, earnedXp);
-      if (battleType !== 'practice') {
-        await gamificationDB.addBadge(user.id, {
-          id: 'battle-winner',
-          name: 'Battle Winner',
-          description: 'Win your first battle',
-          icon: '⚔️',
-          rarity: 'rare',
-          unlockedAt: new Date(),
-        });
-      }
+      // Use global gamification context
+      checkAchievements('battle', activeBattle);
       confetti({ particleCount: 100, spread: 70 });
       toast.success(`You won! +${earnedXp} XP earned!`);
     } else if (result === 'lose') {

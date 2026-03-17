@@ -1201,6 +1201,14 @@ export const tutorMessageDB = {
     if (error) throw error;
     return message;
   },
+
+  deleteByStudent: async (studentId: string): Promise<boolean> => {
+    const { error } = await supabase
+      .from('tutor_messages')
+      .delete()
+      .eq('student_id', studentId);
+    return !error;
+  },
 };
 
 // Notification Operations

@@ -185,8 +185,23 @@ const TutorPage = () => {
 
   const clearHistory = async () => {
     if (!user) return;
+    
+    // Optimistic UI update
+    const previousMessages = [...messages];
     setMessages([]);
-    toast.success('Chat history cleared');
+    
+    try {
+      const success = await tutorMessageDB.deleteByStudent(user.id);
+      if (success) {
+        toast.success('Chat history cleared permanently');
+      } else {
+        throw new Error('Failed to clear database');
+      }
+    } catch (error) {
+      console.error('Error clearing history:', error);
+      setMessages(previousMessages);
+      toast.error('Failed to clear history from database');
+    }
   };
 
   const quickQuestions = [

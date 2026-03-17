@@ -2,7 +2,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { testDB, testAttemptDB, gamificationDB, notificationDB } from '@/services/database';
+import { useGamification } from '@/contexts/GamificationContext';
+import { testDB } from '@/services/database';
+import { testAttemptDB, notificationDB } from '@/services/database';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -23,6 +25,7 @@ import type { Test } from '@/types';
 const TestAttemptPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { checkAchievements } = useGamification();
   const { testId } = useParams();
   const [test, setTest] = useState<Test | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -108,32 +111,8 @@ const TestAttemptPage = () => {
 
     testAttemptDB.create(attempt);
 
-    // Update gamification
-    gamificationDB.addXP(user.id, isPassed ? 100 : 50);
-
-    // Check for badges
-    const attempts = testAttemptDB.getByStudent(user.id);
-    if (attempts.length === 1) {
-      gamificationDB.addBadge(user.id, {
-        id: 'first-test',
-        name: 'First Step',
-        description: 'Complete your first test',
-        icon: '🎯',
-        rarity: 'common',
-        unlockedAt: new Date(),
-      });
-    }
-
-    if (percentage === 100) {
-      gamificationDB.addBadge(user.id, {
-        id: 'perfect-score',
-        name: 'Perfectionist',
-        description: 'Score 100% on any test',
-        icon: '💯',
-        rarity: 'epic',
-        unlockedAt: new Date(),
-      });
-    }
+    // Use global gamification context to check for achievements and add XP
+    checkAchievements('test', attempt);
 
     // Add notification
     notificationDB.create({
