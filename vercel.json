@@ -9,12 +9,8 @@
       "destination": "https://ihcnwuaxcylbivuvzubz.supabase.co/:path*"
     },
     {
-      "source": "/api/ai/:path*",
-      "destination": "/app/api/ai/:path*"
-    },
-    {
       "source": "/:path*",
-      "destination": "/app/index.html"
+      "destination": "/index.html"
     }
   ]
 }
