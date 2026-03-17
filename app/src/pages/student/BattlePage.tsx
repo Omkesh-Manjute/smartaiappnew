@@ -49,7 +49,7 @@ const DIFFICULTY_CONFIG: Record<AIDifficulty, { label: string; color: string; ic
 const BattlePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { checkAchievements } = useGamification();
+  const { checkAchievements, addXP } = useGamification();
   const [activeTab, setActiveTab] = useState<BattleTab>('ai');
   const [waitingBattles, setWaitingBattles] = useState<Battle[]>([]);
   const [activeBattle, setActiveBattle] = useState<Battle | null>(null);
@@ -317,11 +317,11 @@ const BattlePage = () => {
       toast.success(`You won! +${earnedXp} XP earned!`);
     } else if (result === 'lose') {
       earnedXp = 30;
-      await gamificationDB.addXP(user.id, earnedXp);
+      await addXP(earnedXp);
       toast.info('You lost! +30 XP for participation');
     } else {
       earnedXp = 50;
-      await gamificationDB.addXP(user.id, earnedXp);
+      await addXP(earnedXp);
       toast.info("It's a draw! +50 XP");
     }
     setXpEarned(earnedXp);
