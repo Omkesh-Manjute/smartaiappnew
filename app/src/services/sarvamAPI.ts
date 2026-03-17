@@ -56,7 +56,7 @@ export const getSarvamAudio = async (
   text: string, 
   lang: 'hi' | 'en' = 'hi', 
   config?: { apiKey?: string; speaker?: string; model?: string }
-): Promise<string | null> => {
+): Promise<string[] | null> => {
   const currentKey = (config?.apiKey || API_KEY || '').trim();
   if (!currentKey) return null;
 
@@ -98,7 +98,7 @@ export const getSarvamAudio = async (
     }
 
     if (audioChunks.length === 0) return null;
-    return `data:audio/wav;base64,${audioChunks[0]}`;
+    return audioChunks;
   } catch (error) {
     console.error('Error in Sarvam Service:', error);
     return null;

@@ -23,25 +23,21 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   const [rate, setRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  
+  // Refs for audio management
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioQueue = useRef<string[]>([]);
+  const isPlayingQueue = useRef(false);
+  const lastRequestId = useRef<number>(0);
 
   const supported = typeof window !== 'undefined' && ('speechSynthesis' in window);
 
   // Helper to find the best available Hindi/English voice
   const findBestVoice = useCallback((availableVoices: SpeechSynthesisVoice[], langHint: string, text?: string) => {
-    // Hinglish detection: if text is provided, check if it contains Devanagari or mentions Hindi
     const hasHindiChar = text ? /[\u0900-\u097F]/.test(text) : false;
     const mentionsHindi = text ? /\bhindi\b/i.test(text) : false;
     const isHindi = langHint.startsWith('hi') || hasHindiChar || mentionsHindi;
     
-    console.log('Voice Search Context:', { langHint, isHindi, hasHindiChar, mentionsHindi });
-    
-    // Log all voices once for triage
-    if (availableVoices.length > 0 && Math.random() < 0.2) {
-       console.log('Available Voices Table:');
-       console.table(availableVoices.map(v => ({ name: v.name, lang: v.lang })));
-    }
-
     const targetVoices = availableVoices.filter(v => {
       const vLang = v.lang.toLowerCase();
       if (isHindi) return vLang.startsWith('hi') || vLang.startsWith('hin');
@@ -49,20 +45,16 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     });
     
     if (targetVoices.length === 0) {
-      console.warn('No voices found for target lang:', isHindi ? 'Hindi' : 'English');
       if (isHindi) {
-        // Fallback to ANY voice with 'IN' in the name/lang if Hindi specifically isn't found
         const anyIndian = availableVoices.find(v => v.lang.toLowerCase().includes('in'));
         if (anyIndian) return anyIndian;
       }
       return null;
     }
 
-    // Priority 1: Google Natural Voices
     const googleVoice = targetVoices.find(v => v.name.includes('Google') && (isHindi ? (v.lang.includes('IN') || v.name.includes('हिन्दी')) : true));
     if (googleVoice) return googleVoice;
 
-    // Priority 2: Microsoft/Edge Natural
     const naturalVoice = targetVoices.find(v => v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('hi-in-'));
     if (naturalVoice) return naturalVoice;
 
@@ -90,22 +82,68 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   }, [updateVoices]);
 
   const stop = useCallback(() => {
+    // Increment request ID to invalidate any pending async speak calls
+    lastRequestId.current += 1;
+
+    // 1. Stop HTML Audio Queue
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.onended = null;
       audioRef.current.src = '';
       audioRef.current = null;
     }
+    audioQueue.current = [];
+    isPlayingQueue.current = false;
+
+    // 2. Stop Browser TTS
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);
 
-  const playBrowserTTS = useCallback((text: string, lang: string) => {
-    console.log('Playing Browser TTS:', { lang, textShort: text.substring(0, 30) });
-    if (!('speechSynthesis' in window)) return;
+  // Sequential playback for audio chunks
+  const playNextInQueue = useCallback(() => {
+    if (audioQueue.current.length === 0) {
+      setIsSpeaking(false);
+      isPlayingQueue.current = false;
+      return;
+    }
 
+    const nextChunk = audioQueue.current.shift();
+    if (!nextChunk) return;
+
+    // Use a fresh audio element for each chunk to avoid issues with some browsers
+    const audio = new Audio(`data:audio/wav;base64,${nextChunk}`);
+    audioRef.current = audio;
+    
+    audio.onplay = () => {
+      setIsSpeaking(true);
+      isPlayingQueue.current = true;
+    };
+
+    audio.onended = () => {
+      playNextInQueue();
+    };
+
+    audio.onerror = (e) => {
+      console.error('Audio chunk error:', e);
+      // Skip bad chunk
+      playNextInQueue();
+    };
+
+    audio.play().catch(err => {
+      console.error('Audio playback failed:', err);
+      // If play fails (e.g. user hasn't interacted), we stop the queue
+      setIsSpeaking(false);
+      isPlayingQueue.current = false;
+    });
+  }, []);
+
+  const playBrowserTTS = useCallback((text: string, lang: string) => {
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -113,10 +151,8 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     
     if (bestVoice) {
       utterance.voice = bestVoice;
-      console.log('Selected optimized voice:', bestVoice.name, '(' + bestVoice.lang + ')');
     }
 
-    // Calibrate for language
     const isHindi = lang.startsWith('hi') || (bestVoice && bestVoice.lang.startsWith('hi'));
     utterance.rate = isHindi ? 0.85 : rate;
     utterance.pitch = 1.0;
@@ -134,49 +170,51 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   }, [findBestVoice, rate]);
 
   const speak = useCallback(async (text: string, langHint?: string) => {
-    console.log('TTS Speak called:', { textShort: text.substring(0, 30), langHint });
+    // 1. Stop everything immediately
     stop();
+    const requestId = lastRequestId.current;
 
     if (!text) return;
     const cleanedText = text.replace(/[*_~`#]/g, '').trim();
     const hasHindiChar = /[\u0900-\u097F]/.test(cleanedText);
     const targetLang = langHint || (hasHindiChar ? 'hi-IN' : 'en-US');
 
-    // 1. Try Sarvam AI PREMIUM Option (Dynamic Config)
+    // 2. Set UI State to speaking immediately so "Stop" button shows up
+    setIsSpeaking(true);
+
+    // 3. Try Sarvam AI PREMIUM Option (Dynamic Config)
     try {
       const dbSettings = await SystemSettingsService.getSettings();
       const sarvamKey = dbSettings.sarvam_api_key || import.meta.env.VITE_SARVAM_API_KEY;
       
       if (sarvamKey) {
-        const audioData = await getSarvamAudio(cleanedText, hasHindiChar ? 'hi' : 'en', {
+        const audioChunks = await getSarvamAudio(cleanedText, hasHindiChar ? 'hi' : 'en', {
           apiKey: sarvamKey,
           speaker: dbSettings.sarvam_speaker,
           model: dbSettings.sarvam_model
         });
 
-        if (audioData) {
-          const audio = new Audio(audioData);
-          audioRef.current = audio;
-          audio.onplay = () => setIsSpeaking(true);
-          audio.onended = () => { setIsSpeaking(false); audioRef.current = null; };
-          audio.onerror = (e) => {
-            console.error('Sarvam audio element error:', e);
-            playBrowserTTS(cleanedText, targetLang);
-          };
-          audio.play().catch(err => {
-            console.error('Audio play prompt failed:', err);
-            playBrowserTTS(cleanedText, targetLang);
-          });
+        // 4. CHECK: Only proceed if this is still the most recent request
+        if (requestId !== lastRequestId.current) {
+          console.warn('Speak request invalidated by a newer request or stop call');
+          return;
+        }
+
+        if (audioChunks && audioChunks.length > 0) {
+          audioQueue.current = [...audioChunks];
+          playNextInQueue();
           return;
         }
       }
     } catch (dbErr) {
-      console.warn('DB Settings error, falling back to .env:', dbErr);
+      console.warn('DB Settings error, falling back to browser TTS:', dbErr);
     }
 
-    // 2. Free Fallback
-    playBrowserTTS(cleanedText, targetLang);
-  }, [stop, playBrowserTTS]);
+    // 5. Fallback if request is still valid
+    if (requestId === lastRequestId.current) {
+      playBrowserTTS(cleanedText, targetLang);
+    }
+  }, [stop, playBrowserTTS, playNextInQueue]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
