@@ -304,11 +304,11 @@ const AdminAISettingsPage = () => {
                       const { supabase } = await import('@/services/supabase');
                       
                       // Test 1: Connection & Auth
-                      const { data: userData, error: userError } = await supabase.from('users').select('id').limit(1);
+                      const { error: userError } = await supabase.from('users').select('id').limit(1);
                       if (userError) throw new Error('Users table check failed: ' + userError.message);
                       
                       // Test 2: Subjects Table
-                      const { data: subData, error: subError } = await supabase.from('subjects').select('id').limit(1);
+                      const { error: subError } = await supabase.from('subjects').select('id').limit(1);
                       if (subError) throw new Error('Subjects table check failed: ' + subError.message);
                       
                       toast.success('Database is healthy and reachable!', { id: loadingToast });
