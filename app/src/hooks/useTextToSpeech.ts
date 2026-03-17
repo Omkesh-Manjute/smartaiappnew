@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { getSarvamAudio } from '@/services/sarvamAPI';
 
 interface UseTextToSpeechReturn {
-  speak: (text: string, lang?: string) => void;
+  speak: (text: string, lang?: string) => Promise<void>;
   stop: () => void;
   isSpeaking: boolean;
   isPaused: boolean;
@@ -87,6 +87,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   }, []);
 
   const speak = useCallback(async (text: string, langHint?: string) => {
+    console.log('TTS Speak called:', { text: text.substring(0, 50), langHint });
     // Cancel any ongoing speech
     stop();
 
@@ -120,9 +121,16 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
           playBrowserTTS(cleanedText, langHint);
         };
 
-        audio.play();
+        audio.play().catch(e => {
+          console.error('Audio play failed:', e);
+          playBrowserTTS(cleanedText, langHint);
+        });
         return;
+      } else {
+        console.log('No audio data received from Sarvam, falling back...');
       }
+    } else {
+      console.log('No Sarvam API key found, using browser TTS');
     }
 
     // 2. Fallback to Browser native TTS
@@ -130,7 +138,11 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   }, [stop]);
 
   const playBrowserTTS = (text: string, langHint?: string) => {
-    if (!('speechSynthesis' in window)) return;
+    console.log('Playing Browser TTS:', { text: text.substring(0, 50), langHint });
+    if (!('speechSynthesis' in window)) {
+      console.error('speechSynthesis not supported in window');
+      return;
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = rate;

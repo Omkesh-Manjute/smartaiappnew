@@ -348,7 +348,11 @@ const VoicePracticePage = () => {
     const recognition = new RecognitionCtor();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    
+    // Dynamic language detection for recognition
+    const isHindi = /[\u0900-\u097F]/.test(activePromptText);
+    recognition.lang = isHindi ? 'hi-IN' : 'en-US';
+    console.log('Recognition initialized with lang:', recognition.lang);
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -471,9 +475,11 @@ const VoicePracticePage = () => {
 
     resetAttemptState();
     sessionStartRef.current = Date.now();
+    console.log('Starting speech recognition...', { mode, activePromptText });
 
     try {
       if (navigator.mediaDevices?.getUserMedia) {
+        console.log('Requesting microphone access...');
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -485,13 +491,18 @@ const VoicePracticePage = () => {
   };
 
   const stopListening = () => {
+    console.log('Stopping speech recognition...');
     if (!recognitionRef.current || !isListening) return;
     pendingEvaluationRef.current = true;
     recognitionRef.current.stop();
   };
 
   const evaluateAttempt = async (spokenText: string) => {
-    if (!user) return;
+    console.log('Evaluating attempt:', { spokenText, expected: activePromptText });
+    if (!user) {
+      console.warn('No user found in evaluateAttempt');
+      return;
+    }
 
     const durationSeconds = sessionStartRef.current
       ? (Date.now() - sessionStartRef.current) / 1000
@@ -505,6 +516,8 @@ const VoicePracticePage = () => {
       activeTargetWpm
     );
 
+    console.log('Local evaluation result:', result);
+
     // Get AI feedback in background
     getVoicePracticeFeedback(activePromptText, spokenText, {
       pronunciation: result.pronunciation,
@@ -513,13 +526,16 @@ const VoicePracticePage = () => {
       wpm: result.wpm,
       targetWpm: activeTargetWpm,
     }).then((aiFeedback) => {
+      console.log('AI feedback received:', aiFeedback);
       setFeedback((prev) => prev ? {
         ...prev,
         aiTips: aiFeedback.tips,
         syllableHints: aiFeedback.syllableHints,
         aiComment: aiFeedback.overallComment,
       } : prev);
-    }).catch(() => { /* AI feedback is optional */ });
+    }).catch((err) => { 
+      console.error('AI feedback failed:', err);
+    });
 
     setFeedback(result);
 
