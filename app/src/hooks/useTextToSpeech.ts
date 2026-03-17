@@ -175,7 +175,14 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     const requestId = lastRequestId.current;
 
     if (!text) return;
-    const cleanedText = text.replace(/[*_~`#]/g, '').trim();
+    const cleanedText = text
+      .replace(/[*_~`#]/g, '')
+      .replace(/\bHindi\b/g, 'हिन्दी')
+      .replace(/\bhindi\b/g, 'हिन्दी')
+      .replace(/\(/g, ', ')
+      .replace(/\)/g, ', ')
+      .replace(/\s+/g, ' ')
+      .trim();
     const hasHindiChar = /[\u0900-\u097F]/.test(cleanedText);
     const targetLang = langHint || (hasHindiChar ? 'hi-IN' : 'en-US');
 

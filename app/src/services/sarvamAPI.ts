@@ -6,18 +6,32 @@
 const SARVAM_API_URL = 'https://api.sarvam.ai/text-to-speech';
 const API_KEY = (import.meta.env.VITE_SARVAM_API_KEY || '').trim();
 
-// Improves reading of math formulas
-const formatMathForSpeech = (text: string): string => {
+// Cleans and prepares text for a natural speaking voice
+const prepareTextForSpeech = (text: string): string => {
   return text
+    // 1. Phonetic fixes for common mispronunciations
+    .replace(/\bHindi\b/g, 'हिन्दी')
+    .replace(/\bhindi\b/g, 'हिन्दी')
+    
+    // 2. Remove brackets symbols (replace with comma for a natural pause)
+    // The engine won't say "bracket", it will just stop for a millisecond
+    .replace(/\(/g, ', ')
+    .replace(/\)/g, ', ')
+
+    // 3. Remove Markdown-style symbols that shouldn't be spoken
+    .replace(/[*_#~`]/g, ' ')
+    .replace(/^\s*[-•]\s*/gm, ' ') // Remove bullet points at start of lines
+
+    // 4. Handle math symbols naturally
     .replace(/=/g, ' equals ')
     .replace(/\+/g, ' plus ')
     .replace(/-/g, ' minus ')
     .replace(/\//g, ' divided by ')
     .replace(/\*/g, ' multiplied by ')
-    .replace(/\(/g, ' bracket start ')
-    .replace(/\)/g, ' bracket end ')
     .replace(/%/g, ' percent ')
     .replace(/\^/g, ' to the power of ')
+    
+    // 5. Cleanup whitespace
     .replace(/\s+/g, ' ')
     .trim();
 };
@@ -61,7 +75,7 @@ export const getSarvamAudio = async (
   if (!currentKey) return null;
 
   try {
-    const formattedText = formatMathForSpeech(text);
+    const formattedText = prepareTextForSpeech(text);
     const chunks = chunkText(formattedText);
     const audioChunks: string[] = [];
 
