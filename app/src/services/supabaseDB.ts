@@ -2117,6 +2117,10 @@ export const seedSampleData = async () => {
      }
   }
 
+  // Get a valid user ID to use as creator for tests (to avoid foreign key violations)
+  const { data: userData } = await supabase.from('users').select('id').limit(1).single();
+  const validAdminId = userData?.id;
+
   // 2. Seed Tests
   for (const test of class5Tests) {
     stats.tests.total++;
@@ -2130,7 +2134,7 @@ export const seedSampleData = async () => {
       duration: test.duration,
       total_marks: test.totalMarks,
       passing_marks: test.passingMarks,
-      created_by: test.createdBy,
+      created_by: validAdminId || test.createdBy,
       is_active: test.isActive,
       created_at: new Date().toISOString(),
     });
