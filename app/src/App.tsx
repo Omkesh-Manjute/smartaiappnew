@@ -35,6 +35,7 @@ import TestResultsPage from '@/pages/teacher/TestResultsPage';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import UserManagementPage from '@/pages/admin/UserManagementPage';
 import SubjectManagementPage from '@/pages/admin/SubjectManagementPage';
+import AdminAISettingsPage from '@/pages/admin/AdminAISettingsPage';
 
 // Parent Pages
 import ParentDashboardPage from '@/pages/parent/ParentDashboardPage';
@@ -141,6 +142,11 @@ function App() {
           <Route path="/admin/subjects" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <SubjectManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/ai-settings" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminAISettingsPage />
             </ProtectedRoute>
           } />
 

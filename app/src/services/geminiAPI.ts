@@ -1,8 +1,7 @@
-// Gemini Flash API Service for AI Test Generation and AI Tutor
+import { SystemSettingsService } from './SystemSettingsService';
 
 const GEMINI_API_KEY = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
 const GEMINI_MODEL = (import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 export interface GeneratedQuestion {
   question: string;
@@ -58,15 +57,67 @@ export interface TutorMessage {
 
 export type TutorMode = 'simple' | 'teacher' | 'exam' | 'quiz';
 
+const callGroq = async (prompt: string, messages: TutorMessage[], settings: any): Promise<string> => {
+  const apiKey = settings.groq_api_key || import.meta.env.VITE_GROQ_API_KEY;
+  if (!apiKey) throw new Error('Groq API Key not configured');
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: settings.groq_model || 'llama-3.1-70b-versatile',
+      messages: [
+        ...messages.map(m => ({ role: m.role === 'model' ? 'assistant' : 'user', content: m.content })),
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+    }),
+  });
+
+  const rawText = await response.text();
+  if (!response.ok) throw new Error(`Groq API Error: ${response.status} - ${rawText}`);
+  
+  const data = JSON.parse(rawText);
+  return data.choices?.[0]?.message?.content || '';
+};
+
+const callIntelligence = async (prompt: string, previousMessages: TutorMessage[] = []): Promise<string> => {
+  const settings = await SystemSettingsService.getSettings();
+  
+  if (settings.ai_provider === 'groq') {
+    return callGroq(prompt, previousMessages, settings);
+  }
+  
+  const contents = [
+    ...previousMessages.map(m => ({
+      role: m.role === 'model' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    })),
+    { role: 'user', parts: [{ text: prompt }] }
+  ];
+
+  return callGemini(contents, { temperature: 0.7, maxOutputTokens: 2048 }, settings);
+};
+
 const callGemini = async (
   contents: Array<{ role?: string; parts: Array<{ text: string }> }>,
-  generationConfig: { temperature: number; maxOutputTokens: number }
+  generationConfig: { temperature: number; maxOutputTokens: number },
+  settings?: any
 ): Promise<string> => {
-  if (!GEMINI_API_KEY) {
+  const apiKey = settings?.gemini_api_key || GEMINI_API_KEY;
+  const modelName = settings?.gemini_model || GEMINI_MODEL;
+  
+  if (!apiKey) {
     throw new Error('Gemini API key is not configured');
   }
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -384,7 +435,7 @@ export const getTutorResponse = async (
       // Server endpoint failed, fall through to client-side Gemini
     }
 
-    // Client-side Gemini call with mode-specific prompt
+    // Client-side AI call with mode-specific prompt
     const mode = context?.mode || 'teacher';
     const systemPrompt = getModeSystemPrompt(mode);
 
@@ -392,27 +443,10 @@ export const getTutorResponse = async (
     if (context?.subject) contextParts.push(`Subject: ${context.subject}`);
     if (context?.chapter) contextParts.push(`Chapter: ${context.chapter}`);
 
-    const fullPrompt = `${systemPrompt}\n\n${contextParts.length ? contextParts.join('\n') + '\n\n' : ''}Student's question: ${message}`;
+    const prompt = `${systemPrompt}\n\n${contextParts.length ? contextParts.join('\n') + '\n\n' : ''}Student's question: ${message}`;
+    const previousMessages = context?.previousMessages?.slice(-5) || [];
 
-    const contents: Array<{ role?: string; parts: Array<{ text: string }> }> = [];
-
-    // Add previous messages for context
-    if (context?.previousMessages?.length) {
-      for (const msg of context.previousMessages.slice(-5)) {
-        contents.push({
-          role: msg.role === 'model' ? 'model' : 'user',
-          parts: [{ text: msg.content }],
-        });
-      }
-    }
-
-    contents.push({ role: 'user', parts: [{ text: fullPrompt }] });
-
-    const text = await callGemini(contents, {
-      temperature: mode === 'quiz' ? 0.8 : 0.7,
-      maxOutputTokens: 2048,
-    });
-
+    const text = await callIntelligence(prompt, previousMessages);
     return text;
   } catch (error) {
     console.error('Error getting tutor response:', error);

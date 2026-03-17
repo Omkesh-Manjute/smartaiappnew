@@ -18,6 +18,7 @@ import {
   Download,
   BarChart3,
   TrendingUp,
+  Sparkles,
 } from 'lucide-react';
 import type { User } from '@/types';
 
@@ -156,6 +157,7 @@ const AdminDashboard = () => {
               { label: 'Dashboard', path: '/admin/dashboard', active: true },
               { label: 'Users', path: '/admin/users' },
               { label: 'Subjects', path: '/admin/subjects' },
+              { label: 'AI Settings', path: '/admin/ai-settings' },
             ].map((item) => (
               <button
                 key={item.label}
@@ -233,6 +235,13 @@ const AdminDashboard = () => {
                 <span className="flex items-center gap-2">
                   <School className="w-4 h-4" />
                   School Subscriptions
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button onClick={() => navigate('/admin/ai-settings')} variant="outline" className="w-full justify-between border-blue-200 bg-blue-50/20 hover:bg-blue-50">
+                <span className="flex items-center gap-2 text-blue-700">
+                  <Sparkles className="w-4 h-4" />
+                  AI System Settings
                 </span>
                 <ChevronRight className="w-4 h-4" />
               </Button>

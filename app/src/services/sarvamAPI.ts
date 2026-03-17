@@ -6,72 +6,101 @@
 const SARVAM_API_URL = 'https://api.sarvam.ai/text-to-speech';
 const API_KEY = (import.meta.env.VITE_SARVAM_API_KEY || '').trim();
 
-export interface SarvamTTSRequest {
-  inputs: string[];
-  target_language_code: string;
-  speaker?: string;
-  pitch?: number;
-  pace?: number;
-  loudness?: number;
-  speech_sample_rate?: number;
-  model?: string;
-}
+// Improves reading of math formulas
+const formatMathForSpeech = (text: string): string => {
+  return text
+    .replace(/=/g, ' equals ')
+    .replace(/\+/g, ' plus ')
+    .replace(/-/g, ' minus ')
+    .replace(/\//g, ' divided by ')
+    .replace(/\*/g, ' multiplied by ')
+    .replace(/\(/g, ' bracket start ')
+    .replace(/\)/g, ' bracket end ')
+    .replace(/%/g, ' percent ')
+    .replace(/\^/g, ' to the power of ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Recursive text chunker (Sarvam has a 500 char limit)
+const chunkText = (text: string, limit: number = 450): string[] => {
+  if (text.length <= limit) return [text];
+  
+  const chunks: string[] = [];
+  let currentPos = 0;
+  
+  while (currentPos < text.length) {
+    let endPos = currentPos + limit;
+    if (endPos >= text.length) {
+      chunks.push(text.substring(currentPos));
+      break;
+    }
+    
+    // Look for last sentence break or space to avoid cutting words
+    const lastSpace = text.lastIndexOf(' ', endPos);
+    const lastFullStop = text.lastIndexOf('. ', endPos);
+    const splitAt = lastFullStop > currentPos ? lastFullStop + 1 : (lastSpace > currentPos ? lastSpace : endPos);
+    
+    chunks.push(text.substring(currentPos, splitAt).trim());
+    currentPos = splitAt;
+  }
+  
+  return chunks;
+};
 
 export interface SarvamTTSResponse {
   audios: string[];
 }
 
-export const getSarvamAudio = async (text: string, lang: 'hi' | 'en' = 'hi'): Promise<string | null> => {
-  const hasKey = !!API_KEY;
-  console.log('Sarvam TTS Service Call:', { 
-    text: text.substring(0, 50) + '...', 
-    lang, 
-    hasKey, 
-    keyLength: API_KEY?.length 
-  });
-  
-  if (!API_KEY) {
-    console.warn('Sarvam API key (VITE_SARVAM_API_KEY) missing in .env');
-    return null;
-  }
+export const getSarvamAudio = async (
+  text: string, 
+  lang: 'hi' | 'en' = 'hi', 
+  config?: { apiKey?: string; speaker?: string; model?: string }
+): Promise<string | null> => {
+  const currentKey = (config?.apiKey || API_KEY || '').trim();
+  if (!currentKey) return null;
 
   try {
-    const response = await fetch(SARVAM_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-subscription-key': API_KEY,
-      },
-      body: JSON.stringify({
-        inputs: [text],
-        target_language_code: lang === 'hi' ? 'hi-IN' : 'en-IN',
-        speaker: 'meera',
-        model: 'bulbul:v1'
-      }), // Removed explicit cast to allow more flexible JSON
-    });
+    const formattedText = formatMathForSpeech(text);
+    const chunks = chunkText(formattedText);
+    const audioChunks: string[] = [];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Sarvam API Raw Error:', errorText);
-      try {
-        const errorData = JSON.parse(errorText);
-        throw new Error(`Sarvam API error: ${response.status} - ${errorData.message || 'Unknown'}`);
-      } catch (e) {
-        throw new Error(`Sarvam API error: ${response.status} - ${errorText.substring(0, 100)}`);
+    const speaker = config?.speaker || 'anushka';
+    const model = config?.model || 'bulbul:v2';
+
+    console.log(`Processing Sarvam TTS (${model}/${speaker}) in ${chunks.length} chunks...`);
+
+    for (const chunk of chunks) {
+      const response = await fetch(SARVAM_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-subscription-key': currentKey,
+        },
+        body: JSON.stringify({
+          inputs: [chunk],
+          target_language_code: lang === 'hi' ? 'hi-IN' : 'en-IN',
+          speaker: speaker,
+          model: model
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Sarvam Chunk Error:', errorText);
+        continue;
+      }
+
+      const data: SarvamTTSResponse = await response.json();
+      if (data.audios && data.audios.length > 0) {
+        audioChunks.push(data.audios[0]);
       }
     }
 
-    const data: SarvamTTSResponse = await response.json();
-    console.log('Sarvam API Success:', { voice: 'meera', count: data.audios?.length });
-    
-    if (data.audios && data.audios.length > 0) {
-      return `data:audio/wav;base64,${data.audios[0]}`;
-    }
-
-    console.warn('Sarvam API returned no audio data');
-    return null;
+    if (audioChunks.length === 0) return null;
+    return `data:audio/wav;base64,${audioChunks[0]}`;
   } catch (error) {
-    console.error('Error fetching audio from Sarvam AI:', error);
+    console.error('Error in Sarvam Service:', error);
     return null;
   }
 };

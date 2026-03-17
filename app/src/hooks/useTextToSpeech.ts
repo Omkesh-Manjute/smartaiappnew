@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getSarvamAudio } from '@/services/sarvamAPI';
+import { SystemSettingsService } from '@/services/SystemSettingsService';
 
 interface UseTextToSpeechReturn {
   speak: (text: string, langHint?: string) => Promise<void>;
@@ -141,25 +142,36 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     const hasHindiChar = /[\u0900-\u097F]/.test(cleanedText);
     const targetLang = langHint || (hasHindiChar ? 'hi-IN' : 'en-US');
 
-    // 1. Try Sarvam AI PREMIUM Option
-    const sarvamApiKey = import.meta.env.VITE_SARVAM_API_KEY;
-    if (sarvamApiKey) {
-      const audioData = await getSarvamAudio(cleanedText, hasHindiChar ? 'hi' : 'en');
-      if (audioData) {
-        const audio = new Audio(audioData);
-        audioRef.current = audio;
-        audio.onplay = () => setIsSpeaking(true);
-        audio.onended = () => { setIsSpeaking(false); audioRef.current = null; };
-        audio.onerror = (e) => {
-          console.error('Sarvam audio element error:', e);
-          playBrowserTTS(cleanedText, targetLang);
-        };
-        audio.play().catch(err => {
-          console.error('Audio play prompt failed:', err);
-          playBrowserTTS(cleanedText, targetLang);
+    // 1. Try Sarvam AI PREMIUM Option (Dynamic Config)
+    try {
+      const dbSettings = await SystemSettingsService.getSettings();
+      const sarvamKey = dbSettings.sarvam_api_key || import.meta.env.VITE_SARVAM_API_KEY;
+      
+      if (sarvamKey) {
+        const audioData = await getSarvamAudio(cleanedText, hasHindiChar ? 'hi' : 'en', {
+          apiKey: sarvamKey,
+          speaker: dbSettings.sarvam_speaker,
+          model: dbSettings.sarvam_model
         });
-        return;
+
+        if (audioData) {
+          const audio = new Audio(audioData);
+          audioRef.current = audio;
+          audio.onplay = () => setIsSpeaking(true);
+          audio.onended = () => { setIsSpeaking(false); audioRef.current = null; };
+          audio.onerror = (e) => {
+            console.error('Sarvam audio element error:', e);
+            playBrowserTTS(cleanedText, targetLang);
+          };
+          audio.play().catch(err => {
+            console.error('Audio play prompt failed:', err);
+            playBrowserTTS(cleanedText, targetLang);
+          });
+          return;
+        }
       }
+    } catch (dbErr) {
+      console.warn('DB Settings error, falling back to .env:', dbErr);
     }
 
     // 2. Free Fallback
