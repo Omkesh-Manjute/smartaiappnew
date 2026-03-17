@@ -138,44 +138,65 @@ export const class6Subjects: Subject[] = [
         name: 'Motion and Measurement of Distances',
         description: 'Basics of motion and standard units of measurement.',
         order: 10,
-        content: `## Chapter 10: Motion and Measurement of Distances`,
-        mcqs: []
+        content: `## Chapter 10: Motion and Measurement of Distances\n\n### Topic 1: Types of Motion\nMotion is movement of object. Types include rectilinear, circular and periodic motion.\n\n**Key Points:**\n- Rectilinear motion: Motion in a straight line\n- Circular motion: Motion in a circle\n- Periodic motion: Motion that repeats at regular intervals\n`,
+        mcqs: [
+          { id: 'sci-6-ch10-q1', question: 'Swing motion is?', options: ['Circular', 'Periodic', 'Rectilinear', 'None'], correctAnswer: 1, explanation: 'The motion of a swing repeats itself after a fixed interval, so it is periodic.', difficulty: 'easy' },
+          { id: 'sci-6-ch10-q2', question: 'Earth rotation is?', options: ['Circular', 'Linear', 'Static', 'None'], correctAnswer: 0, explanation: 'The rotation of Earth on its axis is a circular/rotational motion.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch11',
         subjectId: 'science-6',
         name: 'Light, Shadows and Reflections',
-        description: 'Properties of light and how shadows are formed.',
+        description: 'Properties of light, shadows, and reflection.',
         order: 11,
-        content: `## Chapter 11: Light, Shadows and Reflections`,
-        mcqs: []
+        content: `## Chapter 11: Light, Shadows and Reflections\n\n### Topic 1: Light and Its Properties\nLight is a form of energy that helps us see objects. Light travels in a straight line, which is called rectilinear propagation of light. Without light, we cannot see anything.\n\n**Key Points:**\n- Light helps us see objects\n- Light travels in straight line\n- Source of light: Sun, bulb\n\n---\n\n### Topic 2: Transparent, Opaque, Translucent\nTransparent objects allow light to pass (glass), opaque block light (wood), translucent allow partial light (paper).\n\n**Key Points:**\n- Transparent: Clear visibility\n- Opaque: No visibility\n- Translucent: Partial visibility\n\n---\n\n### Topic 3: Shadows and Reflection\nShadow forms when an object blocks light. Reflection occurs when light bounces from a surface like a mirror.\n\n**Key Points:**\n- Shadows show the shape of objects\n- Mirrors change the direction of light\n\n---\n\n### Practice Questions\n1. **What is light?**\n   *Answer: A form of energy that helps us see.*\n`,
+        mcqs: [
+          { id: 'sci-6-ch11-q1', question: 'Light travels in?', options: ['Circle', 'Straight line', 'Zig-zag', 'None'], correctAnswer: 1, explanation: 'Light always travels in a straight line.', difficulty: 'easy' },
+          { id: 'sci-6-ch11-q2', question: 'Main source of light is?', options: ['Moon', 'Sun', 'Earth', 'Water'], correctAnswer: 1, explanation: 'The Sun is the primary natural source of light for Earth.', difficulty: 'easy' },
+          { id: 'sci-6-ch11-q3', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1, explanation: 'Light passes clearly through glass.', difficulty: 'easy' },
+          { id: 'sci-6-ch11-q4', question: 'Shadow is formed when?', options: ['Light passes', 'Light blocked', 'Heat', 'None'], correctAnswer: 1, explanation: 'A shadow is formed when an opaque object comes in the path of light.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch12',
         subjectId: 'science-6',
         name: 'Electricity and Circuits',
-        description: 'Electric cells, bulbs, and basic circuits.',
+        description: 'Electric current, circuits, and devices.',
         order: 12,
-        content: `## Chapter 12: Electricity and Circuits`,
-        mcqs: []
+        content: `## Chapter 12: Electricity and Circuits\n\n### Topic 1: Electric Current\nElectric current is the flow of electric charges in a circuit. It flows from positive terminal to negative terminal.\n\n**Key Points:**\n- Flow of electric charges\n- Needs closed circuit\n- Battery is source\n\n---\n\n### Topic 2: Electric Circuit\nA complete path through which current flows is called a circuit. If the circuit is broken, current stops.\n\n**Key Points:**\n- Closed circuit: Current flows\n- Open circuit: Current stops\n\n---\n\n### Topic 3: Electric Devices\nDevices like bulbs, switches and wires help control electricity. A switch turns circuit ON/OFF.\n\n**Key Points:**\n- Switch controls the circuit\n- Bulb glows when current passes\n`,
+        mcqs: [
+          { id: 'sci-6-ch12-q1', question: 'Electric current flows in?', options: ['Open circuit', 'Closed circuit', 'Air', 'Water'], correctAnswer: 1, explanation: ' Electricity needs a continuous closed path to flow.', difficulty: 'easy' },
+          { id: 'sci-6-ch12-q2', question: 'Source of electricity?', options: ['Battery', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'A battery or electric cell provides electrical energy.', difficulty: 'easy' },
+          { id: 'sci-6-ch12-q3', question: 'Broken circuit is?', options: ['Closed', 'Open', 'None', 'Full'], correctAnswer: 1, explanation: 'An open circuit has a break, so no current flows.', difficulty: 'easy' },
+          { id: 'sci-6-ch12-q4', question: 'Switch is used for?', options: ['Increase current', 'Control current', 'Store current', 'None'], correctAnswer: 1, explanation: 'A switch is used to either break the circuit or complete it.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch13',
         subjectId: 'science-6',
         name: 'Fun with Magnets',
-        description: 'Discovery of magnets and their properties.',
+        description: 'Properties and uses of magnets.',
         order: 13,
-        content: `## Chapter 13: Fun with Magnets`,
-        mcqs: []
+        content: `## Chapter 13: Fun with Magnets\n\n### Topic 1: Magnets and Properties\nMagnets attract iron objects. They have two poles: north and south. Like poles repel and unlike poles attract.\n\n**Key Points:**\n- Attract iron\n- Two poles: North (N) & South (S)\n- Like poles repel, unlike attract\n\n---\n\n### Topic 2: Uses of Magnets\nMagnets are used in compass, fridge doors, cranes to lift iron.\n\n**Key Points:**\n- Compass for directions\n- Magnetic separation in industries\n`,
+        mcqs: [
+          { id: 'sci-6-ch13-q1', question: 'Magnets attract?', options: ['Plastic', 'Iron', 'Wood', 'Water'], correctAnswer: 1, explanation: 'Magnets attract magnetic materials like iron, cobalt, and nickel.', difficulty: 'easy' },
+          { id: 'sci-6-ch13-q2', question: 'Like poles?', options: ['Attract', 'Repel', 'Mix', 'None'], correctAnswer: 1, explanation: 'Same poles (N-N or S-S) always push each other away.', difficulty: 'easy' },
+          { id: 'sci-6-ch13-q3', question: 'Compass shows?', options: ['Time', 'Direction', 'Speed', 'Heat'], correctAnswer: 1, explanation: 'Magnetic needle of a compass always points towards North-South direction.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch14',
         subjectId: 'science-6',
         name: 'Water',
-        description: 'Importance of water and the water cycle.',
+        description: 'Importance of water, water cycle, and conservation.',
         order: 14,
-        content: `## Chapter 14: Water`,
-        mcqs: []
+        content: `## Chapter 14: Water\n\n### Topic 1: Sources of Water\nWater is found in rivers, lakes, oceans and underground. It is essential for all living beings.\n\n**Key Points:**\n- Essential for life\n- Sources: river, lake, rain\n- Used in daily life\n\n---\n\n### Topic 2: Water Cycle\nWater evaporates, forms clouds and falls as rain. This process is called water cycle.\n\n**Key Points:**\n- Evaporation and Condensation\n- Continuous movement of water\n\n---\n\n### Topic 3: Conservation of Water\nWater should be saved by rainwater harvesting and avoiding wastage.\n\n**Key Points:**\n- Save every drop\n- Rainwater harvesting\n`,
+        mcqs: [
+          { id: 'sci-6-ch14-q1', question: 'Water is needed for?', options: ['Plants', 'Animals', 'Humans', 'All'], correctAnswer: 3, explanation: 'Water is the basis of life for all organisms.', difficulty: 'easy' },
+          { id: 'sci-6-ch14-q2', question: 'Water cycle includes?', options: ['Evaporation', 'Condensation', 'Rain', 'All'], correctAnswer: 3, explanation: 'It is a complex cycle involving all these processes.', difficulty: 'easy' },
+          { id: 'sci-6-ch14-q3', question: 'Saving water is?', options: ['Important', 'Not needed', 'Waste', 'None'], correctAnswer: 0, explanation: 'Fresh water is limited, so conservation is vital.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch15',
@@ -183,8 +204,11 @@ export const class6Subjects: Subject[] = [
         name: 'Air Around Us',
         description: 'Composition and importance of air.',
         order: 15,
-        content: `## Chapter 15: Air Around Us`,
-        mcqs: []
+        content: `## Chapter 15: Air Around Us\n\n### Topic 1: Composition of Air\nAir contains nitrogen, oxygen, carbon dioxide and other gases. Oxygen is needed for breathing.\n\n**Key Points:**\n- Air is mixture of gases\n- Oxygen for breathing\n- CO2 for plants (Photosynthesis)\n\n---\n\n### Topic 2: Importance of Air\nAir is needed for breathing, burning and flying.\n\n**Key Points:**\n- Supports combustion (burning)\n- Needed by all living beings\n`,
+        mcqs: [
+          { id: 'sci-6-ch15-q1', question: 'Air contains?', options: ['Only oxygen', 'Only nitrogen', 'Many gases', 'None'], correctAnswer: 2, explanation: 'Air is a mixture of several gases like Nitrogen, Oxygen, CO2, etc.', difficulty: 'easy' },
+          { id: 'sci-6-ch15-q2', question: 'Air is needed for?', options: ['Breathing', 'Burning', 'Flying', 'All'], correctAnswer: 3, explanation: 'Air performs many vital functions for survival and science.', difficulty: 'easy' },
+        ]
       },
       {
         id: 'sci-6-ch16',
@@ -192,8 +216,12 @@ export const class6Subjects: Subject[] = [
         name: 'Garbage In Garbage Out',
         description: 'Waste management and vermicomposting.',
         order: 16,
-        content: `## Chapter 16: Garbage In Garbage Out`,
-        mcqs: []
+        content: `## Chapter 16: Garbage In Garbage Out\n\n### Topic 1: Types of Waste\nWaste can be biodegradable (decomposes) and non-biodegradable (does not decompose).\n\n**Key Points:**\n- Biodegradable waste: Kitchen waste, paper\n- Non-biodegradable waste: Plastic, glass, metal\n- Waste management needed\n\n---\n\n### Topic 2: Waste Management\nWe should reduce, reuse and recycle waste to protect environment.\n\n**Key Points:**\n- 3R principle\n- Segregation of waste\n\n---\n\n### Topic 3: Composting\nBiodegradable waste can be converted into manure using composting.\n\n**Key Points:**\n- Redworms are used in Vermicomposting\n- Natural manure for plants\n`,
+        mcqs: [
+          { id: 'sci-6-ch16-q1', question: 'Plastic is?', options: ['Biodegradable', 'Non-biodegradable', 'Both', 'None'], correctAnswer: 1, explanation: 'Plastic does not rot or decompose naturally.', difficulty: 'easy' },
+          { id: 'sci-6-ch16-q2', question: '3R means?', options: ['Reduce Reuse Recycle', 'Run Rest Read', 'None', 'All'], correctAnswer: 0, explanation: 'These are the three pillars of effective waste management.', difficulty: 'easy' },
+          { id: 'sci-6-ch16-q3', question: 'Compost is?', options: ['Waste', 'Manure', 'Plastic', 'Metal'], correctAnswer: 1, explanation: 'Compost is nutrient-rich organic manure.', difficulty: 'easy' },
+        ]
       }
     ]
   }
