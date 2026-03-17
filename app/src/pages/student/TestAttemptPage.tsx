@@ -220,7 +220,7 @@ const TestAttemptPage = () => {
   if (isCompleted && result) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-4xl w-full">
           <CardContent className="p-6 text-center">
             <motion.div
               initial={{ scale: 0 }}
@@ -275,7 +275,7 @@ const TestAttemptPage = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-8">
               <Button variant="outline" onClick={() => navigate('/student/tests')} className="flex-1">
                 <Home className="w-4 h-4 mr-2" />
                 Back to Tests
@@ -284,6 +284,60 @@ const TestAttemptPage = () => {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Retake
               </Button>
+            </div>
+
+            <div className="text-left border-t pt-8">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                Review Answers
+              </h3>
+              <div className="space-y-6">
+                {test.questions.map((q, idx) => {
+                  const isCorrect = answers[idx] === q.correctAnswer;
+                  return (
+                    <div key={idx} className="bg-white border rounded-xl overflow-hidden">
+                      <div className="p-4 border-b bg-gray-50 flex items-start gap-3">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 ${
+                          isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                        <p className="font-medium text-gray-800">{q.question}</p>
+                      </div>
+                      <div className="p-4 space-y-2">
+                        {q.options.map((option, optIdx) => {
+                          const isSelected = answers[idx] === optIdx;
+                          const isCorrectOpt = q.correctAnswer === optIdx;
+                          
+                          let bgClass = 'bg-white border-gray-200';
+                          let textClass = 'text-gray-600';
+                          let icon = null;
+
+                          if (isCorrectOpt) {
+                            bgClass = 'bg-green-50 border-green-200';
+                            textClass = 'text-green-700 font-medium';
+                            icon = <CheckCircle className="w-4 h-4" />;
+                          } else if (isSelected && !isCorrect) {
+                            bgClass = 'bg-red-50 border-red-200';
+                            textClass = 'text-red-700 font-medium';
+                            icon = <AlertCircle className="w-4 h-4" />;
+                          }
+
+                          return (
+                            <div
+                              key={optIdx}
+                              className={`flex items-center justify-between p-3 rounded-lg border text-sm ${bgClass} ${textClass}`}
+                            >
+                              <span>{String.fromCharCode(65 + optIdx)}. {option}</span>
+                              {icon}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
