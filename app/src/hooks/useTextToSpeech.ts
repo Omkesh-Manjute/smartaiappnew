@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { getSarvamAudio } from '@/services/sarvamAPI';
 
 interface UseTextToSpeechReturn {
   speak: (text: string, lang?: string) => void;
@@ -34,12 +35,14 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isSarvamPlaying, setIsSarvamPlaying] = useState(false);
 
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const supported = typeof window !== 'undefined' && ('speechSynthesis' in window || !!audioRef);
 
   // Load available voices
   useEffect(() => {
-    if (!supported) return;
+    if (!('speechSynthesis' in window)) return;
 
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
@@ -63,18 +66,73 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
-  }, [supported, selectedVoice]);
+  }, [selectedVoice]);
 
-  const speak = useCallback((text: string, langHint?: string) => {
-    if (!supported) return;
+  const stop = useCallback(() => {
+    // Stop browser TTS
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Stop Sarvam Audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    
+    setIsSpeaking(false);
+    setIsPaused(false);
+    setIsSarvamPlaying(false);
+  }, []);
 
+  const speak = useCallback(async (text: string, langHint?: string) => {
     // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+    stop();
 
     const cleanedText = cleanContentForSpeech(text);
     if (!cleanedText) return;
 
-    const utterance = new SpeechSynthesisUtterance(cleanedText);
+    // 1. Try Sarvam AI first if hint is Hindi or general
+    const sarvamApiKey = import.meta.env.VITE_SARVAM_API_KEY;
+    if (sarvamApiKey) {
+      const lang = langHint === 'hi' ? 'hi' : 'en';
+      const audioData = await getSarvamAudio(cleanedText, lang);
+      
+      if (audioData) {
+        const audio = new Audio(audioData);
+        audioRef.current = audio;
+        
+        audio.onplay = () => {
+          setIsSpeaking(true);
+          setIsSarvamPlaying(true);
+        };
+        
+        audio.onended = () => {
+          setIsSpeaking(false);
+          setIsSarvamPlaying(false);
+        };
+        
+        audio.onerror = () => {
+          console.error('Sarvam Audio playback error, falling back to browser TTS');
+          setIsSarvamPlaying(false);
+          // FALLBACK to browser TTS
+          playBrowserTTS(cleanedText, langHint);
+        };
+
+        audio.play();
+        return;
+      }
+    }
+
+    // 2. Fallback to Browser native TTS
+    playBrowserTTS(cleanedText, langHint);
+  }, [stop]);
+
+  const playBrowserTTS = (text: string, langHint?: string) => {
+    if (!('speechSynthesis' in window)) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = rate;
     utterance.pitch = 1;
     utterance.volume = 1;
@@ -116,26 +174,25 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
 
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [supported, rate, selectedVoice, voices]);
-
-  const stop = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-    setIsPaused(false);
-  }, [supported]);
+  };
 
   const pause = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.pause();
+    if (isSarvamPlaying && audioRef.current) {
+      audioRef.current.pause();
+    } else if ('speechSynthesis' in window) {
+      window.speechSynthesis.pause();
+    }
     setIsPaused(true);
-  }, [supported]);
+  }, [isSarvamPlaying]);
 
   const resume = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.resume();
+    if (isSarvamPlaying && audioRef.current) {
+      audioRef.current.play();
+    } else if ('speechSynthesis' in window) {
+      window.speechSynthesis.resume();
+    }
     setIsPaused(false);
-  }, [supported]);
+  }, [isSarvamPlaying]);
 
   return {
     speak,
