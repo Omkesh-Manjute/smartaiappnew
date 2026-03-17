@@ -36,7 +36,11 @@ const SubjectsPage = () => {
           const subject = allSubjects.find((s) => s.id === subjectId);
           if (subject) {
             setSelectedSubject(subject);
+          } else {
+            setSelectedSubject(null);
           }
+        } else {
+          setSelectedSubject(null);
         }
 
         if (user) {
@@ -73,9 +77,9 @@ const SubjectsPage = () => {
 
   if (selectedSubject) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-20">
         {/* Header */}
-        <header className="bg-white border-b sticky top-0 z-10">
+        <header className="bg-white border-b sticky top-[64px] z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-4 h-16">
               <button
