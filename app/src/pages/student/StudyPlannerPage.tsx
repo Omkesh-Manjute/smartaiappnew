@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { studyPlanDB, subjectDB, gamificationDB } from '@/services/supabaseDB';
+import { studyPlanDB, subjectDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ import type { StudyPlan, Subject, StudyTask } from '@/types';
 const StudyPlannerPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addXP } = useGamification();
   const [plans, setPlans] = useState<StudyPlan[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -130,7 +132,7 @@ const StudyPlannerPage = () => {
         setPlans((prev) => prev.map((p) => (p.id === planId ? updatedPlan : p)));
 
         if (task.completed) {
-          await gamificationDB.addXP(user!.id, 10);
+          await addXP(10);
           toast.success('+10 XP for completing a task!');
         }
       } catch (error) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { gamificationDB, userDB } from '@/services/database';
+import { gamificationDB, userDB } from '@/services/supabaseDB';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -33,27 +33,38 @@ const LeaderboardPage = () => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
-    const allGamification = gamificationDB.getAll();
-    const allUsers = userDB.getAll().filter((u) => u.role === 'student');
+    const loadLeaderboard = async () => {
+      try {
+        const [allGamification, allUsers] = await Promise.all([
+          gamificationDB.getAll(),
+          userDB.getAll()
+        ]);
+        
+        const students = allUsers.filter((u) => u.role === 'student');
 
-    const leaderboardData: LeaderboardEntry[] = allUsers
-      .map((u) => {
-        const gamification = allGamification.find((g) => g.studentId === u.id);
-        return {
-          userId: u.id,
-          name: u.name,
-          avatar: u.avatar || '',
-          xp: gamification?.xp || 0,
-          level: gamification?.level || 1,
-          badges: gamification?.badges.length || 0,
-          streak: gamification?.streak || 0,
-          rank: 0,
-        };
-      })
-      .sort((a, b) => b.xp - a.xp)
-      .map((entry, index) => ({ ...entry, rank: index + 1 }));
+        const leaderboardData: LeaderboardEntry[] = students
+          .map((u) => {
+            const gamification = allGamification.find((g) => g.studentId === u.id);
+            return {
+              userId: u.id,
+              name: u.name,
+              avatar: u.avatar || '',
+              xp: gamification?.xp || 0,
+              level: gamification?.level || 1,
+              badges: gamification?.badges.length || 0,
+              streak: gamification?.streak || 0,
+              rank: 0,
+            };
+          })
+          .sort((a, b) => b.xp - a.xp)
+          .map((entry, index) => ({ ...entry, rank: index + 1 }));
 
-    setEntries(leaderboardData);
+        setEntries(leaderboardData);
+      } catch (error) {
+        console.error("Failed to load leaderboard:", error);
+      }
+    };
+    loadLeaderboard();
   }, []);
 
   const getRankIcon = (rank: number) => {

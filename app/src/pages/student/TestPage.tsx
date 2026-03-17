@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { testDB, testAttemptDB } from '@/services/database';
+import { testDB, testAttemptDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,13 +25,20 @@ const TestPage = () => {
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
 
   useEffect(() => {
-    const allTests = testDB.getAll().filter((t) => t.isActive);
-    setTests(allTests);
-
-    if (user) {
-      const userAttempts = testAttemptDB.getByStudent(user.id);
-      setAttempts(userAttempts);
-    }
+    const loadData = async () => {
+      try {
+        const [allTests, userAttempts] = await Promise.all([
+          testDB.getAll(),
+          user ? testAttemptDB.getByStudent(user.id) : Promise.resolve([])
+        ]);
+        
+        setTests(allTests.filter((t) => t.isActive));
+        setAttempts(userAttempts);
+      } catch (error) {
+        console.error("Failed to load test data:", error);
+      }
+    };
+    loadData();
   }, [user]);
 
   const getTestAttempts = (testId: string) => {

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { gamificationDB, testAttemptDB, notificationDB } from '@/services/database';
+import { testAttemptDB, notificationDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,20 +22,34 @@ import {
   LogOut,
   Edit,
 } from 'lucide-react';
-import type { GamificationData, TestAttempt, Notification } from '@/types';
+import type { TestAttempt, Notification } from '@/types';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [gamification, setGamification] = useState<GamificationData | null>(null);
+  const { gamification, isLoading: gamificationLoading } = useGamification();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      setGamification(gamificationDB.getByStudent(user.id));
-      setAttempts(testAttemptDB.getByStudent(user.id));
-      setNotifications(notificationDB.getByUser(user.id));
+      const loadData = async () => {
+        setLoading(true);
+        try {
+          const [attemptsData, notificationsData] = await Promise.all([
+            testAttemptDB.getByStudent(user.id),
+            notificationDB.getByUser(user.id),
+          ]);
+          setAttempts(attemptsData);
+          setNotifications(notificationsData);
+        } catch (error) {
+          console.error("Failed to load profile data:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadData();
     }
   }, [user]);
 
@@ -62,7 +77,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (!user || !gamification) {
+  if (!user || gamificationLoading || loading || !gamification) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>

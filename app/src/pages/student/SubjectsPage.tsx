@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subjectDB, progressDB } from '@/services/database';
+import { subjectDB, progressDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -27,24 +27,31 @@ const SubjectsPage = () => {
   const [progress, setProgress] = useState<Record<string, StudentProgress>>({});
 
   useEffect(() => {
-    const allSubjects = subjectDB.getAll();
-    setSubjects(allSubjects);
+    const loadData = async () => {
+      try {
+        const allSubjects = await subjectDB.getAll();
+        setSubjects(allSubjects);
 
-    if (subjectId) {
-      const subject = allSubjects.find((s) => s.id === subjectId);
-      if (subject) {
-        setSelectedSubject(subject);
+        if (subjectId) {
+          const subject = allSubjects.find((s) => s.id === subjectId);
+          if (subject) {
+            setSelectedSubject(subject);
+          }
+        }
+
+        if (user) {
+          const userProgress = await progressDB.getByStudent(user.id);
+          const progressMap: Record<string, StudentProgress> = {};
+          userProgress.forEach((p) => {
+            progressMap[p.chapterId] = p;
+          });
+          setProgress(progressMap);
+        }
+      } catch (error) {
+        console.error("Failed to load subject data:", error);
       }
-    }
-
-    if (user) {
-      const userProgress = progressDB.getByStudent(user.id);
-      const progressMap: Record<string, StudentProgress> = {};
-      userProgress.forEach((p) => {
-        progressMap[p.chapterId] = p;
-      });
-      setProgress(progressMap);
-    }
+    };
+    loadData();
   }, [subjectId, user]);
 
   const getChapterStatus = (chapter: Chapter, index: number) => {

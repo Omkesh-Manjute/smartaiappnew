@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subjectDB, progressDB, gamificationDB, notificationDB } from '@/services/database';
+import { subjectDB, progressDB, notificationDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +24,7 @@ import type { Chapter, Subject } from '@/types';
 const ChapterPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addXP } = useGamification();
   const { chapterId } = useParams();
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [subject, setSubject] = useState<Subject | null>(null);
@@ -34,15 +36,22 @@ const ChapterPage = () => {
 
   useEffect(() => {
     if (chapterId) {
-      const subjects = subjectDB.getAll();
-      for (const sub of subjects) {
-        const foundChapter = sub.chapters.find((c) => c.id === chapterId);
-        if (foundChapter) {
-          setChapter(foundChapter);
-          setSubject(sub);
-          break;
+      const loadData = async () => {
+        try {
+          const subjects = await subjectDB.getAll();
+          for (const sub of subjects) {
+            const foundChapter = sub.chapters.find((c) => c.id === chapterId);
+            if (foundChapter) {
+              setChapter(foundChapter);
+              setSubject(sub);
+              break;
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load chapter data:", error);
         }
-      }
+      };
+      loadData();
     }
   }, [chapterId]);
 
@@ -86,35 +95,43 @@ const ChapterPage = () => {
 
     // Save progress
     const passed = score >= 70;
-    progressDB.update(user.id, chapter.id, {
-      studentId: user.id,
-      subjectId: chapter.subjectId,
-      chapterId: chapter.id,
-      completed: passed,
-      mcqScore: score,
-      timeSpent: 15,
-      lastAccessed: new Date(),
-    });
+    const saveProgress = async () => {
+      try {
+        await progressDB.update(user.id, chapter.id, {
+          studentId: user.id,
+          subjectId: chapter.subjectId,
+          chapterId: chapter.id,
+          completed: passed,
+          mcqScore: score,
+          timeSpent: 15,
+          lastAccessed: new Date(),
+        });
 
-    // Update gamification
-    if (passed) {
-      gamificationDB.addXP(user.id, 50);
-      
-      // Add notification
-      notificationDB.create({
-        id: `notif_${Date.now()}`,
-        userId: user.id,
-        title: 'Chapter Completed!',
-        message: `You completed ${chapter.name} with ${score}% score!`,
-        type: 'achievement',
-        read: false,
-        createdAt: new Date(),
-      });
+        // Update gamification
+        if (passed) {
+          await addXP(50);
+          
+          // Add notification
+          await notificationDB.create({
+            id: `notif_${Date.now()}`,
+            userId: user.id,
+            title: 'Chapter Completed!',
+            message: `You completed ${chapter.name} with ${score}% score!`,
+            type: 'achievement',
+            read: false,
+            createdAt: new Date(),
+          });
 
-      toast.success(`Congratulations! You scored ${score}%`);
-    } else {
-      toast.info(`You scored ${score}%. Try again to pass (70% required)`);
-    }
+          toast.success(`Congratulations! You scored ${score}%`);
+        } else {
+          toast.info(`You scored ${score}%. Try again to pass (70% required)`);
+        }
+      } catch (error) {
+        console.error("Failed to save progress:", error);
+        toast.error("Failed to save progress");
+      }
+    };
+    saveProgress();
   };
 
   const resetMcqs = () => {

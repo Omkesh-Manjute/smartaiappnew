@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { parentChildDB, userDB, gamificationDB, testAttemptDB, progressDB } from '@/services/database';
+import { parentChildDB, userDB, gamificationDB, testAttemptDB, progressDB } from '@/services/supabaseDB';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -36,20 +36,35 @@ const ParentDashboardPage = () => {
 
   useEffect(() => {
     if (user) {
-      const relations = parentChildDB.getByParent(user.id);
-      const childData: ChildData[] = relations.map((rel) => {
-        const childUser = userDB.getById(rel.childId);
-        return {
-          user: childUser!,
-          gamification: gamificationDB.getByStudent(rel.childId),
-          attempts: testAttemptDB.getByStudent(rel.childId),
-          progress: progressDB.getByStudent(rel.childId),
-        };
-      });
-      setChildren(childData);
-      if (childData.length > 0) {
-        setSelectedChild(childData[0]);
-      }
+      const loadAllData = async () => {
+        try {
+          const relations = await parentChildDB.getByParent(user.id);
+          const childData: ChildData[] = await Promise.all(
+            relations.map(async (rel) => {
+              const [childUser, gamification, attempts, progress] = await Promise.all([
+                userDB.getById(rel.childId),
+                gamificationDB.getByStudent(rel.childId),
+                testAttemptDB.getByStudent(rel.childId),
+                progressDB.getByStudent(rel.childId),
+              ]);
+              return {
+                user: childUser!,
+                gamification,
+                attempts,
+                progress,
+              };
+            })
+          );
+          setChildren(childData);
+          if (childData.length > 0) {
+            setSelectedChild(childData[0]);
+          }
+        } catch (error) {
+          console.error("Failed to load parent dashboard data:", error);
+          toast.error("Failed to load children's data");
+        }
+      };
+      loadAllData();
     }
   }, [user]);
 

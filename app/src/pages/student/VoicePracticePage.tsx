@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { gamificationDB, voicePracticeDB } from '@/services/supabaseDB';
+import { voicePracticeDB } from '@/services/supabaseDB';
+import { useGamification } from '@/contexts/GamificationContext';
 import { getVoicePracticeFeedback } from '@/services/geminiAPI';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
@@ -278,6 +279,7 @@ const evaluateSpeech = (
 const VoicePracticePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addXP } = useGamification();
   const { speak, stop: stopSpeech, supported: ttsSupported } = useTextToSpeech();
 
   const [mode, setMode] = useState<PracticeMode>('word');
@@ -560,7 +562,7 @@ const VoicePracticePage = () => {
 
     const xp = result.overall >= 85 ? 40 : result.overall >= 70 ? 25 : 15;
     try {
-      await gamificationDB.addXP(user.id, xp);
+      await addXP(xp);
       toast.success(`Practice complete. +${xp} XP`);
     } catch {
       toast.success('Practice complete');
