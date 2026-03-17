@@ -278,16 +278,48 @@ const AdminAISettingsPage = () => {
                     const loadingToast = toast.loading('Syncing sample data to Supabase...');
                     try {
                       const { seedSampleData } = await import('@/services/supabaseDB');
-                      await seedSampleData();
-                      toast.success('Sample data restored successfully!', { id: loadingToast });
+                      const stats = await seedSampleData();
+                      
+                      const totalFail = stats.subjects.fail + stats.chapters.fail + stats.mcqs.fail + stats.tests.fail;
+                      if (totalFail > 0) {
+                        toast.error(`Partial success: ${stats.subjects.success} subjects, ${stats.tests.success} tests. (${totalFail} items failed - check console)`, { id: loadingToast, duration: 5000 });
+                      } else {
+                        toast.success(`Restored: ${stats.subjects.success} subjects, ${stats.chapters.success} chapters, ${stats.mcqs.success} MCQs, ${stats.tests.success} tests!`, { id: loadingToast, duration: 5000 });
+                      }
                     } catch (error) {
                       console.error('Seed error:', error);
-                      toast.error('Failed to restore sample data.', { id: loadingToast });
+                      toast.error('Failed to restore sample data. Check console for details.', { id: loadingToast });
                     }
                   }}
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Restore Now
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full sm:w-auto font-bold"
+                  onClick={async () => {
+                    const loadingToast = toast.loading('Running database health check...');
+                    try {
+                      const { supabase } = await import('@/services/supabase');
+                      
+                      // Test 1: Connection & Auth
+                      const { data: userData, error: userError } = await supabase.from('users').select('id').limit(1);
+                      if (userError) throw new Error('Users table check failed: ' + userError.message);
+                      
+                      // Test 2: Subjects Table
+                      const { data: subData, error: subError } = await supabase.from('subjects').select('id').limit(1);
+                      if (subError) throw new Error('Subjects table check failed: ' + subError.message);
+                      
+                      toast.success('Database is healthy and reachable!', { id: loadingToast });
+                    } catch (error: any) {
+                      console.error('Health check failed:', error);
+                      toast.error('Health Check Failed: ' + (error.message || 'Check console'), { id: loadingToast, duration: 8000 });
+                    }
+                  }}
+                >
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                  Health Check
                 </Button>
               </div>
             </CardContent>

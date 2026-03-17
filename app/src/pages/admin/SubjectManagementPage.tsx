@@ -565,8 +565,8 @@ const SubjectManagementPage = () => {
       } else {
         toast.success(
           localFallbackUsed
-            ? `${uploaded} test(s) uploaded locally`
-            : `${uploaded} test(s) uploaded successfully`
+            ? `${uploaded} test(s) saved locally because Cloud upload failed. Check RLS policies!`
+            : `${uploaded} test(s) uploaded successfully to Cloud!`
         );
         setTestUploadFile(null);
       }

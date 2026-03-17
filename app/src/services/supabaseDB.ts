@@ -2046,9 +2046,16 @@ export default {
 
 export const seedSampleData = async () => {
   console.log('Starting Supabase seed process...');
+  const stats = {
+    subjects: { total: 0, success: 0, fail: 0 },
+    chapters: { total: 0, success: 0, fail: 0 },
+    mcqs: { total: 0, success: 0, fail: 0 },
+    tests: { total: 0, success: 0, fail: 0 },
+  };
   
   // 1. Seed Subjects, Chapters, and MCQs
   for (const subject of class5Subjects) {
+     stats.subjects.total++;
      const { error: sError } = await supabase.from('subjects').upsert({
        id: subject.id,
        name: subject.name,
@@ -2056,11 +2063,18 @@ export const seedSampleData = async () => {
        icon: subject.icon,
        color: subject.color,
        grade: subject.grade,
-       updated_at: new Date().toISOString(),
+       created_at: new Date().toISOString(),
      });
-     if (sError) console.error(`Error seeding subject ${subject.id}:`, sError);
+     
+     if (sError) {
+       console.error(`Error seeding subject ${subject.id}:`, sError);
+       stats.subjects.fail++;
+       continue; // If subject fails, skip its chapters
+     }
+     stats.subjects.success++;
 
      for (const chapter of subject.chapters) {
+       stats.chapters.total++;
        const { error: chError } = await supabase.from('chapters').upsert({
          id: chapter.id,
          subject_id: chapter.subjectId,
@@ -2070,10 +2084,17 @@ export const seedSampleData = async () => {
          content: chapter.content,
          updated_at: new Date().toISOString(),
        });
-       if (chError) console.error(`Error seeding chapter ${chapter.id}:`, chError);
+       
+       if (chError) {
+         console.error(`Error seeding chapter ${chapter.id}:`, chError);
+         stats.chapters.fail++;
+         continue; // Skip MCQs if chapter fails
+       }
+       stats.chapters.success++;
 
        if (chapter.mcqs && chapter.mcqs.length > 0) {
          for (const mcq of chapter.mcqs) {
+           stats.mcqs.total++;
            const { error: mcqError } = await supabase.from('mcqs').upsert({
              id: mcq.id,
              chapter_id: chapter.id,
@@ -2082,9 +2103,15 @@ export const seedSampleData = async () => {
              correct_answer: mcq.correctAnswer,
              explanation: mcq.explanation,
              difficulty: mcq.difficulty,
-             updated_at: new Date().toISOString(),
+             created_at: new Date().toISOString(),
            });
-           if (mcqError) console.error(`Error seeding MCQ ${mcq.id}:`, mcqError);
+           
+           if (mcqError) {
+             console.error(`Error seeding MCQ ${mcq.id}:`, mcqError);
+             stats.mcqs.fail++;
+           } else {
+             stats.mcqs.success++;
+           }
          }
        }
      }
@@ -2092,6 +2119,7 @@ export const seedSampleData = async () => {
 
   // 2. Seed Tests
   for (const test of class5Tests) {
+    stats.tests.total++;
     const { error: tError } = await supabase.from('tests').upsert({
       id: test.id,
       title: test.title,
@@ -2104,11 +2132,17 @@ export const seedSampleData = async () => {
       passing_marks: test.passingMarks,
       created_by: test.createdBy,
       is_active: test.isActive,
-      updated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     });
-    if (tError) console.error(`Error seeding test ${test.id}:`, tError);
+    
+    if (tError) {
+      console.error(`Error seeding test ${test.id}:`, tError);
+      stats.tests.fail++;
+    } else {
+      stats.tests.success++;
+    }
   }
 
-  console.log('Supabase seed process completed.');
-  return true;
+  console.log('Supabase seed process completed:', stats);
+  return stats;
 };
