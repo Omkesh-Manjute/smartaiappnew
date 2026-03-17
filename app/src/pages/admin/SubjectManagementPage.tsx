@@ -21,6 +21,9 @@ import {
   Upload,
   Loader2,
   FileUp,
+  Edit2,
+  Save,
+  X,
 } from 'lucide-react';
 import type { Chapter, Subject, Test } from '@/types';
 
@@ -52,6 +55,8 @@ const SubjectManagementPage = () => {
   const { user } = useAuth();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingSubjectId, setEditingSubjectId] = useState<string | null>(null);
+  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [isUploadingTests, setIsUploadingTests] = useState(false);
@@ -63,6 +68,7 @@ const SubjectManagementPage = () => {
     grade: 10,
   });
   const [chapterDrafts, setChapterDrafts] = useState<Record<string, { name: string; description: string }>>({});
+  const [editingChapterData, setEditingChapterData] = useState<{ name: string; description: string } | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiFile, setAiFile] = useState<File | null>(null);
   const [testUploadFile, setTestUploadFile] = useState<File | null>(null);
@@ -91,6 +97,17 @@ const SubjectManagementPage = () => {
     }
   };
 
+  const updateSubjectWithFallback = async (id: string, updates: Partial<Subject>): Promise<'cloud' | 'local'> => {
+    try {
+      await subjectDB.update(id, updates);
+      return 'cloud';
+    } catch (error) {
+      console.warn('Cloud subject update failed. Falling back to local:', error);
+      localSubjectDB.update(id, updates);
+      return 'local';
+    }
+  };
+
   const createChapterWithFallback = async (chapter: Chapter): Promise<'cloud' | 'local'> => {
     try {
       await chapterDB.create(chapter);
@@ -101,6 +118,52 @@ const SubjectManagementPage = () => {
       if (!ok) {
         throw error;
       }
+      return 'local';
+    }
+  };
+
+  const updateChapterWithFallback = async (id: string, updates: Partial<Chapter>): Promise<'cloud' | 'local'> => {
+    try {
+      await chapterDB.update(id, updates);
+      return 'cloud';
+    } catch (error) {
+      console.warn('Cloud chapter update failed. Falling back to local:', error);
+      // Local path: update subject's chapters array
+      const allSubjects = localSubjectDB.getAll();
+      let ok = false;
+      for (const s of allSubjects) {
+        const cIdx = s.chapters.findIndex(c => c.id === id);
+        if (cIdx !== -1) {
+          const newChapters = [...(s.chapters || [])];
+          newChapters[cIdx] = { ...newChapters[cIdx], ...updates };
+          localSubjectDB.update(s.id, { chapters: newChapters });
+          ok = true;
+          break;
+        }
+      }
+      if (!ok) throw error;
+      return 'local';
+    }
+  };
+
+  const deleteChapterWithFallback = async (id: string): Promise<'cloud' | 'local'> => {
+    try {
+      await chapterDB.delete(id);
+      return 'cloud';
+    } catch (error) {
+      console.warn('Cloud chapter delete failed. Falling back to local:', error);
+      const allSubjects = localSubjectDB.getAll();
+      let ok = false;
+      for (const s of allSubjects) {
+        const cIdx = s.chapters.findIndex(c => c.id === id);
+        if (cIdx !== -1) {
+          const newChapters = s.chapters.filter(c => c.id !== id);
+          localSubjectDB.update(s.id, { chapters: newChapters });
+          ok = true;
+          break;
+        }
+      }
+      if (!ok) throw error;
       return 'local';
     }
   };
@@ -124,36 +187,72 @@ const SubjectManagementPage = () => {
     void loadSubjects();
   }, []);
 
-  const addSubject = async () => {
+  const handleAddOrUpdateSubject = async () => {
     if (!newSubject.name.trim()) {
       toast.error('Subject name is required');
       return;
     }
 
-    const subject: Subject = {
-      id: `subject_${Date.now()}`,
-      name: newSubject.name.trim(),
-      description: newSubject.description.trim(),
-      icon: newSubject.icon,
-      color: newSubject.color,
-      grade: Math.min(12, Math.max(1, newSubject.grade)),
-      chapters: [],
-    };
+    if (editingSubjectId) {
+      const updates = {
+        name: newSubject.name.trim(),
+        description: newSubject.description.trim(),
+        icon: newSubject.icon,
+        color: newSubject.color,
+        grade: Math.min(12, Math.max(1, newSubject.grade)),
+      };
 
-    try {
-      const mode = await createSubjectWithFallback(subject);
-      setSubjects((prev) => [...prev, normalizeSubject(subject)]);
-      setShowAddForm(false);
-      setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
-      toast.success(mode === 'cloud' ? 'Subject added' : 'Subject added (local fallback)');
-    } catch (error) {
-      console.error('Failed to add subject:', error);
-      const message = error instanceof Error ? error.message : 'Could not add subject';
-      toast.error(message);
+      try {
+        const mode = await updateSubjectWithFallback(editingSubjectId, updates);
+        setSubjects((prev) =>
+          prev.map((s) => (s.id === editingSubjectId ? { ...s, ...updates } : s))
+        );
+        setEditingSubjectId(null);
+        setShowAddForm(false);
+        setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
+        toast.success(mode === 'cloud' ? 'Subject updated' : 'Subject updated (local)');
+      } catch (error) {
+        toast.error('Failed to update subject');
+      }
+    } else {
+      const subject: Subject = {
+        id: `subject_${Date.now()}`,
+        name: newSubject.name.trim(),
+        description: newSubject.description.trim(),
+        icon: newSubject.icon,
+        color: newSubject.color,
+        grade: Math.min(12, Math.max(1, newSubject.grade)),
+        chapters: [],
+      };
+
+      try {
+        const mode = await createSubjectWithFallback(subject);
+        setSubjects((prev) => [...prev, normalizeSubject(subject)]);
+        setShowAddForm(false);
+        setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
+        toast.success(mode === 'cloud' ? 'Subject added' : 'Subject added (local fallback)');
+      } catch (error) {
+        console.error('Failed to add subject:', error);
+        toast.error('Could not add subject');
+      }
     }
   };
 
+  const startEditSubject = (subject: Subject) => {
+    setEditingSubjectId(subject.id);
+    setNewSubject({
+      name: subject.name,
+      description: subject.description,
+      icon: subject.icon,
+      color: subject.color,
+      grade: subject.grade,
+    });
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const deleteSubject = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this subject?')) return;
     try {
       try {
         await subjectDB.delete(id);
@@ -165,8 +264,7 @@ const SubjectManagementPage = () => {
       toast.success('Subject deleted');
     } catch (error) {
       console.error('Failed to delete subject:', error);
-      const message = error instanceof Error ? error.message : 'Could not delete subject';
-      toast.error(message);
+      toast.error('Could not delete subject');
     }
   };
 
@@ -203,8 +301,61 @@ const SubjectManagementPage = () => {
       toast.success(mode === 'cloud' ? 'Chapter added' : 'Chapter added (local fallback)');
     } catch (error) {
       console.error('Failed to add chapter:', error);
-      const message = error instanceof Error ? error.message : 'Could not add chapter';
-      toast.error(message);
+      toast.error('Could not add chapter');
+    }
+  };
+
+  const deleteChapter = async (chapterId: string, subjectId: string) => {
+    if (!window.confirm('Delete this chapter?')) return;
+    try {
+      const mode = await deleteChapterWithFallback(chapterId);
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s.id === subjectId
+            ? { ...s, chapters: s.chapters.filter((c) => c.id !== chapterId) }
+            : s
+        )
+      );
+      toast.success(mode === 'cloud' ? 'Chapter deleted' : 'Chapter deleted (local)');
+    } catch (error) {
+      toast.error('Failed to delete chapter');
+    }
+  };
+
+  const startEditChapter = (chapter: Chapter) => {
+    setEditingChapterId(chapter.id);
+    setEditingChapterData({ name: chapter.name, description: chapter.description });
+  };
+
+  const saveChapterUpdate = async (chapterId: string, subjectId: string) => {
+    if (!editingChapterData?.name.trim()) {
+      toast.error('Chapter name required');
+      return;
+    }
+
+    try {
+      const updates = {
+        name: editingChapterData.name.trim(),
+        description: editingChapterData.description.trim(),
+      };
+      const mode = await updateChapterWithFallback(chapterId, updates);
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s.id === subjectId
+            ? {
+                ...s,
+                chapters: s.chapters.map((c) =>
+                  c.id === chapterId ? { ...c, ...updates } : c
+                ),
+              }
+            : s
+        )
+      );
+      setEditingChapterId(null);
+      setEditingChapterData(null);
+      toast.success(mode === 'cloud' ? 'Chapter updated' : 'Chapter updated (local)');
+    } catch (error) {
+      toast.error('Failed to update chapter');
     }
   };
 
@@ -296,8 +447,7 @@ const SubjectManagementPage = () => {
       await loadSubjects();
     } catch (error) {
       console.error('AI subject generation failed:', error);
-      const message = error instanceof Error ? error.message : 'AI generation failed';
-      toast.error(message);
+      toast.error('AI generation failed');
     } finally {
       setIsAiGenerating(false);
     }
@@ -365,8 +515,7 @@ const SubjectManagementPage = () => {
       }
     } catch (error) {
       console.error('Test upload failed:', error);
-      const message = error instanceof Error ? error.message : 'Failed to upload tests. Use valid JSON.';
-      toast.error(message);
+      toast.error('Failed to upload tests. Use valid JSON.');
     } finally {
       setIsUploadingTests(false);
     }
@@ -383,7 +532,11 @@ const SubjectManagementPage = () => {
               </button>
               <h1 className="text-xl font-bold">Subject & Chapter Management</h1>
             </div>
-            <Button onClick={() => setShowAddForm(true)}>
+            <Button onClick={() => {
+              setEditingSubjectId(null);
+              setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
+              setShowAddForm(true);
+            }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Subject
             </Button>
@@ -392,161 +545,173 @@ const SubjectManagementPage = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-600" />
-              AI Subject Generator (Prompt + PDF)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              value={aiPrompt}
-              onChange={(event) => setAiPrompt(event.target.value)}
-              placeholder='e.g. "Class 10 Science and Math ke 8-8 chapters generate karo"'
-              rows={4}
-            />
-            <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-600">
+                <Sparkles className="w-5 h-5" />
+                AI Subject Generator
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Textarea
+                value={aiPrompt}
+                onChange={(event) => setAiPrompt(event.target.value)}
+                placeholder='e.g. "Class 10 Science and Math ke 8-8 chapters generate karo"'
+                rows={3}
+              />
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  onChange={(event) => setAiFile(event.target.files?.[0] || null)}
+                />
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">
+                  PDF / TEXT Support
+                </p>
+              </div>
+              <Button onClick={generateWithAI} disabled={isAiGenerating} className="w-full">
+                {isAiGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-600">
+                <FileUp className="w-5 h-5" />
+                Bulk Test Upload
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 mb-2">
+                <p className="text-xs text-blue-800 leading-relaxed font-medium">
+                  Upload tests in JSON format. Each test needs a title, subjectId, and questions array.
+                </p>
+              </div>
               <Input
                 type="file"
-                accept=".pdf,.txt,.md"
-                onChange={(event) => setAiFile(event.target.files?.[0] || null)}
+                accept=".json"
+                onChange={(event) => setTestUploadFile(event.target.files?.[0] || null)}
               />
-              <p className="text-xs text-gray-500">
-                PDF upload supported. Extracted text AI context me pass kiya jayega.
-              </p>
-              {aiFile && <p className="text-xs text-gray-500">Selected: {aiFile.name}</p>}
-            </div>
-            <Button onClick={generateWithAI} disabled={isAiGenerating} className="w-full sm:w-auto">
-              {isAiGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Subjects & Chapters
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileUp className="w-5 h-5 text-blue-600" />
-              Test Upload
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Input
-              type="file"
-              accept=".json"
-              onChange={(event) => setTestUploadFile(event.target.files?.[0] || null)}
-            />
-            <p className="text-xs text-gray-500">
-              Upload JSON array of tests with fields: title, subjectId, questions, duration, passingMarks.
-            </p>
-            {testUploadFile && <p className="text-xs text-gray-500">Selected: {testUploadFile.name}</p>}
-            <Button onClick={uploadTests} disabled={isUploadingTests}>
-              {isUploadingTests ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Tests
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+              <Button onClick={uploadTests} disabled={isUploadingTests} variant="secondary" className="w-full">
+                {isUploadingTests ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload JSON
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
         {showAddForm && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Subject</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Name</label>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+            <Card className="border-2 border-purple-200 shadow-xl overflow-hidden">
+              <div className="bg-purple-600 px-6 py-4 flex items-center justify-between">
+                <CardTitle className="text-white">
+                  {editingSubjectId ? 'Update Subject' : 'Create New Subject'}
+                </CardTitle>
+                <button onClick={() => setShowAddForm(false)} className="text-white/80 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Name</label>
                       <Input
                         value={newSubject.name}
                         onChange={(event) => setNewSubject({ ...newSubject, name: event.target.value })}
-                        placeholder="Subject name"
+                        placeholder="e.g. Mathematics"
+                        className="h-11"
                       />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Grade</label>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-gray-700">Grade</label>
                       <Input
                         type="number"
                         value={newSubject.grade}
                         onChange={(event) =>
                           setNewSubject({
                             ...newSubject,
-                            grade: Number.isFinite(Number.parseInt(event.target.value, 10))
-                              ? Number.parseInt(event.target.value, 10)
-                              : 10,
+                            grade: parseInt(event.target.value) || 10,
                           })
                         }
                         min={1}
                         max={12}
+                        className="h-11"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Description</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">Description</label>
                     <Input
                       value={newSubject.description}
                       onChange={(event) => setNewSubject({ ...newSubject, description: event.target.value })}
-                      placeholder="Brief description"
+                      placeholder="Enter subject overview..."
+                      className="h-11"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Icon</label>
-                    <div className="flex flex-wrap gap-2">
-                      {iconOptions.map((icon) => (
-                        <button
-                          key={icon}
-                          onClick={() => setNewSubject({ ...newSubject, icon })}
-                          className={`w-10 h-10 rounded-lg text-xs flex items-center justify-center border-2 ${
-                            newSubject.icon === icon ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
-                          }`}
-                          type="button"
-                        >
-                          {icon}
-                        </button>
-                      ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-sm font-bold text-gray-700">Select Icon</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {iconOptions.map((icon) => (
+                          <button
+                            key={icon}
+                            onClick={() => setNewSubject({ ...newSubject, icon })}
+                            className={`h-10 rounded-lg font-bold transition-all border-2 ${
+                              newSubject.icon === icon 
+                                ? 'border-purple-600 bg-purple-50 text-purple-600 scale-105' 
+                                : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
+                            }`}
+                          >
+                            {icon}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-sm font-bold text-gray-700">Accent Color</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {colorOptions.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setNewSubject({ ...newSubject, color })}
+                            className={`h-10 rounded-lg transition-all ${color} ${
+                              newSubject.color === color 
+                                ? 'ring-4 ring-offset-2 ring-purple-600 scale-105' 
+                                : 'opacity-80 hover:opacity-100 hover:scale-105'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Color</label>
-                    <div className="flex flex-wrap gap-2">
-                      {colorOptions.map((color) => (
-                        <button
-                          key={color}
-                          onClick={() => setNewSubject({ ...newSubject, color })}
-                          className={`w-10 h-10 rounded-lg ${color} ${
-                            newSubject.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
-                          }`}
-                          type="button"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
+                  <div className="flex gap-4 pt-4">
+                    <Button variant="outline" onClick={() => setShowAddForm(false)} className="flex-1 h-12 text-lg">
                       Cancel
                     </Button>
-                    <Button onClick={addSubject} className="flex-1">
-                      Add Subject
+                    <Button onClick={handleAddOrUpdateSubject} className="flex-1 h-12 text-lg bg-purple-600 hover:bg-purple-700">
+                      {editingSubjectId ? 'Update Changes' : 'Create Subject'}
                     </Button>
                   </div>
                 </div>
@@ -555,105 +720,190 @@ const SubjectManagementPage = () => {
           </motion.div>
         )}
 
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Layers className="w-5 h-5 text-gray-600" />
+              Active Subjects
+            </h2>
+            <Badge variant="secondary" className="bg-gray-200 text-gray-700 font-bold px-3 py-1">
+              {subjects.length} Total
+            </Badge>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {sortedSubjects.map((subject, index) => (
-              <motion.div
-                key={subject.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="p-4 space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div className={`w-14 h-14 rounded-xl ${subject.color} flex items-center justify-center text-sm`}>
-                        {subject.icon}
-                      </div>
-                      <button
-                        onClick={() => void deleteSubject(subject.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg text-red-500"
-                        type="button"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
 
-                    <div>
-                      <h3 className="font-semibold text-lg">{subject.name}</h3>
-                      <p className="text-sm text-gray-500">{subject.description}</p>
-                      <div className="flex items-center gap-2 mt-3">
-                        <Badge variant="outline">Grade {subject.grade}</Badge>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Layers className="w-3 h-3" />
-                          {subject.chapters.length} chapters
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
-                      <p className="text-sm font-medium">Add Chapter</p>
-                      <Input
-                        value={chapterDrafts[subject.id]?.name || ''}
-                        onChange={(event) =>
-                          setChapterDrafts((prev) => ({
-                            ...prev,
-                            [subject.id]: {
-                              name: event.target.value,
-                              description: prev[subject.id]?.description || '',
-                            },
-                          }))
-                        }
-                        placeholder="Chapter name"
-                      />
-                      <Input
-                        value={chapterDrafts[subject.id]?.description || ''}
-                        onChange={(event) =>
-                          setChapterDrafts((prev) => ({
-                            ...prev,
-                            [subject.id]: {
-                              name: prev[subject.id]?.name || '',
-                              description: event.target.value,
-                            },
-                          }))
-                        }
-                        placeholder="Chapter short description"
-                      />
-                      <Button size="sm" onClick={() => void addChapter(subject)}>
-                        <BookPlus className="w-4 h-4 mr-2" />
-                        Add Chapter
-                      </Button>
-                    </div>
-
-                    {subject.chapters.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Chapters</p>
-                        <div className="max-h-40 overflow-auto space-y-1 pr-1">
-                          {subject.chapters
-                            .slice()
-                            .sort((a, b) => a.order - b.order)
-                            .map((chapter) => (
-                              <div
-                                key={chapter.id}
-                                className="text-sm rounded-md border p-2 bg-white flex justify-between gap-2"
-                              >
-                                <span className="font-medium truncate">{chapter.name}</span>
-                                <span className="text-xs text-gray-500">#{chapter.order}</span>
-                              </div>
-                            ))}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
+              <Loader2 className="w-10 h-10 animate-spin text-purple-600 mb-4" />
+              <p className="text-gray-500 font-medium tracking-wide">Synchronizing subjects...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {sortedSubjects.map((subject, index) => (
+                <motion.div
+                  key={subject.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="group h-full hover:shadow-lg transition-shadow border-gray-200 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className={`${subject.color} p-5 flex items-start justify-between`}>
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-inner">
+                            {subject.icon}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-white mb-1">{subject.name}</h3>
+                            <Badge className="bg-black/20 hover:bg-black/30 text-white border-0">
+                              Grade {subject.grade}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => startEditSubject(subject)}
+                            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+                            title="Edit Subject"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => void deleteSubject(subject.id)}
+                            className="p-2 bg-white/10 hover:bg-red-500/20 rounded-lg text-white/80 hover:text-white transition-colors"
+                            title="Delete Subject"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
+
+                      <div className="p-6 space-y-6">
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {subject.description || 'No description available.'}
+                        </p>
+
+                        <div className="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-hidden">
+                          <div className="px-4 py-3 border-b flex items-center justify-between">
+                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                              <BookPlus className="w-3.5 h-3.5" />
+                              Chapter Management
+                            </span>
+                            <Badge variant="secondary" className="text-[10px] uppercase font-bold px-2">
+                              {subject.chapters.length} items
+                            </Badge>
+                          </div>
+                          
+                          <div className="p-4 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <Input
+                                value={chapterDrafts[subject.id]?.name || ''}
+                                onChange={(event) =>
+                                  setChapterDrafts((prev) => ({
+                                    ...prev,
+                                    [subject.id]: {
+                                      name: event.target.value,
+                                      description: prev[subject.id]?.description || '',
+                                    },
+                                  }))
+                                }
+                                placeholder="Chapter name"
+                                className="h-9 text-sm"
+                              />
+                              <div className="flex gap-2">
+                                <Input
+                                  value={chapterDrafts[subject.id]?.description || ''}
+                                  onChange={(event) =>
+                                    setChapterDrafts((prev) => ({
+                                      ...prev,
+                                      [subject.id]: {
+                                        name: prev[subject.id]?.name || '',
+                                        description: event.target.value,
+                                      },
+                                    }))
+                                  }
+                                  placeholder="Brief focus"
+                                  className="h-9 text-sm"
+                                />
+                                <Button size="sm" onClick={() => void addChapter(subject)} className="shrink-0 bg-gray-800 hover:bg-black">
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {subject.chapters.length > 0 && (
+                              <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                {subject.chapters
+                                  .slice()
+                                  .sort((a, b) => a.order - b.order)
+                                  .map((chapter) => (
+                                    <div
+                                      key={chapter.id}
+                                      className="group/item flex items-center justify-between p-3 bg-white border rounded-xl hover:border-purple-200 transition-colors"
+                                    >
+                                      {editingChapterId === chapter.id ? (
+                                        <div className="flex-1 flex flex-col gap-2">
+                                          <Input 
+                                            value={editingChapterData?.name || ''}
+                                            onChange={e => setEditingChapterData(prev => ({ ...prev!, name: e.target.value }))}
+                                            className="h-8 text-sm font-bold"
+                                            autoFocus
+                                          />
+                                          <div className="flex gap-2">
+                                            <Input 
+                                              value={editingChapterData?.description || ''}
+                                              onChange={e => setEditingChapterData(prev => ({ ...prev!, description: e.target.value }))}
+                                              className="h-8 text-sm"
+                                            />
+                                            <Button size="icon" className="h-8 w-8 bg-green-600 hover:bg-green-700 shrink-0" onClick={() => saveChapterUpdate(chapter.id, subject.id)}>
+                                              <Save className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditingChapterId(null)}>
+                                              <X className="w-4 h-4" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <div className="flex-1 min-w-0 pr-4">
+                                            <p className="text-sm font-bold text-gray-800 truncate">
+                                              #{chapter.order} {chapter.name}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 font-medium truncate uppercase tracking-tighter">
+                                              {chapter.description || 'Regular Content'}
+                                            </p>
+                                          </div>
+                                          <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                            <button 
+                                              onClick={() => startEditChapter(chapter)}
+                                              className="p-1.5 hover:bg-purple-50 text-gray-400 hover:text-purple-600 rounded-lg"
+                                              title="Edit Chapter"
+                                            >
+                                              <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button 
+                                              onClick={() => deleteChapter(chapter.id, subject.id)}
+                                              className="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg"
+                                              title="Delete Chapter"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
