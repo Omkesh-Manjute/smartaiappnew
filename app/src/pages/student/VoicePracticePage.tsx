@@ -455,7 +455,8 @@ const VoicePracticePage = () => {
       toast.error('Text-to-speech is not supported in this browser');
       return;
     }
-    speak(activePromptText);
+    const isHindi = /[\u0900-\u097F]/.test(activePromptText);
+    speak(activePromptText, isHindi ? 'hi' : 'en');
   };
 
   const startListening = async () => {

@@ -183,13 +183,18 @@ const TutorPage = () => {
       toast.error('Text-to-speech is not supported in this browser');
       return;
     }
+
     if (isSpeaking && showTtsControls === msgId) {
       stopSpeech();
       setShowTtsControls(null);
       return;
     }
+
     setShowTtsControls(msgId);
-    speak(text);
+    
+    // Auto-detect language (Hindi if Devanagari characters present)
+    const isHindi = /[\u0900-\u097F]/.test(text);
+    speak(text, isHindi ? 'hi' : 'en');
   };
 
   return (

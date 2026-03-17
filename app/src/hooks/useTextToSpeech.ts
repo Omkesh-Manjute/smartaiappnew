@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface UseTextToSpeechReturn {
-  speak: (text: string) => void;
+  speak: (text: string, lang?: string) => void;
   stop: () => void;
   isSpeaking: boolean;
   isPaused: boolean;
@@ -15,10 +15,22 @@ interface UseTextToSpeechReturn {
   setSelectedVoice: (voice: SpeechSynthesisVoice | null) => void;
 }
 
+const cleanContentForSpeech = (text: string): string => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+    .replace(/\*(.*?)\*/g, '$1')     // Remove italic
+    .replace(/#{1,6}\s+(.*?)\n/g, '$1 ') // Remove headers
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // Remove links
+    .replace(/`{1,3}.*?`{1,3}/gs, '')    // Remove code blocks
+    .replace(/(\*|\d+\.) /g, '')         // Remove list markers
+    .replace(/\s+/g, ' ')                // Consolidate whitespace
+    .trim();
+};
+
 export const useTextToSpeech = (): UseTextToSpeechReturn => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [rate, setRate] = useState(0.9);
+  const [rate, setRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -33,13 +45,15 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       const availableVoices = window.speechSynthesis.getVoices();
       if (availableVoices.length > 0) {
         setVoices(availableVoices);
-        // Try to select a good default English voice
-        const preferred = availableVoices.find(
+        
+        // Default selection strategy
+        const defaultVoice = availableVoices.find(
           (v) => v.lang.startsWith('en') && v.name.toLowerCase().includes('google')
         ) || availableVoices.find(
           (v) => v.lang.startsWith('en')
         ) || availableVoices[0];
-        if (!selectedVoice) setSelectedVoice(preferred);
+        
+        if (!selectedVoice) setSelectedVoice(defaultVoice);
       }
     };
 
@@ -49,20 +63,30 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     return () => {
       window.speechSynthesis.onvoiceschanged = null;
     };
-  }, [supported]);
+  }, [supported, selectedVoice]);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, langHint?: string) => {
     if (!supported) return;
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanedText = cleanContentForSpeech(text);
+    if (!cleanedText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.rate = rate;
     utterance.pitch = 1;
     utterance.volume = 1;
 
-    if (selectedVoice) {
+    // Try to find a language-specific voice if hint provided
+    if (langHint) {
+      const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(langHint.toLowerCase()));
+      if (langVoices.length > 0) {
+        const preferred = langVoices.find(v => v.name.toLowerCase().includes('google')) || langVoices[0];
+        utterance.voice = preferred;
+      }
+    } else if (selectedVoice) {
       utterance.voice = selectedVoice;
     }
 
@@ -84,14 +108,15 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       setIsPaused(false);
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
+      console.error('TTS Error:', event);
       setIsSpeaking(false);
       setIsPaused(false);
     };
 
     utteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [supported, rate, selectedVoice]);
+  }, [supported, rate, selectedVoice, voices]);
 
   const stop = useCallback(() => {
     if (!supported) return;
