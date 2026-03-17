@@ -14,20 +14,25 @@ const prepareTextForSpeech = (text: string): string => {
     .replace(/\bhindi\b/g, 'हिन्दी')
     
     // 2. Remove brackets symbols (replace with comma for a natural pause)
-    // The engine won't say "bracket", it will just stop for a millisecond
     .replace(/\(/g, ', ')
     .replace(/\)/g, ', ')
 
     // 3. Remove Markdown-style symbols that shouldn't be spoken
     .replace(/[*_#~`]/g, ' ')
-    .replace(/^\s*[-•]\s*/gm, ' ') // Remove bullet points at start of lines
+    .replace(/^\s*[-•]\s*/gm, ' ') 
 
-    // 4. Handle math symbols naturally
-    .replace(/=/g, ' equals ')
-    .replace(/\+/g, ' plus ')
-    .replace(/-/g, ' minus ')
-    .replace(/\//g, ' divided by ')
-    .replace(/\*/g, ' multiplied by ')
+    // 4. Handle math symbols naturally (ONLY IF SURROUNDED BY DIGITS)
+    .replace(/(\d)\s*-\s*(\d)/g, '$1 minus $2') // Only minus if between numbers
+    .replace(/(\d)\s*=\s*(\d)/g, '$1 equals $2')
+    .replace(/(\d)\s*\+\s*(\d)/g, '$1 plus $2')
+    .replace(/(\d)\s*\/\s*(\d)/g, '$1 divided by $2')
+    .replace(/(\d)\s*\*\s*(\d)/g, '$1 multiplied by $2')
+    
+    // Fallback for standalone math symbols
+    .replace(/\s=\s/g, ' equals ')
+    .replace(/\s\+\s/g, ' plus ')
+    .replace(/\s\/\s/g, ' divided by ')
+    .replace(/\s\*\s/g, ' multiplied by ')
     .replace(/%/g, ' percent ')
     .replace(/\^/g, ' to the power of ')
     

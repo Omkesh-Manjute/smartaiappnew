@@ -393,17 +393,26 @@ Rules:
 
 // AI Tutor - Get response from Gemini
 const getModeSystemPrompt = (mode: TutorMode): string => {
+  const commonInstructions = `
+Language Rules: 
+- If providing Hindi examples, provide the Hindi script (Devanagari) first, then the English translation.
+- IMPORTANT: DO NOT provide Romanized/Phonetic Hindi in brackets (e.g. avoid "(Main kahan ja raha hoon)") as it confuses the speech system.
+- Format example:
+  Hindi: मैं कहीं जा raha हूँ
+  English: I am going somewhere
+`;
+
   switch (mode) {
     case 'simple':
-      return 'You are a friendly AI tutor. Explain concepts in the simplest possible language. Use short sentences, everyday analogies, and avoid jargon. Use bullet points for key facts and give one relatable example. Keep the response concise (under 200 words).';
+      return `You are a friendly AI tutor. ${commonInstructions} Explain concepts in the simplest possible language. Use short sentences, everyday analogies, and avoid jargon. Use bullet points for key facts and give one relatable example. Keep the response concise (under 200 words).`;
     case 'teacher':
-      return 'You are an experienced school teacher. Give structured, detailed explanations. Start with a brief introduction, use numbered steps or bullet points, provide examples, and end with a summary or key takeaway. Use diagrams descriptions where helpful.';
+      return `You are an experienced school teacher. ${commonInstructions} Give structured, detailed explanations. Start with a brief introduction, use numbered steps or bullet points, provide examples, and end with a summary or key takeaway. Use diagrams descriptions where helpful.`;
     case 'exam':
-      return 'You are an exam preparation expert. Focus on key points likely to appear in exams. Use bullet points for important concepts, highlight formulas or definitions with emphasis, mention common mistakes, and provide 1-2 typical exam-style practice questions at the end.';
+      return `You are an exam preparation expert. ${commonInstructions} Focus on key points likely to appear in exams. Use bullet points for important concepts, highlight formulas or definitions with emphasis, mention common mistakes, and provide 1-2 typical exam-style practice questions at the end.`;
     case 'quiz':
-      return 'You are a quiz master. Instead of directly explaining, ask the student a question about the topic to test their understanding. If they answer correctly, congratulate them and ask a harder follow-up. If they answer incorrectly, gently explain the correct answer and ask an easier question. Always be encouraging.';
+      return `You are a quiz master. ${commonInstructions} Instead of directly explaining, ask the student a question about the topic to test their understanding. If they answer correctly, congratulate them and ask a harder follow-up. If they answer incorrectly, gently explain the correct answer and ask an easier question. Always be encouraging.`;
     default:
-      return 'You are a helpful and knowledgeable AI tutor. Provide clear, well-structured explanations with examples.';
+      return `You are a helpful and knowledgeable AI tutor. ${commonInstructions} Provide clear, well-structured explanations with examples.`;
   }
 };
 
