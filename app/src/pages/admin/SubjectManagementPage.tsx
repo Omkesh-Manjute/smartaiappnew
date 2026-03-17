@@ -498,11 +498,41 @@ const SubjectManagementPage = () => {
         if (!item?.title || !item?.subjectId || !Array.isArray(item?.questions)) {
           continue;
         }
-        const questions = item.questions;
+
+        // Normalize questions and handle various correctAnswer formats
+        const normalizedQuestions = item.questions.map((q: any) => {
+          let correctAnswer = q.correctAnswer;
+          
+          // Handle text-based answers (e.g., "Sad")
+          if (typeof correctAnswer === 'string' && q.options.includes(correctAnswer)) {
+            correctAnswer = q.options.indexOf(correctAnswer);
+          }
+          
+          // Handle numeric strings (e.g., "1")
+          if (typeof correctAnswer === 'string' && !isNaN(Number(correctAnswer))) {
+            correctAnswer = Number(correctAnswer);
+          }
+
+          // Handle 1-indexed answers (heuristic: if answer index is >= options length)
+          if (typeof correctAnswer === 'number' && correctAnswer >= q.options.length) {
+            correctAnswer -= 1;
+          }
+
+          return {
+            ...q,
+            id: q.id || `q_${Math.random().toString(36).substr(2, 9)}`,
+            correctAnswer: Number(correctAnswer),
+            marks: Number(q.marks) || 1,
+            difficulty: q.difficulty || 'medium',
+            explanation: q.explanation || '',
+          };
+        });
+
         const totalMarks =
           typeof item.totalMarks === 'number'
             ? item.totalMarks
-            : questions.reduce((sum: number, question: any) => sum + (Number(question?.marks) || 1), 0);
+            : normalizedQuestions.reduce((sum: number, q: any) => sum + q.marks, 0);
+
         const normalizedTest: Test = {
           id: item.id || `test_upload_${Date.now()}_${i}`,
           title: String(item.title),
@@ -511,7 +541,7 @@ const SubjectManagementPage = () => {
           chapterIds: Array.isArray(item.chapterIds)
             ? item.chapterIds.map((chapterId: unknown) => String(chapterId))
             : [],
-          questions,
+          questions: normalizedQuestions,
           duration: Number(item.duration) || 30,
           totalMarks,
           passingMarks: Number(item.passingMarks) || Math.max(1, Math.round(totalMarks * 0.5)),
@@ -519,6 +549,7 @@ const SubjectManagementPage = () => {
           createdAt: new Date(),
           isActive: item.isActive ?? true,
         };
+
         try {
           await testDB.create(normalizedTest);
         } catch (error) {
