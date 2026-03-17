@@ -171,13 +171,39 @@ const SubjectManagementPage = () => {
   const loadSubjects = async () => {
     setIsLoading(true);
     try {
-      const data = await subjectDB.getAll();
-      setSubjects(data.map(normalizeSubject));
+      // 1. Get local subjects (source of pre-installed data)
+      const localData = localSubjectDB.getAll();
+      const normalizedLocal = localData.map(normalizeSubject);
+      
+      let merged = [...normalizedLocal];
+      let cloudSynced = false;
+
+      // 2. Try to get cloud subjects
+      try {
+        const cloudData = await subjectDB.getAll();
+        const normalizedCloud = cloudData.map(normalizeSubject);
+        
+        // Merge cloud into local, cloud overwrites local if ID matches
+        normalizedCloud.forEach(cloudS => {
+          const index = merged.findIndex(s => s.id === cloudS.id);
+          if (index !== -1) {
+            merged[index] = cloudS;
+          } else {
+            merged.push(cloudS);
+          }
+        });
+        cloudSynced = true;
+      } catch (cloudError) {
+        console.warn('Cloud sync skipped or failed during load:', cloudError);
+      }
+
+      setSubjects(merged);
+      if (!cloudSynced && merged.length > 0) {
+        toast.info('Showing local data. Cloud sync unavailable.');
+      }
     } catch (error) {
-      console.error('Failed to load cloud subjects:', error);
-      const localSubjects = localSubjectDB.getAll();
-      setSubjects(localSubjects.map(normalizeSubject));
-      toast.error('Cloud subject load failed. Showing local data.');
+      console.error('Failed to load subjects:', error);
+      toast.error('Could not load subjects');
     } finally {
       setIsLoading(false);
     }
