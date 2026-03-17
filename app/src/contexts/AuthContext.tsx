@@ -38,6 +38,8 @@ const mapToUser = (row: Record<string, unknown>): User => ({
   createdAt:
     typeof row.created_at === 'string' ? new Date(row.created_at) : new Date(),
   isPremium: Boolean(row.is_premium ?? false),
+  aiQuestionsToday: Number(row.ai_questions_today ?? 0),
+  lastAiResetAt: typeof row.last_ai_reset_at === 'string' ? new Date(row.last_ai_reset_at) : undefined,
   schoolId: typeof row.school_id === 'string' ? row.school_id : undefined,
   password: '',
 });
@@ -64,6 +66,7 @@ const buildFallbackUser = (
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${safeEmail || authUser.id}`,
     createdAt: authUser.created_at ? new Date(authUser.created_at) : new Date(),
     isPremium: false,
+    aiQuestionsToday: 0,
     schoolId: undefined,
     password: '',
   };
@@ -144,6 +147,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             name: fallbackUser.name,
             role: fallbackUser.role,
             avatar: fallbackUser.avatar ?? null,
+            ai_questions_today: 0,
+            last_ai_reset_at: new Date().toISOString(),
           },
           { onConflict: 'id' }
         )

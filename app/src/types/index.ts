@@ -10,6 +10,8 @@ export interface User {
   avatar?: string;
   createdAt: Date;
   isPremium?: boolean;
+  aiQuestionsToday?: number;
+  lastAiResetAt?: Date;
   schoolId?: string;
 }
 

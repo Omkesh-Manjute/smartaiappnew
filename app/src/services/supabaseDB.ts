@@ -24,6 +24,8 @@ export const userDB = {
       avatar: u.avatar || undefined,
       createdAt: new Date(u.created_at),
       isPremium: u.is_premium,
+      aiQuestionsToday: u.ai_questions_today || 0,
+      lastAiResetAt: u.last_ai_reset_at ? new Date(u.last_ai_reset_at) : undefined,
       schoolId: u.school_id || undefined,
       password: '',
     }));
@@ -41,6 +43,8 @@ export const userDB = {
       avatar: d.avatar || undefined,
       createdAt: new Date(d.created_at),
       isPremium: d.is_premium,
+      aiQuestionsToday: d.ai_questions_today || 0,
+      lastAiResetAt: d.last_ai_reset_at ? new Date(d.last_ai_reset_at) : undefined,
       schoolId: d.school_id || undefined,
       password: '',
     };
@@ -58,6 +62,8 @@ export const userDB = {
       avatar: d.avatar || undefined,
       createdAt: new Date(d.created_at),
       isPremium: d.is_premium,
+      aiQuestionsToday: d.ai_questions_today || 0,
+      lastAiResetAt: d.last_ai_reset_at ? new Date(d.last_ai_reset_at) : undefined,
       schoolId: d.school_id || undefined,
       password: '',
     };
@@ -2149,4 +2155,92 @@ export const seedSampleData = async () => {
 
   console.log('Supabase seed process completed:', stats);
   return stats;
+};
+
+
+// --- Smart AI Tutor Operations ---
+export const tutorDB = {
+  /**
+   * Layer 1: Search local chapters and MCQs for content related to the query
+   */
+  searchLocalContent: async (query: string, subjectId?: string): Promise<string | null> => {
+    try {
+      // 1. Search in Chapters Content
+      let chapterQuery = supabase.from('chapters').select('name, content, description');
+      if (subjectId) chapterQuery = chapterQuery.eq('subject_id', subjectId);
+      
+      const { data: chapters } = await chapterQuery;
+      
+      const keywords = query.toLowerCase().split(' ').filter(k => k.length > 3);
+      
+      if (chapters) {
+        for (const ch of chapters) {
+          const content = (ch.content || '').toLowerCase();
+          const name = (ch.name || '').toLowerCase();
+          
+          // Simple keyword match (at least 2 keywords or high density)
+          const matches = keywords.filter(k => content.includes(k) || name.includes(k));
+          if (matches.length >= 2 || (keywords.length === 1 && (content.includes(keywords[0]) || name.includes(keywords[0])))) {
+             return `ðŸ“š Found in Syllabus (${ch.name}):\n\n${ch.content.substring(0, 500)}${ch.content.length > 500 ? '...' : ''}`;
+          }
+        }
+      }
+
+      // 2. Search in MCQs (Explanations)
+      let mcqQuery = supabase.from('mcqs').select('question, explanation');
+      const { data: mcqs } = await mcqQuery;
+
+      if (mcqs) {
+        for (const mcq of mcqs) {
+          const explanation = (mcq.explanation || '').toLowerCase();
+          const question = (mcq.question || '').toLowerCase();
+          
+          const matches = keywords.filter(k => explanation.includes(k) || question.includes(k));
+          if (matches.length >= 2) {
+            return `ðŸ’¡ From Lesson Bank:\n\n${mcq.explanation}`;
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Local search failed:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Layer 2: Usage Tracking
+   */
+  getUsage: async (userId: string): Promise<{ today: number, limit: number, isPremium: boolean }> => {
+    const user = await userDB.getById(userId);
+    if (!user) return { today: 0, limit: 5, isPremium: false };
+
+    // Reset if it's a new day
+    const lastReset = user.lastAiResetAt ? new Date(user.lastAiResetAt) : new Date(0);
+    const isToday = new Date().toDateString() === lastReset.toDateString();
+
+    let todayCount = user.aiQuestionsToday || 0;
+    if (!isToday) {
+      todayCount = 0;
+      await supabase.from('users').update({ 
+        ai_questions_today: 0, 
+        last_ai_reset_at: new Date().toISOString() 
+      }).eq('id', userId);
+    }
+
+    const limit = user.isPremium ? 30 : 5;
+    return { today: todayCount, limit, isPremium: !!user.isPremium };
+  },
+
+  incrementUsage: async (userId: string): Promise<number> => {
+    const { data: user } = await supabase.from('users').select('ai_questions_today').eq('id', userId).single();
+    const newCount = (user?.ai_questions_today || 0) + 1;
+    
+    await supabase.from('users')
+      .update({ ai_questions_today: newCount })
+      .eq('id', userId);
+      
+    return newCount;
+  }
 };

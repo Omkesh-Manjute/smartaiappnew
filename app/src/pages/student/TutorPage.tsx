@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { tutorMessageDB, subjectDB } from '@/services/supabaseDB';
+import { tutorMessageDB, subjectDB, tutorDB } from '@/services/supabaseDB';
 import { getTutorResponse } from '@/services/geminiAPI';
 import type { TutorMode } from '@/services/geminiAPI';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -62,6 +62,7 @@ const TutorPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<TutorMode>('teacher');
+  const [usage, setUsage] = useState<{ today: number, limit: number, isPremium: boolean }>({ today: 0, limit: 5, isPremium: false });
   const [showTtsControls, setShowTtsControls] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const {
@@ -107,6 +108,9 @@ const TutorPage = () => {
     try {
       const history = await tutorMessageDB.getByStudent(user.id);
       setMessages(history);
+      
+      const usageData = await tutorDB.getUsage(user.id);
+      setUsage(usageData);
     } catch (error) {
       console.error('Error loading tutor history:', error);
       setMessages([]);
@@ -149,12 +153,41 @@ const TutorPage = () => {
         ? subjects.find(s => s.id === selectedSubject)?.chapters.find(c => c.id === selectedChapter)?.name
         : undefined;
 
+      // --- Layer 1: Local Search ---
+      const localResponse = await tutorDB.searchLocalContent(input, selectedSubject || undefined);
+      if (localResponse) {
+        const updatedMessage = { ...userMessage, response: localResponse };
+        setMessages((prev) =>
+          prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
+        );
+        void tutorMessageDB.create(updatedMessage);
+        setIsTyping(false);
+        return;
+      }
+
+      // --- Layer 2: Usage Limits ---
+      if (usage.today >= usage.limit) {
+        const limitMsg = `⚠️ You've reached your daily limit of ${usage.limit} questions. ${!usage.isPremium ? 'Upgrade to Premium for up to 30 questions/day!' : ''}`;
+        const updatedMessage = { ...userMessage, response: limitMsg };
+        setMessages((prev) =>
+          prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
+        );
+        setIsTyping(false);
+        toast.error('Limit reached');
+        return;
+      }
+
+      // --- Layer 3: AI API Call ---
       const aiResponse = await getTutorResponse(input, {
         subject: subjectName,
         chapter: chapterName,
         previousMessages: recentMessages,
         mode: selectedMode,
       });
+
+      // Increment usage if AI was called
+      await tutorDB.incrementUsage(user.id);
+      setUsage(prev => ({ ...prev, today: prev.today + 1 }));
 
       const updatedMessage = { ...userMessage, response: aiResponse };
       setMessages((prev) =>
@@ -247,10 +280,28 @@ const TutorPage = () => {
               </div>
               <div>
                 <h1 className="font-bold">AI Tutor</h1>
-                <p className="text-xs text-gray-500">Powered by Gemini</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-500">Powered by Gemini</p>
+                  <span className="w-1 h-1 bg-gray-300 rounded-full" />
+                  <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${usage.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {usage.isPremium ? 'PREMIUM' : 'FREE'}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex flex-col items-end">
+                <p className="text-[10px] font-medium text-gray-400">DAILY USAGE</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all ${usage.today >= usage.limit ? 'bg-red-500' : 'bg-purple-500'}`}
+                      style={{ width: `${Math.min((usage.today / usage.limit) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-600">{usage.today}/{usage.limit}</span>
+                </div>
+              </div>
               <button
                 onClick={clearHistory}
                 className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"
