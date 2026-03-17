@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
+import AIAvatar from './AIAvatar';
+import type { AvatarState } from './AIAvatar';
 import {
   ChevronLeft,
   Send,
@@ -67,6 +69,24 @@ const TutorPage = () => {
     isPaused, pause: pauseSpeech, resume: resumeSpeech,
     rate, setRate,
   } = useTextToSpeech();
+  const [avatarState, setAvatarState] = useState<AvatarState>('idle');
+
+  useEffect(() => {
+    // Wave on load
+    setAvatarState('waving');
+    const timer = setTimeout(() => setAvatarState('idle'), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (isTyping) {
+      setAvatarState('thinking');
+    } else if (isSpeaking) {
+      setAvatarState('talking');
+    } else {
+      setAvatarState('idle');
+    }
+  }, [isTyping, isSpeaking]);
 
   useEffect(() => {
     if (user) {
@@ -320,13 +340,15 @@ const TutorPage = () => {
 
       {/* Chat Area */}
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        <ScrollArea className="h-[calc(100vh-400px)]" ref={scrollRef}>
+        <ScrollArea className="h-[calc(100vh-450px)]" ref={scrollRef}>
           <div className="space-y-4">
+            {/* 3D Avatar Display */}
+            <div className="mb-6">
+              <AIAvatar state={avatarState} />
+            </div>
+
             {messages.length === 0 && (
-              <div className="text-center py-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-10 h-10 text-purple-600" />
-                </div>
+              <div className="text-center py-2">
                 <h2 className="text-xl font-semibold mb-2">Hello! I'm your AI Tutor</h2>
                 <p className="text-gray-500 mb-1">Powered by Google's Gemini AI</p>
                 <p className="text-sm text-purple-600 mb-4 font-medium">
