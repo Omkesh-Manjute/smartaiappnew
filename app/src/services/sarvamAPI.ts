@@ -45,21 +45,25 @@ export const getSarvamAudio = async (text: string, lang: 'hi' | 'en' = 'hi'): Pr
       body: JSON.stringify({
         inputs: [text],
         target_language_code: lang === 'hi' ? 'hi-IN' : 'en-IN',
-        speaker: 'meera', // 'meera' is the standard high-quality female voice for bulbul:v1
+        speaker: 'meera',
         model: 'bulbul:v1'
-      } as SarvamTTSRequest),
+      }), // Removed explicit cast to allow more flexible JSON
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Sarvam API Error Response:', errorData);
-      throw new Error(`Sarvam API error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+      const errorText = await response.text();
+      console.error('Sarvam API Raw Error:', errorText);
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(`Sarvam API error: ${response.status} - ${errorData.message || 'Unknown'}`);
+      } catch (e) {
+        throw new Error(`Sarvam API error: ${response.status} - ${errorText.substring(0, 100)}`);
+      }
     }
 
     const data: SarvamTTSResponse = await response.json();
-    console.log('Sarvam API Response:', { count: data.audios?.length });
+    console.log('Sarvam API Success:', { voice: 'meera', count: data.audios?.length });
     
-    // The API returns a base64 encoded string in the 'audios' array
     if (data.audios && data.audios.length > 0) {
       return `data:audio/wav;base64,${data.audios[0]}`;
     }
