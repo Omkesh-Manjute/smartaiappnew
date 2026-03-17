@@ -1,12 +1,13 @@
 import { supabase } from './supabase';
-import type { 
-  User, Subject, Chapter, MCQ, Test, TestAttempt, 
+import type {
+  User, Subject, Chapter, MCQ, Test, TestAttempt,
   StudyGroup, GroupMessage, GamificationData, Battle,
   Homework, HomeworkSubmission,
   School, Notification, Badge, TeacherAnalytics,
   StudentProgress, StudyPlan, ConceptMastery, ParentChild
 } from '@/types';
 import { class5Subjects, class5Tests } from '@/data/class5Data';
+import { class6Subjects } from '@/data/class6Data';
 
 // Helper type
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -96,7 +97,7 @@ export const subjectDB = {
   getAll: async (): Promise<Subject[]> => {
     const { data: subjects, error } = await supabase.from('subjects').select('*');
     if (error) throw error;
-    
+
     const result: Subject[] = [];
     for (const subject of subjects || []) {
       const s = subject as any;
@@ -104,7 +105,7 @@ export const subjectDB = {
         .from('chapters')
         .select('*, mcqs(*)')
         .eq('subject_id', s.id);
-      
+
       result.push({
         id: s.id,
         name: s.name,
@@ -849,7 +850,7 @@ export const gamificationDB = {
     const gamification = await gamificationDB.getByStudent(studentId);
     if (!gamification) return null;
     if (gamification.badges.some(b => b.id === badge.id)) return gamification;
-    
+
     const updatedBadges = [...gamification.badges, { ...badge, unlockedAt: new Date() }];
     return gamificationDB.update(studentId, { badges: updatedBadges });
   },
@@ -857,14 +858,14 @@ export const gamificationDB = {
   addXP: async (studentId: string, xp: number): Promise<GamificationData | null> => {
     const gamification = await gamificationDB.getByStudent(studentId);
     if (!gamification) return null;
-    
+
     const newXP = gamification.xp + xp;
     const newLevel = Math.floor(newXP / 1000) + 1;
-    
-    return gamificationDB.update(studentId, { 
-      xp: newXP, 
+
+    return gamificationDB.update(studentId, {
+      xp: newXP,
       level: newLevel,
-      totalStudyTime: gamification.totalStudyTime + 1 
+      totalStudyTime: gamification.totalStudyTime + 1
     });
   },
 };
@@ -1432,7 +1433,7 @@ export const teacherAnalyticsDB = {
     // Get all tests by teacher
     const tests = await testDB.getByTeacher(teacherId);
     const testIds = tests.map(t => t.id);
-    
+
     // Get all test results for these tests
     const allAttempts: TestAttempt[] = [];
     for (const testId of testIds) {
@@ -1468,7 +1469,7 @@ export const teacherAnalyticsDB = {
         const student = await userDB.getById(studentId);
         const studentAttempts = allAttempts.filter(a => a.studentId === studentId);
         const studentSubmissions = allSubmissions.filter(s => s.studentId === studentId);
-        
+
         return {
           studentId,
           name: student?.name || 'Unknown',
@@ -1518,7 +1519,7 @@ export const storageDB = {
       console.error('Upload error:', error);
       return null;
     }
-    
+
     const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
     return publicUrl;
   },
@@ -2058,69 +2059,70 @@ export const seedSampleData = async () => {
     mcqs: { total: 0, success: 0, fail: 0 },
     tests: { total: 0, success: 0, fail: 0 },
   };
-  
+
   // 1. Seed Subjects, Chapters, and MCQs
-  for (const subject of class5Subjects) {
-     stats.subjects.total++;
-     const { error: sError } = await supabase.from('subjects').upsert({
-       id: subject.id,
-       name: subject.name,
-       description: subject.description,
-       icon: subject.icon,
-       color: subject.color,
-       grade: subject.grade,
-       created_at: new Date().toISOString(),
-     });
-     
-     if (sError) {
-       console.error(`Error seeding subject ${subject.id}:`, sError);
-       stats.subjects.fail++;
-       continue; // If subject fails, skip its chapters
-     }
-     stats.subjects.success++;
+  const allSubjects = [...class5Subjects, ...class6Subjects];
+  for (const subject of allSubjects) {
+    stats.subjects.total++;
+    const { error: sError } = await supabase.from('subjects').upsert({
+      id: subject.id,
+      name: subject.name,
+      description: subject.description,
+      icon: subject.icon,
+      color: subject.color,
+      grade: subject.grade,
+      created_at: new Date().toISOString(),
+    });
 
-     for (const chapter of subject.chapters) {
-       stats.chapters.total++;
-       const { error: chError } = await supabase.from('chapters').upsert({
-         id: chapter.id,
-         subject_id: chapter.subjectId,
-         name: chapter.name,
-         description: chapter.description,
-         order: chapter.order,
-         content: chapter.content,
-         updated_at: new Date().toISOString(),
-       });
-       
-       if (chError) {
-         console.error(`Error seeding chapter ${chapter.id}:`, chError);
-         stats.chapters.fail++;
-         continue; // Skip MCQs if chapter fails
-       }
-       stats.chapters.success++;
+    if (sError) {
+      console.error(`Error seeding subject ${subject.id}:`, sError);
+      stats.subjects.fail++;
+      continue; // If subject fails, skip its chapters
+    }
+    stats.subjects.success++;
 
-       if (chapter.mcqs && chapter.mcqs.length > 0) {
-         for (const mcq of chapter.mcqs) {
-           stats.mcqs.total++;
-           const { error: mcqError } = await supabase.from('mcqs').upsert({
-             id: mcq.id,
-             chapter_id: chapter.id,
-             question: mcq.question,
-             options: mcq.options,
-             correct_answer: mcq.correctAnswer,
-             explanation: mcq.explanation,
-             difficulty: mcq.difficulty,
-             created_at: new Date().toISOString(),
-           });
-           
-           if (mcqError) {
-             console.error(`Error seeding MCQ ${mcq.id}:`, mcqError);
-             stats.mcqs.fail++;
-           } else {
-             stats.mcqs.success++;
-           }
-         }
-       }
-     }
+    for (const chapter of subject.chapters) {
+      stats.chapters.total++;
+      const { error: chError } = await supabase.from('chapters').upsert({
+        id: chapter.id,
+        subject_id: chapter.subjectId,
+        name: chapter.name,
+        description: chapter.description,
+        order: chapter.order,
+        content: chapter.content,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (chError) {
+        console.error(`Error seeding chapter ${chapter.id}:`, chError);
+        stats.chapters.fail++;
+        continue; // Skip MCQs if chapter fails
+      }
+      stats.chapters.success++;
+
+      if (chapter.mcqs && chapter.mcqs.length > 0) {
+        for (const mcq of chapter.mcqs) {
+          stats.mcqs.total++;
+          const { error: mcqError } = await supabase.from('mcqs').upsert({
+            id: mcq.id,
+            chapter_id: chapter.id,
+            question: mcq.question,
+            options: mcq.options,
+            correct_answer: mcq.correctAnswer,
+            explanation: mcq.explanation,
+            difficulty: mcq.difficulty,
+            created_at: new Date().toISOString(),
+          });
+
+          if (mcqError) {
+            console.error(`Error seeding MCQ ${mcq.id}:`, mcqError);
+            stats.mcqs.fail++;
+          } else {
+            stats.mcqs.success++;
+          }
+        }
+      }
+    }
   }
 
   // Get a valid user ID to use as creator for tests (to avoid foreign key violations)
@@ -2144,7 +2146,7 @@ export const seedSampleData = async () => {
       is_active: test.isActive,
       created_at: new Date().toISOString(),
     });
-    
+
     if (tError) {
       console.error(`Error seeding test ${test.id}:`, tError);
       stats.tests.fail++;
@@ -2168,20 +2170,20 @@ export const tutorDB = {
       // 1. Search in Chapters Content
       let chapterQuery = supabase.from('chapters').select('name, content, description');
       if (subjectId) chapterQuery = chapterQuery.eq('subject_id', subjectId);
-      
+
       const { data: chapters } = await chapterQuery;
-      
+
       const keywords = query.toLowerCase().split(' ').filter(k => k.length > 3);
-      
+
       if (chapters) {
         for (const ch of chapters) {
           const content = (ch.content || '').toLowerCase();
           const name = (ch.name || '').toLowerCase();
-          
+
           // Simple keyword match (at least 2 keywords or high density)
           const matches = keywords.filter(k => content.includes(k) || name.includes(k));
           if (matches.length >= 2 || (keywords.length === 1 && (content.includes(keywords[0]) || name.includes(keywords[0])))) {
-             return `ðŸ“š Found in Syllabus (${ch.name}):\n\n${ch.content.substring(0, 500)}${ch.content.length > 500 ? '...' : ''}`;
+            return `ðŸ“š Found in Syllabus (${ch.name}):\n\n${ch.content.substring(0, 500)}${ch.content.length > 500 ? '...' : ''}`;
           }
         }
       }
@@ -2194,7 +2196,7 @@ export const tutorDB = {
         for (const mcq of mcqs) {
           const explanation = (mcq.explanation || '').toLowerCase();
           const question = (mcq.question || '').toLowerCase();
-          
+
           const matches = keywords.filter(k => explanation.includes(k) || question.includes(k));
           if (matches.length >= 2) {
             return `ðŸ’¡ From Lesson Bank:\n\n${mcq.explanation}`;
@@ -2223,9 +2225,9 @@ export const tutorDB = {
     let todayCount = user.aiQuestionsToday || 0;
     if (!isToday) {
       todayCount = 0;
-      await supabase.from('users').update({ 
-        ai_questions_today: 0, 
-        last_ai_reset_at: new Date().toISOString() 
+      await supabase.from('users').update({
+        ai_questions_today: 0,
+        last_ai_reset_at: new Date().toISOString()
       }).eq('id', userId);
     }
 
@@ -2236,11 +2238,11 @@ export const tutorDB = {
   incrementUsage: async (userId: string): Promise<number> => {
     const { data: user } = await supabase.from('users').select('ai_questions_today').eq('id', userId).single();
     const newCount = (user?.ai_questions_today || 0) + 1;
-    
+
     await supabase.from('users')
       .update({ ai_questions_today: newCount })
       .eq('id', userId);
-      
+
     return newCount;
   }
 };
