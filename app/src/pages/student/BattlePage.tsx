@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/contexts/GamificationContext';
+import { supabase } from '@/services/supabase';
 import { battleDB, subjectDB, userDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,6 +86,45 @@ const BattlePage = () => {
       return () => clearInterval(timer);
     }
   }, [activeBattle, currentQuestion]);
+
+  // Listen for opponent joining the created battle
+  useEffect(() => {
+    if (!activeBattle || activeBattle.status !== 'waiting' || battleType !== 'online') return;
+
+    const channel = supabase
+      .channel(`battle_${activeBattle.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'battles', filter: `id=eq.${activeBattle.id}` },
+        async (payload) => {
+          const updatedBattle = payload.new;
+          if (updatedBattle.status === 'in_progress' && updatedBattle.player2_id) {
+            const opponentId = updatedBattle.player2_id;
+            const opp = await userDB.getById(opponentId);
+            if (opp) setOpponentName(opp.name);
+            
+            setActiveBattle((prev) => prev ? {
+              ...prev,
+              status: 'in_progress',
+              player2Id: opponentId,
+              startedAt: updatedBattle.started_at ? new Date(updatedBattle.started_at) : new Date(),
+            } : null);
+            
+            setAnswers(new Array(activeBattle.questions.length).fill(-1));
+            setCurrentQuestion(0);
+            setTimeLeft(15);
+            setMyScore(0);
+            setOpponentScore(0);
+            toast.success('Opponent joined! Battle starting!');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeBattle, battleType]);
 
   const loadData = async () => {
     const allSubjects = await subjectDB.getAll();
