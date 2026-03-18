@@ -34,6 +34,8 @@ import {
   BrainCircuit,
   ClipboardCheck,
   HelpCircle,
+  Search,
+  X,
 } from 'lucide-react';
 import type { TutorMessage, Subject } from '@/types';
 
@@ -52,6 +54,61 @@ const LEARNING_MODES: { id: TutorMode; label: string; icon: React.ElementType; d
   { id: 'quiz', label: 'Quiz Mode', icon: HelpCircle, description: 'Test your understanding' },
 ];
 
+const renderAIResponse = (text: string) => {
+  if (!text.includes('## Explanation')) {
+    return <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{text}</p>;
+  }
+
+  const sections = text.split('## ').filter(Boolean);
+  
+  return (
+    <div className="space-y-4 w-full">
+      {sections.map((section, idx) => {
+        const lines = section.trim().split('\n');
+        const title = lines[0].trim();
+        const content = lines.slice(1).join('\n').trim();
+        
+        // Skip empty sections
+        if (!content && !title) return null;
+
+        let Icon = Bot;
+        let bgClass = 'bg-purple-50/50';
+        let textClass = 'text-purple-700';
+        let borderClass = 'border-purple-100';
+
+        if (title.toLowerCase().includes('explanation')) {
+          Icon = BookOpen;
+          bgClass = 'bg-blue-50/50';
+          textClass = 'text-blue-700';
+          borderClass = 'border-blue-100';
+        } else if (title.toLowerCase().includes('example')) {
+          Icon = Lightbulb;
+          bgClass = 'bg-amber-50/50';
+          textClass = 'text-amber-700';
+          borderClass = 'border-amber-100';
+        } else if (title.toLowerCase().includes('key point')) {
+          Icon = Sparkles;
+          bgClass = 'bg-emerald-50/50';
+          textClass = 'text-emerald-700';
+          borderClass = 'border-emerald-100';
+        }
+
+        return (
+          <div key={idx} className={`rounded-xl p-4 border shadow-sm ${bgClass} ${borderClass}`}>
+            <h4 className={`flex items-center gap-2 font-bold mb-3 pb-2 border-b ${borderClass} ${textClass}`}>
+              <Icon className="w-4 h-4" />
+              {title}
+            </h4>
+            <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap space-y-2">
+              {content}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const TutorPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -65,6 +122,8 @@ const TutorPage = () => {
   const [usage, setUsage] = useState<{ today: number, limit: number, isPremium: boolean }>({ today: 0, limit: 5, isPremium: false });
   const [showTtsControls, setShowTtsControls] = useState<string | null>(null);
   const [voiceLang, setVoiceLang] = useState<'en' | 'hi'>('hi');
+  const [chapterSearch, setChapterSearch] = useState('');
+  const [activeGrammarTip, setActiveGrammarTip] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const {
     speak, stop: stopSpeech, supported: ttsSupported, isSpeaking,
@@ -168,7 +227,7 @@ const TutorPage = () => {
 
       // --- Layer 2: Usage Limits ---
       if (usage.today >= usage.limit) {
-        const limitMsg = `⚠️ You've reached your daily limit of ${usage.limit} questions. ${!usage.isPremium ? 'Upgrade to Premium for up to 30 questions/day!' : ''}`;
+        const limitMsg = `⚠️ Daily Limit Reached (${usage.today}/${usage.limit})\nUpgrade to continue unlimited learning`;
         const updatedMessage = { ...userMessage, response: limitMsg };
         setMessages((prev) =>
           prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
@@ -284,7 +343,7 @@ const TutorPage = () => {
                   <p className="text-xs text-gray-500">Powered by Gemini</p>
                   <span className="w-1 h-1 bg-gray-300 rounded-full" />
                   <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${usage.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {usage.isPremium ? 'PREMIUM' : 'FREE'}
+                    {usage.isPremium ? 'PREMIUM' : `FREE PLAN (${usage.limit} questions/day)`}
                   </p>
                 </div>
               </div>
@@ -376,10 +435,11 @@ const TutorPage = () => {
                 onClick={() => {
                   setSelectedSubject(subject.id);
                   setSelectedChapter(null);
+                  setChapterSearch('');
                 }}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${selectedSubject === subject.id
-                    ? 'bg-purple-100 text-purple-700'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all font-medium border-b-2 ${selectedSubject === subject.id
+                    ? 'bg-purple-50 text-purple-700 border-purple-500 font-bold'
+                    : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
                   }`}
               >
                 {subject.name}
@@ -388,28 +448,42 @@ const TutorPage = () => {
           </div>
 
           {selectedSubjectData && (
-            <div className="flex gap-2 overflow-x-auto mt-2 pt-2 border-t">
-              <button
-                onClick={() => setSelectedChapter(null)}
-                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${selectedChapter === null
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                  }`}
-              >
-                All Chapters
-              </button>
-              {selectedSubjectData.chapters.map((chapter) => (
+            <div className="mt-3 pt-3 border-t">
+              <div className="flex items-center gap-2 mb-3">
+                <Search className="w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search chapters..."
+                  value={chapterSearch}
+                  onChange={(e) => setChapterSearch(e.target.value)}
+                  className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:border-purple-300 w-full sm:w-72 transition-all placeholder:text-gray-400"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 <button
-                  key={chapter.id}
-                  onClick={() => setSelectedChapter(chapter.id)}
-                  className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${selectedChapter === chapter.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  onClick={() => setSelectedChapter(null)}
+                  className={`px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all font-medium border-b-2 ${selectedChapter === null
+                      ? 'bg-blue-50 text-blue-700 border-blue-500 font-bold'
+                      : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
                     }`}
                 >
-                  {chapter.name}
+                  All Chapters
                 </button>
-              ))}
+                {selectedSubjectData.chapters
+                  .filter(c => c.name.toLowerCase().includes(chapterSearch.toLowerCase()))
+                  .map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    onClick={() => setSelectedChapter(chapter.id)}
+                    className={`px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all font-medium border-b-2 ${selectedChapter === chapter.id
+                        ? 'bg-blue-50 text-blue-700 border-blue-500 font-bold'
+                        : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
+                      }`}
+                  >
+                    {chapter.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -420,8 +494,10 @@ const TutorPage = () => {
         <ScrollArea className="h-[calc(100vh-450px)]" ref={scrollRef}>
           <div className="space-y-4">
             {/* 3D Avatar Display */}
-            <div className="mb-6">
-              <AIAvatar state={avatarState} />
+            <div className="mb-4 flex flex-col items-center justify-center">
+              <div className="w-full max-w-[120px] aspect-square transition-all duration-500">
+                <AIAvatar state={avatarState} />
+              </div>
             </div>
 
             {messages.length === 0 && (
@@ -475,16 +551,28 @@ const TutorPage = () => {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex justify-end mb-2"
+                  className="flex justify-end mb-3"
                 >
-                  <div className="flex items-start gap-2 max-w-[80%]">
-                    <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-2">
-                      <p>{msg.message}</p>
+                  <div className="flex flex-col items-end gap-1 max-w-[80%]">
+                    <div className="flex items-start gap-2">
+                      <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm">
+                        <p>{msg.message}</p>
+                      </div>
+                      <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm">
+                        <AvatarImage src={user?.avatar} />
+                        <AvatarFallback>{user?.name[0]}</AvatarFallback>
+                      </Avatar>
                     </div>
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.avatar} />
-                      <AvatarFallback>{user?.name[0]}</AvatarFallback>
-                    </Avatar>
+
+                    {/* Fun Grammar Tip UI Simulation */}
+                    {msg.message.length > 10 && msg.message.indexOf(' ') > 0 && (
+                      <button
+                        onClick={() => setActiveGrammarTip(msg.message)}
+                        className="mr-10 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                      >
+                        💡 Grammar Tip Available
+                      </button>
+                    )}
                   </div>
                 </motion.div>
 
@@ -499,58 +587,88 @@ const TutorPage = () => {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
-                      <div className="bg-white border rounded-2xl rounded-tl-sm px-4 py-2 space-y-2">
-                        <p className="text-gray-700 whitespace-pre-wrap">{msg.response}</p>
+                      <div className="bg-white border rounded-2xl rounded-tl-sm p-4 space-y-4 shadow-sm min-w-[280px]">
+                        {msg.response.includes('Daily Limit Reached') ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-red-600 font-bold bg-red-50 p-3 rounded-xl border border-red-100 text-sm">
+                              ⚠️ Daily Limit Reached ({usage.limit}/{usage.limit})
+                            </div>
+                            <p className="text-gray-600 text-sm font-medium">Upgrade to continue unlimited learning</p>
+                            <div className="flex flex-col gap-2">
+                              {/* Assuming non-existing paths, just UI placeholders for now */}
+                              <button onClick={() => toast.info('Redirecting to upgrade...')} className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity">
+                                🔓 Upgrade Now
+                              </button>
+                              <button onClick={() => {
+                                setUsage(prev => ({ ...prev, limit: prev.limit + 1 }));
+                                toast.success('Unlocked 1 extra question!');
+                              }} className="w-full py-2.5 bg-white border-2 border-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition-colors flex justify-center items-center gap-2">
+                                🎁 Watch Ad <span className="text-xs font-normal opacity-70">(Unlock 1 question)</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {renderAIResponse(msg.response)}
 
-                        {/* TTS Controls */}
-                        <div className="border-t pt-2 space-y-2">
-                          <button
-                            onClick={() => handleTtsAction(msg.id, msg.response)}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full transition-colors"
-                            type="button"
-                          >
-                            {isSpeaking && showTtsControls === msg.id ? (
-                              <>
-                                <Square className="w-3 h-3" />
-                                Stop
-                              </>
-                            ) : (
-                              <>
-                                <Volume2 className="w-3 h-3" />
-                                🔊 Listen Explanation
-                              </>
-                            )}
-                          </button>
-
-                          {/* Expanded TTS Controls */}
-                          {showTtsControls === msg.id && isSpeaking && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="flex items-center gap-3 bg-gray-50 rounded-lg p-2"
-                            >
+                            {/* TTS Controls */}
+                            <div className="border-t pt-3 space-y-3">
                               <button
-                                onClick={() => isPaused ? resumeSpeech() : pauseSpeech()}
-                                className="p-1.5 rounded-full bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors"
+                                onClick={() => handleTtsAction(msg.id, msg.response)}
+                                className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-4 py-3 rounded-xl transition-all shadow-sm"
                                 type="button"
                               >
-                                {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+                                {isSpeaking && showTtsControls === msg.id ? (
+                                  <>
+                                    <Square className="w-5 h-5 fill-current" />
+                                    Stop Voice
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-5 h-5" />
+                                    ▶️ Listen with AI Voice
+                                  </>
+                                )}
                               </button>
-                              <div className="flex items-center gap-2 flex-1">
-                                <span className="text-xs text-gray-500 whitespace-nowrap">Speed</span>
-                                <Slider
-                                  value={[rate]}
-                                  onValueChange={([val]) => setRate(val)}
-                                  min={0.5}
-                                  max={2}
-                                  step={0.1}
-                                  className="w-24"
-                                />
-                                <span className="text-xs font-mono text-gray-600 w-8">{rate.toFixed(1)}x</span>
-                              </div>
-                            </motion.div>
-                          )}
-                        </div>
+
+                              {/* Expanded TTS Controls */}
+                              {showTtsControls === msg.id && isSpeaking && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  className="flex items-center gap-3 bg-purple-50/50 rounded-xl p-3 border border-purple-100"
+                                >
+                                  <button
+                                    onClick={() => isPaused ? resumeSpeech() : pauseSpeech()}
+                                    className="p-2 rounded-full bg-white text-purple-600 hover:bg-purple-100 transition-colors shadow-sm border border-purple-100"
+                                    type="button"
+                                  >
+                                    {isPaused ? <Play className="w-4 h-4 fill-current ml-0.5" /> : <Pause className="w-4 h-4 fill-current" />}
+                                  </button>
+                                  <div className="flex items-center gap-3 flex-1 px-1">
+                                    <span className="text-xs font-bold text-purple-700 whitespace-nowrap">Speed</span>
+                                    <Slider
+                                      value={[rate]}
+                                      onValueChange={([val]) => setRate(val)}
+                                      min={0.75}
+                                      max={1.25}
+                                      step={0.25}
+                                      className="w-full cursor-pointer"
+                                    />
+                                    <span className="text-xs font-black text-purple-700 w-8 text-right bg-white px-1.5 py-0.5 rounded border border-purple-100">{rate.toFixed(2)}x</span>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Quick Actions */}
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 mt-2">
+                              <button onClick={() => { setInput('Can you repeat that and give me another example?'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">🔁 Repeat</button>
+                              <button onClick={() => { setInput('Explain this more simply.'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">✏️ Simplify</button>
+                              <button onClick={() => { setInput('Can you ask me a follow-up test question?'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">❓ Ask Follow-up</button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </motion.div>

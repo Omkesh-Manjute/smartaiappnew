@@ -397,9 +397,19 @@ const getModeSystemPrompt = (mode: TutorMode): string => {
 Language Rules: 
 - If providing Hindi examples, provide the Hindi script (Devanagari) first, then the English translation.
 - IMPORTANT: DO NOT provide Romanized/Phonetic Hindi in brackets (e.g. avoid "(Main kahan ja raha hoon)") as it confuses the speech system.
-- Format example:
-  Hindi: मैं कहीं जा raha हूँ
-  English: I am going somewhere
+
+CRITICAL FORMATTING RULES:
+You MUST structure your response EXACTLY using these three Markdown headers:
+## Explanation
+(Provide the main explanation, answer, or quiz question here)
+
+## Example
+(Provide a concrete example or analogy here)
+
+## Key Points
+(Provide 1-3 short bullet points summarizing the takeaway or hint)
+
+Do not add any conversational filler before the first header.
 `;
 
   switch (mode) {
