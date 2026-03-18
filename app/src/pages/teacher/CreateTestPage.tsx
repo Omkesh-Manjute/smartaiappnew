@@ -227,7 +227,7 @@ const CreateTestPage = () => {
       totalMarks,
       passingMarks: Math.round((testData.passingMarks / 100) * totalMarks),
       createdBy: user.id,
-      createdAt: testId ? undefined : new Date(),
+      createdAt: new Date(),
       isActive: true,
     };
 
