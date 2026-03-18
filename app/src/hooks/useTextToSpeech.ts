@@ -209,44 +209,84 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     });
   }, []);
 
-  const playBrowserTTS = useCallback((text: string, lang: string) => {
+  const playBrowserTTS = useCallback((text: string, langHint: string) => {
     if (!('speechSynthesis' in window)) return;
+    
+    // Stop any ongoing speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    const bestVoice = findBestVoice(window.speechSynthesis.getVoices(), lang, text);
-    
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
+    // 1. Split text into manageable chunks (sentences) to prevent browser-specific length issues
+    // Using a regex that handles English and Hindi (। is the Hindi full stop)
+    const chunks = text.match(/[^.!?।]+[.!?।]?\s*/g) || [text];
+    let currentChunkIndex = 0;
+    let totalCharOffset = 0;
 
-    const isHindi = lang.startsWith('hi') || (bestVoice && bestVoice.lang.startsWith('hi'));
-    utterance.rate = isHindi ? 0.85 : rate;
-    utterance.pitch = 1.0;
-    utterance.lang = bestVoice ? bestVoice.lang : lang;
-
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      setCurrentCharIndex(-1);
-    };
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setIsPaused(false);
-      setCurrentCharIndex(-1);
-    };
-    utterance.onboundary = (event) => {
-      if (event.name === 'word') {
-        setCurrentCharIndex(event.charIndex);
+    const speakNextChunk = () => {
+      // If we reached the end
+      if (currentChunkIndex >= chunks.length) {
+        setIsSpeaking(false);
+        setIsPaused(false);
+        setCurrentCharIndex(-1);
+        return;
       }
-    };
-    utterance.onerror = (e) => {
-      console.error('SpeechSynthesis Error:', e);
-      setIsSpeaking(false);
-      setIsPaused(false);
-      setCurrentCharIndex(-1);
+
+      const chunk = chunks[currentChunkIndex];
+      // Skip empty chunks
+      if (!chunk.trim()) {
+        currentChunkIndex++;
+        speakNextChunk();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      const bestVoice = findBestVoice(window.speechSynthesis.getVoices(), langHint, chunk);
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      }
+
+      const isHindi = langHint.startsWith('hi') || (bestVoice && bestVoice.lang.startsWith('hi'));
+      utterance.rate = isHindi ? 0.85 : rate;
+      utterance.pitch = 1.0;
+      utterance.lang = bestVoice ? bestVoice.lang : langHint;
+
+      utterance.onstart = () => {
+        // First chunk start
+        if (currentChunkIndex === 0) {
+          setIsSpeaking(true);
+        }
+      };
+
+      utterance.onend = () => {
+        totalCharOffset += chunk.length;
+        currentChunkIndex++;
+        speakNextChunk();
+      };
+
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          setCurrentCharIndex(totalCharOffset + event.charIndex);
+        }
+      };
+
+      utterance.onerror = (e) => {
+        console.error('SpeechSynthesis Chunk Error:', e.error, 'Reason:', e.type, 'on text:', chunk);
+        // Fallback for network errors on Google voices
+        if (e.error === 'network' && utterance.voice?.name.includes('Google')) {
+          console.warn('Network voice failed, falling back to local voice...');
+          utterance.voice = null; 
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setIsSpeaking(false);
+          setIsPaused(false);
+          setCurrentCharIndex(-1);
+        }
+      };
+
+      window.speechSynthesis.speak(utterance);
     };
 
-    window.speechSynthesis.speak(utterance);
+    speakNextChunk();
   }, [findBestVoice, rate]);
 
   const speak = useCallback(async (text: string, langHint?: string) => {
