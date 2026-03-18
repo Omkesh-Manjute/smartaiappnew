@@ -254,11 +254,12 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       const dbSettings = await SystemSettingsService.getSettings();
       const sarvamKey = dbSettings.sarvam_api_key || import.meta.env.VITE_SARVAM_API_KEY;
       
-      if (sarvamKey) {
-        const audioChunks = await getSarvamAudio(cleanedText, hasHindiChar ? 'hi' : 'en', {
+      if (sarvamKey && sarvamKey.trim() !== '') {
+        const isHindi = targetLang.startsWith('hi');
+        const audioChunks = await getSarvamAudio(cleanedText, isHindi ? 'hi' : 'en', {
           apiKey: sarvamKey,
-          speaker: dbSettings.sarvam_speaker,
-          model: dbSettings.sarvam_model
+          speaker: isHindi ? 'anushka' : 'amartya', // anushka = hindi female, amartya = english male
+          model: 'bulbul:v2'
         });
 
         // 4. CHECK: Only proceed if this is still the most recent request

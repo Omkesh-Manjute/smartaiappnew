@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { progressDB, subjectDB, notificationDB } from '@/services/supabaseDB';
 import { useGamification } from '@/contexts/GamificationContext';
+import { translateContent } from '@/services/geminiAPI';
 import { useTextToSpeech, cleanTextForTTS } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +20,8 @@ import {
   VolumeX,
   ArrowRight,
   Star,
+  Languages,
+  Loader2,
 } from 'lucide-react';
 import type { Chapter, Subject } from '@/types';
 
@@ -34,6 +37,11 @@ const ChapterPage = () => {
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
   const [showMcqResults, setShowMcqResults] = useState(false);
   const [mcqScore, setMcqScore] = useState(0);
+
+  // Translation State
+  const [contentLang, setContentLang] = useState<'en' | 'hi'>('en');
+  const [translatedContent, setTranslatedContent] = useState<Record<string, string>>({});
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Auto-scroll to currently highlighted word
   useEffect(() => {
@@ -67,12 +75,39 @@ const ChapterPage = () => {
     }
   }, [chapterId]);
 
+  const handleLangToggle = async () => {
+    if (!chapter) return;
+    const newLang = contentLang === 'en' ? 'hi' : 'en';
+    
+    stop(); // Stop any ongoing speech
+
+    if (newLang === 'hi' && !translatedContent['hi']) {
+      setIsTranslating(true);
+      try {
+        const translated = await translateContent(chapter.content, 'hi');
+        setTranslatedContent((prev) => ({ ...prev, hi: translated }));
+      } catch (error) {
+        toast.error('Translation failed. Please try again later.');
+        setIsTranslating(false);
+        return; // fallback to English
+      }
+      setIsTranslating(false);
+    }
+
+    setContentLang(newLang);
+    toast.success(`Language changed to ${newLang === 'hi' ? 'Hindi' : 'English'}`);
+  };
+
   const speakContent = () => {
     if (!chapter) return;
     if (isSpeaking) {
       stop();
     } else {
-      speak(chapter.content);
+      const displayContent = contentLang === 'hi' && translatedContent['hi'] 
+        ? translatedContent['hi'] 
+        : chapter.content;
+      const cleanedText = cleanTextForTTS(displayContent);
+      speak(cleanedText, contentLang);
     }
   };
 
@@ -187,32 +222,52 @@ const ChapterPage = () => {
           <TabsContent value="content" className="mt-6">
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                   <h2 className="text-xl font-semibold">{chapter.name}</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={speakContent}
-                    className="flex items-center gap-2"
-                  >
-                    {isSpeaking ? (
-                      <>
-                        <VolumeX className="w-4 h-4" />
-                        Stop
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="w-4 h-4" />
-                        Read Aloud
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLangToggle}
+                      disabled={isTranslating}
+                      className="flex items-center gap-2"
+                    >
+                      {isTranslating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Languages className="w-4 h-4" />
+                      )}
+                      {contentLang === 'en' ? 'Translate to Hindi' : 'Read in English'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={speakContent}
+                      disabled={isTranslating}
+                      className="flex items-center gap-2"
+                    >
+                      {isSpeaking ? (
+                        <>
+                          <VolumeX className="w-4 h-4" />
+                          Stop
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-4 h-4" />
+                          Read Aloud
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="prose max-w-none">
                   <div className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
                     {(() => {
-                      const cleanedText = cleanTextForTTS(chapter.content);
+                      const displayContent = contentLang === 'hi' && translatedContent['hi'] 
+                        ? translatedContent['hi'] 
+                        : chapter.content;
+                      const cleanedText = cleanTextForTTS(displayContent);
                       const parts = cleanedText.split(/(\s+)/);
                       let currentPos = 0;
                       

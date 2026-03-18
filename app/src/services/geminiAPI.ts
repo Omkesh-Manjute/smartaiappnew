@@ -701,6 +701,24 @@ Return ONLY JSON, no markdown.`;
   }
 };
 
+// Translate content directly
+export const translateContent = async (text: string, targetLanguage: 'hi' | 'en'): Promise<string> => {
+  try {
+    const prompt = `Translate the following educational content to ${targetLanguage === 'hi' ? 'Hindi' : 'English'}.
+Preserve ALL the original formatting, including paragraphs, bullet points, headers, and symbols.
+Do not add any additional explanations or intro text. Just the translated content.
+If the text contains mathematical or scientific formulas, keep them intact or translate surrounding words appropriately.
+
+Content to translate:
+${text}`;
+
+    return await callIntelligence(prompt);
+  } catch (error) {
+    console.error('Translation error:', error);
+    throw new Error('Failed to translate content');
+  }
+};
+
 export default {
   generateTestQuestions,
   generateTestQuestionsFromPrompt,
@@ -709,4 +727,5 @@ export default {
   generateStudyPlan,
   analyzeWeakAreas,
   getVoicePracticeFeedback,
+  translateContent,
 };
