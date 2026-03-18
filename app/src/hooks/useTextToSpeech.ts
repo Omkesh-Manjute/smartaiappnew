@@ -13,7 +13,8 @@ export const cleanTextForTTS = (text: string) => {
     .replace(/\(/g, ', ')
     .replace(/\)/g, ', ')
     .replace(/\b-\b/g, ' ')    // Replace single dashes between words with space (to avoid "minus")
-    .replace(/\s+/g, ' ')
+    .replace(/^[-*]\s+/gm, '') // Remove list bullets at start of lines
+    .replace(/[ \t]+/g, ' ')   // Replace multiple spaces/tabs with single space (preserves \n)
     .trim();
 };
 
