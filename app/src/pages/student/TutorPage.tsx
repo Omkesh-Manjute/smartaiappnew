@@ -35,7 +35,6 @@ import {
   ClipboardCheck,
   HelpCircle,
   Search,
-  X,
 } from 'lucide-react';
 import type { TutorMessage, Subject } from '@/types';
 
@@ -123,7 +122,6 @@ const TutorPage = () => {
   const [showTtsControls, setShowTtsControls] = useState<string | null>(null);
   const [voiceLang, setVoiceLang] = useState<'en' | 'hi'>('hi');
   const [chapterSearch, setChapterSearch] = useState('');
-  const [activeGrammarTip, setActiveGrammarTip] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const {
     speak, stop: stopSpeech, supported: ttsSupported, isSpeaking,
@@ -588,12 +586,11 @@ const TutorPage = () => {
 
                     {/* Fun Grammar Tip UI Simulation */}
                     {msg.message.length > 10 && msg.message.indexOf(' ') > 0 && (
-                      <button
-                        onClick={() => setActiveGrammarTip(msg.message)}
-                        className="mr-10 text-[10px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors shadow-sm cursor-pointer"
+                      <div
+                        className="mr-10 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
                       >
                         💡 Grammar Tip Available
-                      </button>
+                      </div>
                     )}
                   </div>
                 </motion.div>
