@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subjectDB, progressDB, notificationDB } from '@/services/supabaseDB';
+import { progressDB, subjectDB, notificationDB } from '@/services/supabaseDB';
 import { useGamification } from '@/contexts/GamificationContext';
+import { useTextToSpeech, cleanTextForTTS } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,7 +30,7 @@ const ChapterPage = () => {
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [activeTab, setActiveTab] = useState('content');
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { speak, stop, isSpeaking, currentCharIndex } = useTextToSpeech();
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
   const [showMcqResults, setShowMcqResults] = useState(false);
   const [mcqScore, setMcqScore] = useState(0);
@@ -57,20 +58,10 @@ const ChapterPage = () => {
 
   const speakContent = () => {
     if (!chapter) return;
-
-    if ('speechSynthesis' in window) {
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        setIsSpeaking(false);
-      } else {
-        const utterance = new SpeechSynthesisUtterance(chapter.content);
-        utterance.lang = 'en-US';
-        utterance.onend = () => setIsSpeaking(false);
-        window.speechSynthesis.speak(utterance);
-        setIsSpeaking(true);
-      }
+    if (isSpeaking) {
+      stop();
     } else {
-      toast.error('Text-to-speech not supported in your browser');
+      speak(chapter.content);
     }
   };
 
@@ -208,9 +199,36 @@ const ChapterPage = () => {
                 </div>
 
                 <div className="prose max-w-none">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {chapter.content}
-                  </p>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
+                    {(() => {
+                      const cleanedText = cleanTextForTTS(chapter.content);
+                      const parts = cleanedText.split(/(\s+)/);
+                      let currentPos = 0;
+                      
+                      return parts.map((part, index) => {
+                        const start = currentPos;
+                        currentPos += part.length;
+                        const end = currentPos;
+                        
+                        // Check if this part is currently being spoken
+                        // We highlight the part if the currentCharIndex falls within its range
+                        const isHighlighted = isSpeaking && currentCharIndex >= start && currentCharIndex < end;
+                        
+                        return (
+                          <span 
+                            key={index}
+                            className={`${
+                              isHighlighted 
+                                ? 'bg-yellow-200 text-yellow-900 rounded px-0.5 font-medium transition-all duration-150 shadow-sm border-b-2 border-yellow-400' 
+                                : ''
+                            }`}
+                          >
+                            {part}
+                          </span>
+                        );
+                      });
+                    })()}
+                  </div>
                 </div>
 
                 {chapter.videoUrl && (

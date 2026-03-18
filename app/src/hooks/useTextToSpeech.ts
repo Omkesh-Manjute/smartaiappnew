@@ -2,11 +2,27 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { getSarvamAudio } from '@/services/sarvamAPI';
 import { SystemSettingsService } from '@/services/SystemSettingsService';
 
+export const cleanTextForTTS = (text: string) => {
+  if (!text) return '';
+  return text
+    .replace(/#{1,6}\s?/g, '') // Remove hashtags (headings)
+    .replace(/[-*]{3,}/g, ' ') // Remove horizontal rules --- or ***
+    .replace(/[*_~`]/g, '')    // Remove other markdown symbols
+    .replace(/\bHindi\b/g, 'हिन्दी')
+    .replace(/\bhindi\b/g, 'हिन्दी')
+    .replace(/\(/g, ', ')
+    .replace(/\)/g, ', ')
+    .replace(/\b-\b/g, ' ')    // Replace single dashes between words with space (to avoid "minus")
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 interface UseTextToSpeechReturn {
   speak: (text: string, langHint?: string) => Promise<void>;
   stop: () => void;
   isSpeaking: boolean;
   isPaused: boolean;
+  currentCharIndex: number;
   pause: () => void;
   resume: () => void;
   supported: boolean;
@@ -20,6 +36,7 @@ interface UseTextToSpeechReturn {
 export const useTextToSpeech = (): UseTextToSpeechReturn => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentCharIndex, setCurrentCharIndex] = useState(-1);
   const [rate, setRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
@@ -41,6 +58,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     const targetVoices = availableVoices.filter(v => {
       const vLang = v.lang.toLowerCase();
       if (isHindi) return vLang.startsWith('hi') || vLang.startsWith('hin');
+      // For English, prioritize Indian English (en-IN) if possible
       return vLang.startsWith('en');
     });
     
@@ -52,10 +70,21 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       return null;
     }
 
-    const googleVoice = targetVoices.find(v => v.name.includes('Google') && (isHindi ? (v.lang.includes('IN') || v.name.includes('हिन्दी')) : true));
+    // Sort to prioritize en-IN voices for English
+    if (!isHindi) {
+      targetVoices.sort((a, b) => {
+        const aIN = a.lang.toLowerCase().includes('in');
+        const bIN = b.lang.toLowerCase().includes('in');
+        if (aIN && !bIN) return -1;
+        if (!aIN && bIN) return 1;
+        return 0;
+      });
+    }
+
+    const googleVoice = targetVoices.find(v => v.name.includes('Google') && (isHindi ? (v.lang.includes('IN') || v.name.includes('हिन्दी')) : v.lang.includes('IN')));
     if (googleVoice) return googleVoice;
 
-    const naturalVoice = targetVoices.find(v => v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('hi-in-'));
+    const naturalVoice = targetVoices.find(v => v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('hi-in-') || v.name.toLowerCase().includes('en-in-'));
     if (naturalVoice) return naturalVoice;
 
     return targetVoices[0];
@@ -102,6 +131,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
 
     setIsSpeaking(false);
     setIsPaused(false);
+    setCurrentCharIndex(-1);
   }, []);
 
   // Sequential playback for audio chunks
@@ -158,12 +188,25 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     utterance.pitch = 1.0;
     utterance.lang = bestVoice ? bestVoice.lang : lang;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => { setIsSpeaking(false); setIsPaused(false); };
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setCurrentCharIndex(-1);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      setCurrentCharIndex(-1);
+    };
+    utterance.onboundary = (event) => {
+      if (event.name === 'word') {
+        setCurrentCharIndex(event.charIndex);
+      }
+    };
     utterance.onerror = (e) => {
       console.error('SpeechSynthesis Error:', e);
       setIsSpeaking(false);
       setIsPaused(false);
+      setCurrentCharIndex(-1);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -175,19 +218,13 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     const requestId = lastRequestId.current;
 
     if (!text) return;
-    const cleanedText = text
-      .replace(/[*_~`#]/g, '')
-      .replace(/\bHindi\b/g, 'हिन्दी')
-      .replace(/\bhindi\b/g, 'हिन्दी')
-      .replace(/\(/g, ', ')
-      .replace(/\)/g, ', ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleanedText = cleanTextForTTS(text);
     const hasHindiChar = /[\u0900-\u097F]/.test(cleanedText);
     const targetLang = langHint || (hasHindiChar ? 'hi-IN' : 'en-US');
 
     // 2. Set UI State to speaking immediately so "Stop" button shows up
     setIsSpeaking(true);
+    setCurrentCharIndex(-1);
 
     // 3. Try Sarvam AI PREMIUM Option (Dynamic Config)
     try {
@@ -246,6 +283,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     stop,
     isSpeaking,
     isPaused,
+    currentCharIndex,
     pause,
     resume,
     supported,

@@ -40,6 +40,8 @@ import {
   CheckCircle,
   AlertCircle,
   MoreVertical,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 import type { Test, TestAttempt, Homework, Subject, TeacherAnalytics } from '@/types';
 import { subjectDB } from '@/services/supabaseDB';
@@ -515,15 +517,42 @@ const TeacherDashboard = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-sm text-gray-500">Avg Score</p>
-                              <p className={`font-bold ${avgScore >= 70 ? 'text-green-600' : 'text-orange-600'}`}>
-                                {avgScore}%
-                              </p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right mr-2">
+                                <p className="text-sm text-gray-500">Avg Score</p>
+                                <p className={`font-bold ${avgScore >= 70 ? 'text-green-600' : 'text-orange-600'}`}>
+                                  {avgScore}%
+                                </p>
+                              </div>
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  onClick={() => navigate(`/teacher/edit-test/${test.id}`)}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Delete this test?')) {
+                                      const success = await testDB.delete(test.id);
+                                      if (success) {
+                                        setTests(prev => prev.filter(t => t.id !== test.id));
+                                        toast.success('Test deleted');
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-gray-400" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                          </div>
                         </motion.div>
                       );
                     })}

@@ -238,6 +238,13 @@ const AdminDashboard = () => {
                 </span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
+              <Button onClick={() => navigate('/admin/tests')} variant="outline" className="w-full justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Manage Tests
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
               <Button onClick={() => navigate('/admin/ai-settings')} variant="outline" className="w-full justify-between border-blue-200 bg-blue-50/20 hover:bg-blue-50">
                 <span className="flex items-center gap-2 text-blue-700">
                   <Sparkles className="w-4 h-4" />

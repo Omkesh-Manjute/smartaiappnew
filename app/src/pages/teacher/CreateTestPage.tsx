@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { testDB, subjectDB } from '@/services/supabaseDB';
@@ -50,6 +50,7 @@ import type { TestQuestion, Subject } from '@/types';
 
 const CreateTestPage = () => {
   const navigate = useNavigate();
+  const { testId } = useParams();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -80,7 +81,34 @@ const CreateTestPage = () => {
 
   useEffect(() => {
     loadSubjects();
-  }, []);
+    if (testId) {
+      loadTestData();
+    }
+  }, [testId]);
+
+  const loadTestData = async () => {
+    if (!testId) return;
+    try {
+      const test = await testDB.getById(testId);
+      if (test) {
+        setTestData({
+          title: test.title,
+          description: test.description,
+          subjectId: test.subjectId,
+          chapterId: test.chapterIds?.[0] || '',
+          topic: '', // Topic is used for AI generation, not stored directly
+          duration: test.duration,
+          passingMarks: Math.round((test.passingMarks / test.totalMarks) * 100),
+          difficulty: 'mixed',
+          numQuestions: test.questions.length,
+        });
+        setQuestions(test.questions);
+      }
+    } catch (error) {
+      console.error('Error loading test data:', error);
+      toast.error('Failed to load test data');
+    }
+  };
 
   const loadSubjects = async () => {
     try {
@@ -189,7 +217,7 @@ const CreateTestPage = () => {
     const totalMarks = questions.reduce((acc, q) => acc + q.marks, 0);
 
     const test = {
-      id: `test_${Date.now()}`,
+      id: testId || `test_${Date.now()}`,
       title: testData.title,
       description: testData.description,
       subjectId: testData.subjectId,
@@ -199,13 +227,24 @@ const CreateTestPage = () => {
       totalMarks,
       passingMarks: Math.round((testData.passingMarks / 100) * totalMarks),
       createdBy: user.id,
-      createdAt: new Date(),
+      createdAt: testId ? undefined : new Date(),
       isActive: true,
     };
 
-    await testDB.create(test);
-    toast.success('Test created successfully!');
-    navigate('/teacher/dashboard');
+    if (testId) {
+      await testDB.update(testId, test);
+      toast.success('Test updated successfully!');
+    } else {
+      await testDB.create(test);
+      toast.success('Test created successfully!');
+    }
+    
+    // Redirect based on user role or previous page
+    if (user.role === 'admin') {
+      navigate('/admin/tests');
+    } else {
+      navigate('/teacher/dashboard');
+    }
   };
 
   return (
@@ -213,10 +252,13 @@ const CreateTestPage = () => {
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 h-16">
-            <button onClick={() => navigate('/teacher/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <button 
+              onClick={() => user?.role === 'admin' ? navigate('/admin/tests') : navigate('/teacher/dashboard')} 
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold">Create New Test</h1>
+            <h1 className="text-xl font-bold">{testId ? 'Edit Test' : 'Create New Test'}</h1>
           </div>
         </div>
       </header>
