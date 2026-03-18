@@ -552,10 +552,19 @@ const SubjectManagementPage = () => {
 
         try {
           await testDB.create(normalizedTest);
-        } catch (error) {
-          console.warn('Cloud test upload failed. Falling back to local:', error);
-          localTestDB.create(normalizedTest);
-          localFallbackUsed = true;
+        } catch (error: any) {
+          console.warn('Cloud test upload failed:', error);
+          
+          if (error.code === '23503') {
+            toast.error(`Upload Failed: The subjectId "${normalizedTest.subjectId}" is invalid (does not exist in database).`);
+            throw new Error('Foreign key violation');
+          } else if (error.code === '23505') {
+            toast.error(`Upload Failed: A test with ID "${normalizedTest.id}" already exists.`);
+            throw new Error('Unique constraint violation');
+          } else {
+            localTestDB.create(normalizedTest);
+            localFallbackUsed = true;
+          }
         }
         uploaded += 1;
       }
@@ -565,14 +574,19 @@ const SubjectManagementPage = () => {
       } else {
         toast.success(
           localFallbackUsed
-            ? `${uploaded} test(s) saved locally because Cloud upload failed. Check RLS policies!`
+            ? `${uploaded} test(s) parsed, but cloud upload failed for some. Check console or IDs.`
             : `${uploaded} test(s) uploaded successfully to Cloud!`
         );
         setTestUploadFile(null);
       }
     } catch (error) {
       console.error('Test upload failed:', error);
-      toast.error('Failed to upload tests. Use valid JSON.');
+      // Suppress the generic error if we already showed a specific toast above
+      if (error instanceof Error && (error.message.includes('Foreign key') || error.message.includes('Unique constraint'))) {
+        // already handled by specific toasts
+      } else {
+        toast.error('Failed to upload tests. Please ensure valid JSON structure.');
+      }
     } finally {
       setIsUploadingTests(false);
     }
