@@ -501,48 +501,70 @@ const TutorPage = () => {
             </div>
 
             {messages.length === 0 && (
-              <div className="text-center py-2">
-                <h2 className="text-xl font-semibold mb-2">Hello! I'm your AI Tutor</h2>
-                <p className="text-gray-500 mb-1">Powered by Google's Gemini AI</p>
-                <p className="text-sm text-purple-600 mb-4 font-medium">
-                  Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
-                </p>
-                <p className="text-gray-500 mb-6">I can help you with any subject. Try asking:</p>
-
-                <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
-                  {quickQuestions.map((q, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setInput(q.text);
-                        if (q.subject) {
-                          const sub = subjects.find((s) => s.name.toLowerCase().includes(q.subject!));
-                          if (sub) setSelectedSubject(sub.id);
-                        }
-                      }}
-                      className="flex items-center gap-2 p-3 rounded-xl border hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <q.icon className="w-5 h-5 text-purple-500" />
-                      <span className="text-sm">{q.text}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-8">
-                  <p className="text-sm text-gray-400 mb-3">Tips:</p>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {AI_TIPS.map((tip, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-purple-50 text-purple-700 text-xs rounded-full cursor-pointer hover:bg-purple-100"
-                        onClick={() => setInput(tip)}
-                      >
-                        {tip}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center pt-2 pb-8"
+              >
+                <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 max-w-md w-full relative overflow-hidden group">
+                  {/* Decorative top gradient */}
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 group-hover:h-3 transition-all duration-300" />
+                  
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 mb-2">
+                      Hello! I'm your AI Tutor
+                    </h2>
+                    <p className="text-gray-500 mb-6 text-sm">Powered by Google's Gemini AI</p>
+                    
+                    <div className="inline-flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-full mb-8 border border-purple-100/50">
+                      <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                      <span className="text-purple-700 text-sm font-semibold tracking-wide">
+                        Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
                       </span>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 mb-4 font-medium text-center">I can help you with any subject. Try asking:</p>
+                  
+                  <div className="grid grid-cols-1 gap-3 max-w-sm mx-auto">
+                    {quickQuestions.slice(0, 3).map((q, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setInput(q.text);
+                          if (q.subject) {
+                            const sub = subjects.find((s) => s.name.toLowerCase().includes(q.subject!));
+                            if (sub) setSelectedSubject(sub.id);
+                          }
+                        }}
+                        className="flex items-center gap-4 p-3.5 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-200 text-left group/btn"
+                      >
+                        <div className="bg-white p-2.5 rounded-xl shadow-sm text-purple-500 group-hover/btn:scale-110 group-hover/btn:bg-purple-50 transition-transform duration-200">
+                          <q.icon className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 group-hover/btn:text-purple-700 transition-colors">
+                          {q.text}
+                        </span>
+                      </button>
                     ))}
                   </div>
+
+                  <div className="mt-8 text-center">
+                    <p className="text-xs text-gray-400 mb-3 px-4 uppercase tracking-wider font-semibold">Quick Tips</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {AI_TIPS.slice(0, 4).map((tip, index) => (
+                        <span
+                          key={index}
+                          className="px-3.5 py-1.5 bg-gray-50 hover:bg-purple-50 border border-gray-100 hover:border-purple-200 text-gray-600 hover:text-purple-700 text-[11px] font-medium rounded-full cursor-pointer transition-all duration-200 shadow-sm"
+                          onClick={() => setInput(tip)}
+                        >
+                          {tip}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {messages.map((msg) => (

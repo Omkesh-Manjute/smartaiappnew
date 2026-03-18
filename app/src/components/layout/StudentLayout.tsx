@@ -255,12 +255,12 @@ const StudentLayout = () => {
             </header>
 
             {/* ─── PAGE CONTENT ─── */}
-            <main className="flex-1">
+            <main className="flex-grow w-full shrink-0">
                 <Outlet />
             </main>
 
             {/* ─── FOOTER ─── */}
-            <footer className="bg-gray-900 text-gray-300 mt-auto">
+            <footer className="bg-gray-900 text-gray-300 mt-auto shrink-0 relative z-10 w-full">
                 {/* Main Footer */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
