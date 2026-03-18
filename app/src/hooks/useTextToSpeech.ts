@@ -258,7 +258,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
         const isHindi = targetLang.startsWith('hi');
         const audioChunks = await getSarvamAudio(cleanedText, isHindi ? 'hi' : 'en', {
           apiKey: sarvamKey,
-          speaker: isHindi ? 'anushka' : 'amartya', // anushka = hindi female, amartya = english male
+          speaker: isHindi ? 'anushka' : 'abhilash', // Use valid Sarvam speakers
           model: 'bulbul:v2'
         });
 

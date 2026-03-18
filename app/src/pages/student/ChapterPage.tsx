@@ -86,8 +86,8 @@ const ChapterPage = () => {
       try {
         const translated = await translateContent(chapter.content, 'hi');
         setTranslatedContent((prev) => ({ ...prev, hi: translated }));
-      } catch (error) {
-        toast.error('Translation failed. Please try again later.');
+      } catch (error: any) {
+        toast.error(error.message || 'Translation failed. Please try again later.');
         setIsTranslating(false);
         return; // fallback to English
       }

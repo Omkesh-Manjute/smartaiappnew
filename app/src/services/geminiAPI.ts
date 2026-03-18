@@ -713,9 +713,9 @@ Content to translate:
 ${text}`;
 
     return await callIntelligence(prompt);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Translation error:', error);
-    throw new Error('Failed to translate content');
+    throw new Error(error.message || 'Failed to translate content');
   }
 };
 
