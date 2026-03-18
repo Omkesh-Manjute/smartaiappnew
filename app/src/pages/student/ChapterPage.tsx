@@ -35,6 +35,17 @@ const ChapterPage = () => {
   const [showMcqResults, setShowMcqResults] = useState(false);
   const [mcqScore, setMcqScore] = useState(0);
 
+  // Auto-scroll to currently highlighted word
+  useEffect(() => {
+    if (isSpeaking && currentCharIndex >= 0) {
+      const el = document.getElementById('current-tts-word');
+      if (el) {
+        // Find nearest scrollable container or window
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentCharIndex, isSpeaking]);
+
   useEffect(() => {
     if (chapterId) {
       const loadData = async () => {
@@ -217,6 +228,7 @@ const ChapterPage = () => {
                         return (
                           <span 
                             key={index}
+                            id={isHighlighted ? 'current-tts-word' : undefined}
                             className={`${
                               isHighlighted 
                                 ? 'bg-yellow-200 text-yellow-900 rounded px-0.5 font-medium transition-all duration-150 shadow-sm border-b-2 border-yellow-400' 

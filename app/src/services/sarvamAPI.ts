@@ -71,18 +71,23 @@ export interface SarvamTTSResponse {
   audios: string[];
 }
 
+export interface SarvamAudioChunk {
+  audio: string;
+  text: string;
+}
+
 export const getSarvamAudio = async (
   text: string, 
   lang: 'hi' | 'en' = 'hi', 
   config?: { apiKey?: string; speaker?: string; model?: string }
-): Promise<string[] | null> => {
+): Promise<SarvamAudioChunk[] | null> => {
   const currentKey = (config?.apiKey || API_KEY || '').trim();
   if (!currentKey) return null;
 
   try {
     const formattedText = prepareTextForSpeech(text);
     const chunks = chunkText(formattedText);
-    const audioChunks: string[] = [];
+    const audioChunks: SarvamAudioChunk[] = [];
 
     const speaker = config?.speaker || 'anushka';
     const model = config?.model || 'bulbul:v2';
@@ -112,7 +117,10 @@ export const getSarvamAudio = async (
 
       const data: SarvamTTSResponse = await response.json();
       if (data.audios && data.audios.length > 0) {
-        audioChunks.push(data.audios[0]);
+        audioChunks.push({
+          audio: data.audios[0],
+          text: chunk
+        });
       }
     }
 

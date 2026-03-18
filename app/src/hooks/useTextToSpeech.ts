@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { getSarvamAudio } from '@/services/sarvamAPI';
+import type { SarvamAudioChunk } from '@/services/sarvamAPI';
 import { SystemSettingsService } from '@/services/SystemSettingsService';
 
 export const cleanTextForTTS = (text: string) => {
@@ -44,9 +45,11 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   
   // Refs for audio management
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioQueue = useRef<string[]>([]);
+  const audioQueue = useRef<SarvamAudioChunk[]>([]);
   const isPlayingQueue = useRef(false);
   const lastRequestId = useRef<number>(0);
+  // Store the global start index of the current chunk so we can offset properly
+  const currentChunkGlobalOffset = useRef<number>(0);
 
   const supported = typeof window !== 'undefined' && ('speechSynthesis' in window);
 
@@ -136,18 +139,25 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   }, []);
 
   // Sequential playback for audio chunks
-  const playNextInQueue = useCallback(() => {
+  const playNextInQueue = useCallback((cleanedText: string) => {
     if (audioQueue.current.length === 0) {
       setIsSpeaking(false);
       isPlayingQueue.current = false;
+      setCurrentCharIndex(-1);
       return;
     }
 
     const nextChunk = audioQueue.current.shift();
     if (!nextChunk) return;
 
+    // Calculate global offset for this chunk
+    const chunkIndexPos = cleanedText.indexOf(nextChunk.text, currentChunkGlobalOffset.current);
+    if (chunkIndexPos !== -1) {
+      currentChunkGlobalOffset.current = chunkIndexPos;
+    }
+
     // Use a fresh audio element for each chunk to avoid issues with some browsers
-    const audio = new Audio(`data:audio/wav;base64,${nextChunk}`);
+    const audio = new Audio(`data:audio/wav;base64,${nextChunk.audio}`);
     audioRef.current = audio;
     
     audio.onplay = () => {
@@ -155,14 +165,25 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       isPlayingQueue.current = true;
     };
 
+    audio.ontimeupdate = () => {
+      // Simulate currentCharIndex based on playback progress
+      if (audio.duration && audio.duration > 0 && currentChunkGlobalOffset.current !== -1) {
+        const progress = audio.currentTime / audio.duration;
+        const simulatedIndex = currentChunkGlobalOffset.current + Math.floor(progress * nextChunk.text.length);
+        setCurrentCharIndex(simulatedIndex);
+      }
+    };
+
     audio.onended = () => {
-      playNextInQueue();
+      currentChunkGlobalOffset.current += nextChunk.text.length;
+      playNextInQueue(cleanedText);
     };
 
     audio.onerror = (e) => {
       console.error('Audio chunk error:', e);
       // Skip bad chunk
-      playNextInQueue();
+      currentChunkGlobalOffset.current += nextChunk.text.length;
+      playNextInQueue(cleanedText);
     };
 
     audio.play().catch(err => {
@@ -170,6 +191,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       // If play fails (e.g. user hasn't interacted), we stop the queue
       setIsSpeaking(false);
       isPlayingQueue.current = false;
+      setCurrentCharIndex(-1);
     });
   }, []);
 
@@ -247,7 +269,8 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
 
         if (audioChunks && audioChunks.length > 0) {
           audioQueue.current = [...audioChunks];
-          playNextInQueue();
+          currentChunkGlobalOffset.current = 0;
+          playNextInQueue(cleanedText);
           return;
         }
       }
