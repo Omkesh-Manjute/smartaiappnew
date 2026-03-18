@@ -59,37 +59,51 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     const mentionsHindi = text ? /\bhindi\b/i.test(text) : false;
     const isHindi = langHint.startsWith('hi') || hasHindiChar || mentionsHindi;
     
+    // Filter voices strictly by language
     const targetVoices = availableVoices.filter(v => {
-      const vLang = v.lang.toLowerCase();
+      const vLang = v.lang.toLowerCase().replace('_', '-');
       if (isHindi) return vLang.startsWith('hi') || vLang.startsWith('hin');
-      // For English, prioritize Indian English (en-IN) if possible
       return vLang.startsWith('en');
     });
     
     if (targetVoices.length === 0) {
       if (isHindi) {
+        // Fallback to any Indian voice if no direct Hindi match
         const anyIndian = availableVoices.find(v => v.lang.toLowerCase().includes('in'));
         if (anyIndian) return anyIndian;
       }
       return null;
     }
 
-    // Sort to prioritize en-IN voices for English
-    if (!isHindi) {
-      targetVoices.sort((a, b) => {
-        const aIN = a.lang.toLowerCase().includes('in');
-        const bIN = b.lang.toLowerCase().includes('in');
+    // Sort voices by quality preference
+    targetVoices.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aLang = a.lang.toLowerCase();
+      const bLang = b.lang.toLowerCase();
+
+      // 1. Prioritize Microsoft Online Natural voices (if in Edge)
+      const aNatural = aName.includes('online') || aName.includes('natural');
+      const bNatural = bName.includes('online') || bName.includes('natural');
+      if (aNatural && !bNatural) return -1;
+      if (!aNatural && bNatural) return 1;
+
+      // 2. Prioritize Google voices (if in Chrome)
+      const aGoogle = aName.includes('google');
+      const bGoogle = bName.includes('google');
+      if (aGoogle && !bGoogle) return -1;
+      if (!aGoogle && bGoogle) return 1;
+
+      // 3. For English, prioritize Indian English accents
+      if (!isHindi) {
+        const aIN = aLang.includes('in');
+        const bIN = bLang.includes('in');
         if (aIN && !bIN) return -1;
         if (!aIN && bIN) return 1;
-        return 0;
-      });
-    }
+      }
 
-    const googleVoice = targetVoices.find(v => v.name.includes('Google') && (isHindi ? (v.lang.includes('IN') || v.name.includes('हिन्दी')) : v.lang.includes('IN')));
-    if (googleVoice) return googleVoice;
-
-    const naturalVoice = targetVoices.find(v => v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('hi-in-') || v.name.toLowerCase().includes('en-in-'));
-    if (naturalVoice) return naturalVoice;
+      return 0;
+    });
 
     return targetVoices[0];
   }, []);
@@ -282,7 +296,12 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
 
     // 5. Fallback if request is still valid
     if (requestId === lastRequestId.current) {
-      playBrowserTTS(cleanedText, targetLang);
+      // Small delay after cancel() to ensure browser state is ready
+      setTimeout(() => {
+        if (requestId === lastRequestId.current) {
+          playBrowserTTS(cleanedText, targetLang);
+        }
+      }, 50);
     }
   }, [stop, playBrowserTTS, playNextInQueue]);
 
