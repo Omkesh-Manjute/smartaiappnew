@@ -14,6 +14,7 @@ export interface AISettings {
 }
 
 const DEFAULT_SETTINGS: AISettings = {
+  id: '00000000-0000-0000-0000-000000000001',
   ai_provider: 'gemini',
   gemini_model: 'gemini-1.5-flash',
   groq_model: 'llama-3.1-70b-versatile',
@@ -48,10 +49,17 @@ export class SystemSettingsService {
 
   static async updateSettings(settings: Partial<AISettings>): Promise<boolean> {
     try {
-      // We only ever want one row for global settings
+      // We only ever want one row for global settings (id: '1')
       const current = await this.getSettings();
-      const payload = { ...current, ...settings, updated_at: new Date().toISOString() };
+      const payload = { 
+        ...current, 
+        ...settings, 
+        id: current.id || '00000000-0000-0000-0000-000000000001',
+        updated_at: new Date().toISOString() 
+      };
       
+      console.log('Upserting settings payload:', payload);
+
       const { error } = await supabase
         .from(this.table)
         .upsert(payload, { onConflict: 'id' });
