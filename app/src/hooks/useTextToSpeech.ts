@@ -254,7 +254,8 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       const dbSettings = await SystemSettingsService.getSettings();
       const sarvamKey = dbSettings.sarvam_api_key || import.meta.env.VITE_SARVAM_API_KEY;
       
-      if (sarvamKey && sarvamKey.trim() !== '') {
+      const USE_SARVAM = false; // User requested to strictly use Web Speech API fallback
+      if (USE_SARVAM && sarvamKey && sarvamKey.trim() !== '') {
         const isHindi = targetLang.startsWith('hi');
         const audioChunks = await getSarvamAudio(cleanedText, isHindi ? 'hi' : 'en', {
           apiKey: sarvamKey,

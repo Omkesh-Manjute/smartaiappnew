@@ -123,7 +123,9 @@ const AdminAISettingsPage = () => {
                      </SelectTrigger>
                      <SelectContent>
                        <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash (Balanced)</SelectItem>
+                       <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
                        <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning)</SelectItem>
+                       <SelectItem value="gemini-pro">Gemini Pro 1.0 (Legacy)</SelectItem>
                      </SelectContent>
                    </Select>
                 </div>
