@@ -64,6 +64,7 @@ const TutorPage = () => {
   const [selectedMode, setSelectedMode] = useState<TutorMode>('teacher');
   const [usage, setUsage] = useState<{ today: number, limit: number, isPremium: boolean }>({ today: 0, limit: 5, isPremium: false });
   const [showTtsControls, setShowTtsControls] = useState<string | null>(null);
+  const [voiceLang, setVoiceLang] = useState<'en' | 'hi'>('hi');
   const scrollRef = useRef<HTMLDivElement>(null);
   const {
     speak, stop: stopSpeech, supported: ttsSupported, isSpeaking,
@@ -260,9 +261,8 @@ const TutorPage = () => {
 
     setShowTtsControls(msgId);
     
-    // Auto-detect language (Hindi if Devanagari characters present)
-    const isHindi = /[\u0900-\u097F]/.test(text);
-    speak(text, isHindi ? 'hi' : 'en');
+    // Explicitly use the user-selected language preference
+    speak(text, voiceLang);
   };
 
   return (
@@ -302,6 +302,17 @@ const TutorPage = () => {
                   <span className="text-[10px] font-bold text-gray-600">{usage.today}/{usage.limit}</span>
                 </div>
               </div>
+              <button
+                onClick={() => {
+                  const newLang = voiceLang === 'en' ? 'hi' : 'en';
+                  setVoiceLang(newLang);
+                  toast.success(`Voice set to ${newLang === 'hi' ? 'Hindi' : 'English'}`);
+                }}
+                className="hidden sm:flex px-2.5 py-1.5 text-xs font-bold rounded-lg border hover:bg-gray-50 items-center justify-center min-w-[50px]"
+                title="Toggle Voice Language (English / Hindi)"
+              >
+                {voiceLang === 'hi' ? '🇮🇳 HI' : '🇺🇸 EN'}
+              </button>
               <button
                 onClick={clearHistory}
                 className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"
