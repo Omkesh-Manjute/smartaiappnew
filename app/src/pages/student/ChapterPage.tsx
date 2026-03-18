@@ -283,7 +283,7 @@ const ChapterPage = () => {
                         
                         return (
                           <span 
-                            key={index}
+                            key={idx}
                             id={isHighlighted ? 'current-tts-word' : undefined}
                             className={`${
                               isHighlighted 
@@ -291,7 +291,7 @@ const ChapterPage = () => {
                                 : ''
                             }`}
                           >
-                            {part}
+                            {segment}
                           </span>
                         );
                       });
