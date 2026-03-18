@@ -113,15 +113,15 @@ const StudentDashboard = () => {
   return (
     <div className="bg-gray-50/50">
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full overflow-x-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-8 space-y-6 min-w-0">
             {/* Welcome Banner */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20"
             >
               <h1 className="text-2xl font-bold mb-2">Welcome back, {user.name.split(' ')[0]}! 👋</h1>
               <p className="text-white/80 mb-4">
@@ -130,7 +130,7 @@ const StudentDashboard = () => {
               <div className="flex gap-3">
                 <Button
                   onClick={() => navigate('/student/subjects')}
-                  className="bg-white text-blue-600 hover:bg-white/90"
+                  className="bg-white text-blue-600 hover:bg-white/90 shadow-sm"
                 >
                   Continue Learning
                   <ChevronRight className="w-4 h-4 ml-1" />
@@ -139,7 +139,7 @@ const StudentDashboard = () => {
             </motion.div>
 
             {/* Quick Actions */}
-            <div>
+            <div className="overflow-hidden">
               <h2 className="text-lg font-semibold mb-3">Quick Actions</h2>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                 {quickActions.map((action, index) => (
@@ -149,9 +149,9 @@ const StudentDashboard = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => navigate(action.path)}
-                    className="flex flex-col items-center p-3 rounded-xl bg-white border hover:shadow-md transition-all"
+                    className="flex flex-col items-center p-3 rounded-xl bg-white border hover:shadow-md hover:border-blue-200 transition-all group"
                   >
-                    <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-2`}>
+                    <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
                       <action.icon className="w-5 h-5 text-white" />
                     </div>
                     <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>
@@ -168,13 +168,13 @@ const StudentDashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl p-4 border"
+                  className="bg-white rounded-xl p-4 border shadow-sm"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                    <span className="text-sm text-gray-500">{stat.label}</span>
+                    <span className="text-sm text-gray-500 font-medium">{stat.label}</span>
                   </div>
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl font-bold text-gray-900">
                     {stat.value}{stat.suffix || ''}
                   </p>
                 </motion.div>
@@ -183,17 +183,17 @@ const StudentDashboard = () => {
 
             {/* Homework Quick Actions */}
             {(pendingHomework.length > 0 || overdueHomework.length > 0) && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+              <Card className="border-none shadow-sm ring-1 ring-gray-100">
+                <CardHeader className="flex flex-row items-center justify-between py-4">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <FileText className="w-5 h-5 text-blue-500" />
                     Homework
                   </CardTitle>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/student/homework')}>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/student/homework')} className="text-blue-600">
                     View All
                   </Button>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-4">
                   <div className="space-y-2">
                     {overdueHomework.slice(0, 2).map((hw) => (
                       <div
@@ -203,13 +203,13 @@ const StudentDashboard = () => {
                         <div className="flex items-center gap-3">
                           <AlertCircle className="w-5 h-5 text-red-500" />
                           <div>
-                            <p className="font-medium text-red-700">{hw.title}</p>
-                            <p className="text-sm text-red-600">
+                            <p className="font-bold text-red-700">{hw.title}</p>
+                            <p className="text-xs text-red-600">
                               Overdue - Due {new Date(hw.dueDate).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" variant="destructive" onClick={() => navigate('/student/homework')}>
+                        <Button size="sm" variant="destructive" onClick={() => navigate('/student/homework')} className="h-8">
                           Submit Now
                         </Button>
                       </div>
@@ -217,18 +217,18 @@ const StudentDashboard = () => {
                     {pendingHomework.slice(0, 3).map((hw) => (
                       <div
                         key={hw.id}
-                        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-blue-50/50 rounded-lg border border-blue-100/50"
                       >
                         <div className="flex items-center gap-3">
                           <Clock3 className="w-5 h-5 text-blue-500" />
                           <div>
-                            <p className="font-medium">{hw.title}</p>
-                            <p className="text-sm text-gray-500">
+                            <p className="font-semibold text-blue-900">{hw.title}</p>
+                            <p className="text-xs text-blue-600">
                               Due {new Date(hw.dueDate).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => navigate('/student/homework')}>
+                        <Button size="sm" onClick={() => navigate('/student/homework')} className="h-8 bg-blue-600 hover:bg-blue-700">
                           Start
                         </Button>
                       </div>
@@ -239,7 +239,7 @@ const StudentDashboard = () => {
             )}
 
             {/* Continue Learning */}
-            <div>
+            <div className="min-w-0">
               <h2 className="text-lg font-semibold mb-3">Continue Learning</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {subjects.slice(0, 4).map((subject, index) => (
@@ -249,21 +249,21 @@ const StudentDashboard = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     onClick={() => navigate(`/student/subject/${subject.id}`)}
-                    className="bg-white rounded-xl p-4 border hover:shadow-md cursor-pointer transition-all"
+                    className="bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer transition-all group"
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-12 h-12 rounded-xl ${subject.color} flex items-center justify-center text-2xl`}>
+                      <div className={`w-12 h-12 rounded-xl ${subject.color} flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
                         {subject.icon}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{subject.name}</h3>
-                        <p className="text-sm text-gray-500">{subject.chapters.length} chapters</p>
-                        <div className="mt-2">
-                          <div className="flex justify-between text-xs mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 truncate">{subject.name}</h3>
+                        <p className="text-xs text-gray-500">{subject.chapters.length} chapters</p>
+                        <div className="mt-2 text-xs">
+                          <div className="flex justify-between mb-1">
                             <span className="text-gray-500">Progress</span>
-                            <span className="font-medium">0%</span>
+                            <span className="font-bold text-gray-700">0%</span>
                           </div>
-                          <Progress value={0} className="h-2" />
+                          <Progress value={0} className="h-1.5" />
                         </div>
                       </div>
                     </div>
@@ -273,46 +273,46 @@ const StudentDashboard = () => {
             </div>
 
             {/* Recent Tests */}
-            <Card>
-              <CardHeader>
+            <Card className="border-none shadow-sm ring-1 ring-gray-100">
+              <CardHeader className="py-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Target className="w-5 h-5 text-blue-500" />
                   Recent Tests
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pb-4">
                 {recentTests.length > 0 ? (
                   <div className="space-y-3">
                     {recentTests.map((test) => (
                       <div
                         key={test.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
                       >
                         <div>
-                          <p className="font-medium">Test #{test.testId.slice(-4)}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="font-bold text-gray-900 truncate max-w-[150px] sm:max-w-none">Test #{test.testId.slice(-4)}</p>
+                          <p className="text-xs text-gray-500">
                             {new Date(test.completedAt).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className={`font-bold ${test.isPassed ? 'text-green-600' : 'text-red-600'}`}>
+                          <p className={`text-lg font-black ${test.isPassed ? 'text-green-600' : 'text-red-600'}`}>
                             {test.percentage}%
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {test.score}/{test.totalMarks}
+                          <p className="text-[10px] font-bold text-gray-400">
+                            {test.score}/{test.totalMarks} MARKS
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
                     <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p>No tests taken yet</p>
+                    <p className="font-medium">No tests taken yet</p>
                     <Button
                       onClick={() => navigate('/student/tests')}
                       variant="outline"
-                      className="mt-3"
+                      className="mt-4 bg-white"
                     >
                       Take Your First Test
                     </Button>
@@ -323,66 +323,88 @@ const StudentDashboard = () => {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="lg:col-span-4 space-y-6 min-w-0">
             {/* XP Bar */}
-            <XPBar gamification={gamification} />
+            <div className="bg-white rounded-2xl p-6 border shadow-sm">
+                <XPBar gamification={gamification} />
+            </div>
 
             {/* Daily Quote */}
             <DailyQuote />
 
             {/* Badges */}
-            <BadgesDisplay gamification={gamification} />
+            <div className="h-fit">
+               <BadgesDisplay gamification={gamification} />
+            </div>
 
             {/* Homework Summary */}
-            <Card>
-              <CardHeader>
+            <Card className="border-none shadow-sm ring-1 ring-gray-100 overflow-hidden">
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-500" />
                   Homework Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="p-5">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Pending</span>
-                    <Badge variant="default">{pendingHomework.length}</Badge>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="text-sm font-medium text-gray-600">Pending</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">{pendingHomework.length}</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Overdue</span>
-                    <Badge variant="destructive">{overdueHomework.length}</Badge>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-sm font-medium text-gray-600">Overdue</span>
+                    </div>
+                    <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-100">{overdueHomework.length}</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Submitted</span>
-                    <Badge variant="outline" className="text-green-600">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="text-sm font-medium text-gray-600">Submitted</span>
+                    </div>
+                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50/50">
                       {homeworkSubmissions.length}
                     </Badge>
                   </div>
                 </div>
                 <Button
-                  className="w-full mt-4"
+                  className="w-full mt-6 bg-white hover:bg-blue-50 border-blue-200 text-blue-600 font-bold h-11"
                   variant="outline"
                   onClick={() => navigate('/student/homework')}
                 >
                   <FileText className="w-4 h-4 mr-2" />
-                  View Homework
+                  View Homework Details
                 </Button>
               </CardContent>
             </Card>
 
             {/* Premium Banner */}
             {!user.isPremium && (
-              <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-xl p-4 text-white">
-                <h3 className="font-bold text-lg mb-2">Upgrade to Premium</h3>
-                <p className="text-sm text-white/90 mb-3">
-                  Unlock AI Tutor, Voice Practice, and more!
-                </p>
-                <Button
-                  onClick={() => navigate('/school/subscription')}
-                  className="w-full bg-white text-orange-600 hover:bg-white/90"
-                >
-                  Upgrade Now
-                </Button>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative z-10">
+                    <h3 className="font-black text-xl mb-2 flex items-center gap-2">
+                        <Trophy className="w-6 h-6" />
+                        Go Premium
+                    </h3>
+                    <p className="text-sm text-white/90 mb-4 font-medium leading-relaxed">
+                        Unlock AI Tutor, Voice Practice, and personalized learning plans!
+                    </p>
+                    <Button
+                        onClick={() => navigate('/school/subscription')}
+                        className="w-full bg-white text-orange-600 hover:bg-white/90 font-black h-11 shadow-sm"
+                    >
+                        Upgrade Now
+                    </Button>
+                </div>
+              </motion.div>
             )}
           </div>
         </div>

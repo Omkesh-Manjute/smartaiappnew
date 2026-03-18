@@ -33,7 +33,7 @@ const ChapterPage = () => {
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [activeTab, setActiveTab] = useState('content');
-  const { speak, stop, isSpeaking, currentCharIndex } = useTextToSpeech();
+  const { speak, stop, isSpeaking, currentSentenceIndex } = useTextToSpeech();
   const [mcqAnswers, setMcqAnswers] = useState<Record<string, number>>({});
   const [showMcqResults, setShowMcqResults] = useState(false);
   const [mcqScore, setMcqScore] = useState(0);
@@ -45,14 +45,14 @@ const ChapterPage = () => {
 
   // Auto-scroll to currently highlighted word
   useEffect(() => {
-    if (isSpeaking && currentCharIndex >= 0) {
+    if (isSpeaking && currentSentenceIndex >= 0) {
       const el = document.getElementById('current-tts-word');
       if (el) {
         // Find nearest scrollable container or window
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [currentCharIndex, isSpeaking]);
+  }, [currentSentenceIndex, isSpeaking]);
 
   useEffect(() => {
     if (chapterId) {
@@ -267,31 +267,24 @@ const ChapterPage = () => {
                       const displayContent = contentLang === 'hi' && translatedContent['hi'] 
                         ? translatedContent['hi'] 
                         : chapter.content;
-                      const cleanedText = cleanTextForTTS(displayContent);
                       
                       // Split into sentences (preserving punctuation and spacing)
-                      const sentences = cleanedText.match(/[^.!?।]+[.!?।]?\s*/g) || [cleanedText];
-                      let currentPos = 0;
+                      const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
                       
-                      return sentences.map((segment, idx) => {
-                        const start = currentPos;
-                        currentPos += segment.length;
-                        
-                        // Check if current speaking cursor is within this sentence
-                        const isWhitespace = /^\s+$/.test(segment);
-                        const isHighlighted = !isWhitespace && isSpeaking && currentCharIndex >= start && currentCharIndex < currentPos;
+                      return sentences.map((sentence, idx) => {
+                        const isHighlighted = isSpeaking && currentSentenceIndex === idx;
                         
                         return (
                           <span 
                             key={idx}
                             id={isHighlighted ? 'current-tts-word' : undefined}
-                            className={`${
+                            className={`transition-all duration-300 rounded ${
                               isHighlighted 
-                                ? 'bg-yellow-200 text-yellow-900 rounded px-0.5 font-medium transition-all duration-150 shadow-sm border-b-2 border-yellow-400' 
+                                ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
                                 : ''
                             }`}
                           >
-                            {segment}
+                            {sentence}
                           </span>
                         );
                       });
