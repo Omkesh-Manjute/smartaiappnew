@@ -788,7 +788,29 @@ export const gamificationDB = {
 
   getByStudent: async (studentId: string): Promise<GamificationData | null> => {
     const { data, error } = await supabase.from('gamification').select('*').eq('student_id', studentId).single();
-    if (error || !data) return null;
+    if (error || !data) {
+      // Auto-create gamification data if missing (e.g. users registered outside the app flow)
+      try {
+        const newData: GamificationData = {
+          studentId: studentId,
+          xp: 0,
+          level: 1,
+          streak: 0,
+          lastStudyDate: new Date(),
+          totalStudyTime: 0,
+          badges: [],
+          unlockedAvatars: ['default'],
+          unlockedThemes: ['default'],
+          currentAvatar: 'default',
+          coins: 0,
+        };
+        await gamificationDB.create(newData);
+        return newData;
+      } catch (err) {
+        console.error('Failed to auto-create gamification data', err);
+        return null; // Fallback to null if creation fails
+      }
+    }
     const g = data as any;
     return {
       studentId: g.student_id,

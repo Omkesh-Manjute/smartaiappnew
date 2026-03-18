@@ -115,6 +115,20 @@ const BattlePage = () => {
         });
       });
     });
+    
+    // Fallback: If no questions exist in DB for this subject, provide dummy questions for testing
+    if (allQuestions.length < 5) {
+      for (let i = allQuestions.length + 1; i <= 5; i++) {
+        allQuestions.push({
+          id: `dummy_${Date.now()}_${i}`,
+          question: `Sample Question ${i} for ${subject.name}`,
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswer: Math.floor(Math.random() * 4),
+          marks: 10,
+          difficulty: 'medium',
+        });
+      }
+    }
 
     return allQuestions.sort(() => 0.5 - Math.random()).slice(0, 5);
   };
