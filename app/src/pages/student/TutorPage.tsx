@@ -53,22 +53,44 @@ const LEARNING_MODES: { id: TutorMode; label: string; icon: React.ElementType; d
   { id: 'quiz', label: 'Quiz Mode', icon: HelpCircle, description: 'Test your understanding' },
 ];
 
-const renderAIResponse = (text: string) => {
+const renderAIResponse = (text: string, currentSpeakingId: string | null, currentSentenceIndex: number) => {
+  // Regex to split by sentences while keeping punctuation
+  const splitSentences = (str: string) => {
+    return str.match(/[^.!?।]+[.!?।]?\s*/g) || [str];
+  };
+
   if (!text.includes('## Explanation')) {
-    return <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{text}</p>;
+    const sentences = splitSentences(text);
+    return (
+      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+        {sentences.map((sentence, sIdx) => (
+          <span 
+            key={sIdx}
+            className={`transition-all duration-300 rounded ${
+              currentSpeakingId === 'active' && currentSentenceIndex === sIdx 
+                ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
+                : ''
+            }`}
+          >
+            {sentence}
+          </span>
+        ))}
+      </p>
+    );
   }
 
   const sections = text.split('## ').filter(Boolean);
+  let globalSentenceCounter = 0;
   
   return (
     <div className="space-y-4 w-full">
       {sections.map((section, idx) => {
         const lines = section.trim().split('\n');
         const title = lines[0].trim();
-        const content = lines.slice(1).join('\n').trim();
+        const contentLines = lines.slice(1).join('\n').trim();
         
         // Skip empty sections
-        if (!content && !title) return null;
+        if (!contentLines && !title) return null;
 
         let Icon = Bot;
         let bgClass = 'bg-purple-50/50';
@@ -92,14 +114,30 @@ const renderAIResponse = (text: string) => {
           borderClass = 'border-emerald-100';
         }
 
+        const sentences = splitSentences(contentLines);
+
         return (
           <div key={idx} className={`rounded-xl p-4 border shadow-sm ${bgClass} ${borderClass}`}>
             <h4 className={`flex items-center gap-2 font-bold mb-3 pb-2 border-b ${borderClass} ${textClass}`}>
               <Icon className="w-4 h-4" />
               {title}
             </h4>
-            <div className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap space-y-2">
-              {content}
+            <div className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">
+              {sentences.map((sentence, sIdx) => {
+                const currentIdx = globalSentenceCounter++;
+                return (
+                  <span 
+                    key={sIdx}
+                    className={`transition-all duration-300 rounded ${
+                      currentSpeakingId && currentSentenceIndex === currentIdx 
+                        ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
+                        : ''
+                    }`}
+                  >
+                    {sentence}
+                  </span>
+                );
+              })}
             </div>
           </div>
         );
@@ -126,7 +164,7 @@ const TutorPage = () => {
   const {
     speak, stop: stopSpeech, supported: ttsSupported, isSpeaking,
     isPaused, pause: pauseSpeech, resume: resumeSpeech,
-    rate, setRate,
+    rate, setRate, currentSentenceIndex,
   } = useTextToSpeech();
   const [avatarState, setAvatarState] = useState<AvatarState>('idle');
 
@@ -628,7 +666,7 @@ const TutorPage = () => {
                           </div>
                         ) : (
                           <>
-                            {renderAIResponse(msg.response)}
+                            {renderAIResponse(msg.response, showTtsControls === msg.id ? 'active' : null, currentSentenceIndex)}
 
                             {/* TTS Controls */}
                             <div className="border-t pt-3 space-y-3">

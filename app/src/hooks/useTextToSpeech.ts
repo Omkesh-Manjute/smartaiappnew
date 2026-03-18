@@ -25,6 +25,7 @@ interface UseTextToSpeechReturn {
   isSpeaking: boolean;
   isPaused: boolean;
   currentCharIndex: number;
+  currentSentenceIndex: number;
   pause: () => void;
   resume: () => void;
   supported: boolean;
@@ -39,6 +40,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentCharIndex, setCurrentCharIndex] = useState(-1);
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(-1);
   const [rate, setRate] = useState(1.0);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
@@ -150,6 +152,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     setIsSpeaking(false);
     setIsPaused(false);
     setCurrentCharIndex(-1);
+    setCurrentSentenceIndex(-1);
   }, []);
 
   // Sequential playback for audio chunks
@@ -206,6 +209,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       setIsSpeaking(false);
       isPlayingQueue.current = false;
       setCurrentCharIndex(-1);
+      setCurrentSentenceIndex(-1);
     });
   }, []);
 
@@ -227,6 +231,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
         setIsSpeaking(false);
         setIsPaused(false);
         setCurrentCharIndex(-1);
+        setCurrentSentenceIndex(-1);
         return;
       }
 
@@ -255,6 +260,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
         if (currentChunkIndex === 0) {
           setIsSpeaking(true);
         }
+        setCurrentSentenceIndex(currentChunkIndex);
       };
 
       utterance.onend = () => {
@@ -280,6 +286,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
           setIsSpeaking(false);
           setIsPaused(false);
           setCurrentCharIndex(-1);
+          setCurrentSentenceIndex(-1);
         }
       };
 
@@ -302,6 +309,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     // 2. Set UI State to speaking immediately so "Stop" button shows up
     setIsSpeaking(true);
     setCurrentCharIndex(-1);
+    setCurrentSentenceIndex(-1);
 
     // 3. Try Sarvam AI PREMIUM Option (Dynamic Config)
     try {
@@ -369,6 +377,7 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
     isSpeaking,
     isPaused,
     currentCharIndex,
+    currentSentenceIndex,
     pause,
     resume,
     supported,
