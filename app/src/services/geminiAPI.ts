@@ -701,10 +701,35 @@ Return ONLY JSON, no markdown.`;
   }
 };
 
-// Translate content directly
-export const translateContent = async (text: string, targetLanguage: 'hi' | 'en'): Promise<string> => {
+// Translate content directly using Unofficial Google API (Gtx - Free)
+export const freeTranslate = async (text: string, targetLanguage: 'hi' | 'en'): Promise<string> => {
   try {
-    const prompt = `Translate the following educational content to ${targetLanguage === 'hi' ? 'Hindi' : 'English'}.
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLanguage}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Free Translation service unavailable');
+    const data = await response.json();
+    // data[0] contains translated segments
+    if (data && data[0]) {
+      return data[0].map((s: any) => s[0]).join('');
+    }
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Free translation error:', error);
+    throw error;
+  }
+};
+
+// Main translation entry point
+export const translateContent = async (text: string, targetLanguage: 'hi' | 'en'): Promise<string> => {
+  // Always try free translation first for "Beginner / Free App" mode
+  try {
+    return await freeTranslate(text, targetLanguage);
+  } catch (freeError) {
+    console.warn('Free translation failed, falling back to Gemini if configured...', freeError);
+    
+    // Fallback to Gemini if free fails
+    try {
+      const prompt = `Translate the following educational content to ${targetLanguage === 'hi' ? 'Hindi' : 'English'}.
 Preserve ALL the original formatting, including paragraphs, bullet points, headers, and symbols.
 Do not add any additional explanations or intro text. Just the translated content.
 If the text contains mathematical or scientific formulas, keep them intact or translate surrounding words appropriately.
@@ -712,10 +737,11 @@ If the text contains mathematical or scientific formulas, keep them intact or tr
 Content to translate:
 ${text}`;
 
-    return await callIntelligence(prompt);
-  } catch (error: any) {
-    console.error('Translation error:', error);
-    throw new Error(error.message || 'Failed to translate content');
+      return await callIntelligence(prompt);
+    } catch (error: any) {
+      console.error('Translation error:', error);
+      throw new Error(error.message || 'Failed to translate content');
+    }
   }
 };
 
@@ -728,4 +754,5 @@ export default {
   analyzeWeakAreas,
   getVoicePracticeFeedback,
   translateContent,
+  freeTranslate,
 };

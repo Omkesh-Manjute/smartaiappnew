@@ -268,17 +268,18 @@ const ChapterPage = () => {
                         ? translatedContent['hi'] 
                         : chapter.content;
                       const cleanedText = cleanTextForTTS(displayContent);
-                      const parts = cleanedText.split(/(\s+)/);
+                      
+                      // Split into sentences (preserving punctuation and spacing)
+                      const sentences = cleanedText.match(/[^.!?।]+[.!?।]?\s*/g) || [cleanedText];
                       let currentPos = 0;
                       
-                      return parts.map((part, index) => {
+                      return sentences.map((segment, idx) => {
                         const start = currentPos;
-                        currentPos += part.length;
-                        const end = currentPos;
+                        currentPos += segment.length;
                         
-                        // Check if this part is currently being spoken
-                        // We highlight the part if the currentCharIndex falls within its range
-                        const isHighlighted = isSpeaking && currentCharIndex >= start && currentCharIndex < end;
+                        // Check if current speaking cursor is within this sentence
+                        const isWhitespace = /^\s+$/.test(segment);
+                        const isHighlighted = !isWhitespace && isSpeaking && currentCharIndex >= start && currentCharIndex < currentPos;
                         
                         return (
                           <span 
