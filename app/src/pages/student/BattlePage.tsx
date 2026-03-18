@@ -103,8 +103,8 @@ const BattlePage = () => {
     if (!subject) return [];
 
     const allQuestions: TestQuestion[] = [];
-    subject.chapters.forEach((ch) => {
-      ch.mcqs.forEach((mcq) => {
+    subject.chapters?.forEach((ch) => {
+      ch.mcqs?.forEach((mcq) => {
         allQuestions.push({
           id: mcq.id,
           question: mcq.question,
