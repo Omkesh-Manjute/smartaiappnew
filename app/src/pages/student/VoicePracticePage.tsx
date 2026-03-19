@@ -280,7 +280,7 @@ const VoicePracticePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addXP } = useGamification();
-  const { speak, stop: stopSpeech, supported: ttsSupported } = useTextToSpeech();
+   const { speak, stop: stopSpeech, isSpeaking, currentSentenceIndex, supported: ttsSupported } = useTextToSpeech();
 
   const [mode, setMode] = useState<PracticeMode>('word');
   const [currentPrompt, setCurrentPrompt] = useState<PromptItem>(() => pickRandomPrompt('word'));
@@ -462,6 +462,7 @@ const VoicePracticePage = () => {
       return;
     }
     const isHindi = /[\u0900-\u097F]/.test(activePromptText);
+    console.log('Playing TTS for prompt:', { text: activePromptText, lang: isHindi ? 'hi' : 'en' });
     speak(activePromptText, isHindi ? 'hi' : 'en');
   };
 
@@ -685,16 +686,54 @@ const VoicePracticePage = () => {
                       <RefreshCw className="w-4 h-4 mr-1" />
                       New Prompt
                     </Button>
-                    <Button variant="outline" size="sm" onClick={playPrompt}>
-                      <Volume2 className="w-4 h-4 mr-1" />
-                      Listen
+                    <Button 
+                      variant={isSpeaking ? "secondary" : "outline"} 
+                      size="sm" 
+                      onClick={isSpeaking ? stopSpeech : playPrompt}
+                      className={isSpeaking ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : ''}
+                    >
+                      {isSpeaking ? (
+                        <>
+                          <Square className="w-4 h-4 mr-1 fill-current" />
+                          Stop
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-4 h-4 mr-1" />
+                          Listen
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg leading-relaxed">{activePromptText}</p>
-                <p className="text-sm text-gray-500">{currentPrompt.hint}</p>
+                <div className="text-xl leading-relaxed font-medium min-h-[3rem] flex flex-wrap gap-x-1.5">
+                  {(() => {
+                    const text = activePromptText;
+                    // Split by sentences or words depending on mode
+                    const parts = mode === 'word' 
+                      ? [text] 
+                      : text.match(/[^.!?।]+[.!?।]?\s*/g) || [text];
+                    
+                    return parts.map((part, idx) => {
+                      const isHighlighted = isSpeaking && currentSentenceIndex === idx;
+                      return (
+                        <span 
+                          key={idx}
+                          className={`transition-all duration-300 rounded px-1 ${
+                            isHighlighted 
+                              ? 'bg-yellow-200 text-black shadow-sm scale-105' 
+                              : ''
+                          }`}
+                        >
+                          {part}
+                        </span>
+                      );
+                    });
+                  })()}
+                </div>
+                <p className="text-sm text-gray-500 italic">{currentPrompt.hint}</p>
 
                 <div className="flex items-center gap-2">
                   <Button
@@ -727,26 +766,35 @@ const VoicePracticePage = () => {
               <CardContent>
                 <div className="text-center">
                   {!isListening ? (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={startListening}
-                      className="w-24 h-24 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30"
-                    >
-                      <Mic className="w-10 h-10 text-white" />
-                    </motion.button>
+                    <div className="relative inline-block">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={startListening}
+                        className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20 active:shadow-inner"
+                      >
+                        <Mic className="w-10 h-10 text-white" />
+                      </motion.button>
+                    </div>
                   ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={stopListening}
-                      className="w-24 h-24 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/30"
-                    >
-                      <Square className="w-8 h-8 text-white" />
-                    </motion.button>
+                    <div className="relative inline-block">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="absolute inset-0 rounded-full bg-rose-500/20"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={stopListening}
+                        className="relative w-24 h-24 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center mx-auto shadow-xl shadow-rose-500/30"
+                      >
+                        <Square className="w-8 h-8 text-white fill-current" />
+                      </motion.button>
+                    </div>
                   )}
-                  <p className={`mt-3 font-medium ${isListening ? 'text-rose-600' : 'text-gray-600'}`}>
-                    {isListening ? 'Recording... tap to stop' : 'Tap to start speaking'}
+                  <p className={`mt-4 font-semibold tracking-tight ${isListening ? 'text-rose-600 animate-pulse' : 'text-gray-600'}`}>
+                    {isListening ? 'Recording... Tap to Stop' : 'Tap to Start Speaking'}
                   </p>
                 </div>
 
