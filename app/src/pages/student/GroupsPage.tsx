@@ -128,7 +128,9 @@ const GroupsPage = () => {
                 </button>
                 <div>
                   <h1 className="font-bold">{selectedGroup.name}</h1>
-                  <p className="text-xs text-gray-500">{subject?.name} • {selectedGroup.members.length} members</p>
+                  <p className="text-xs text-gray-500">
+                    {subject?.name ? (typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')) : 'Subject'} • {selectedGroup.members.length} members
+                  </p>
                 </div>
               </div>
             </div>
@@ -249,7 +251,9 @@ const GroupsPage = () => {
                   >
                     <option value="">Select Subject</option>
                     {subjects.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
+                      <option key={s.id} value={s.id}>
+                        {typeof s.name === 'string' ? s.name : (s.name[user?.board || 'CBSE'] || 'Subject')}
+                      </option>
                     ))}
                   </select>
                   <div className="flex gap-3">
@@ -292,7 +296,7 @@ const GroupsPage = () => {
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="flex items-center gap-1">
                               <BookOpen className="w-3 h-3" />
-                              {subject?.name}
+                             {subject?.name ? (typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')) : 'Subject'}
                             </Badge>
                             <Badge variant="outline" className="flex items-center gap-1">
                               <Users className="w-3 h-3" />
@@ -335,7 +339,9 @@ const GroupsPage = () => {
                           <h3 className="font-semibold">{group.name}</h3>
                           <p className="text-sm text-gray-500">{group.description}</p>
                           <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">{subject?.name}</Badge>
+                            <Badge variant="outline">
+                              {subject?.name ? (typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')) : 'Subject'}
+                            </Badge>
                             <span className="text-sm text-gray-500">{group.members.length} members</span>
                           </div>
                         </div>

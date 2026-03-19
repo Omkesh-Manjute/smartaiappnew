@@ -286,10 +286,12 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
+                mcq: [],
                 short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
               },
               STATE: {
                 explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
+                mcq: [],
                 short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
               }
             }
@@ -498,6 +500,9 @@ export const class6Subjects: Subject[] = [
             short_questions: [
               { question: "What are objects?", answer: "Things around us like table, chair, book" },
               { question: "Why grouping is important?", answer: "To make study and use easier" }
+            ],
+            extra_questions: [
+              { question: "List properties of materials", answer: "Lustre, hardness, solubility, etc." }
             ]
           }
         },
@@ -666,6 +671,9 @@ export const class6Subjects: Subject[] = [
             short_questions: [
               { question: "What is threshing?", answer: "Separating grains from stalks" },
               { question: "Define evaporation", answer: "Liquid turning into vapor by heating" }
+            ],
+            extra_questions: [
+              { question: "Explain winnowing", answer: "Method to separate lighter husk from heavier grains using wind" }
             ]
           }
         },
@@ -834,6 +842,9 @@ export const class6Subjects: Subject[] = [
             short_questions: [
               { question: "What is chemical change?", answer: "Change where new substance is formed" },
               { question: "Expansion occurs due to?", answer: "Heat" }
+            ],
+            extra_questions: [
+              { question: "Is melting of wax reversible?", answer: "Yes" }
             ]
           }
         },

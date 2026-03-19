@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { User, UserRole } from '@/types';
+import type { User, UserRole, Board } from '@/types';
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
 

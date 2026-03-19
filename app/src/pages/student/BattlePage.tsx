@@ -161,7 +161,7 @@ const BattlePage = () => {
       for (let i = allQuestions.length + 1; i <= 5; i++) {
         allQuestions.push({
           id: `dummy_${Date.now()}_${i}`,
-          question: `Sample Question ${i} for ${subject.name}`,
+          question: `Sample Question ${i} for ${typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown')}`,
           options: ['Option A', 'Option B', 'Option C', 'Option D'],
           correctAnswer: Math.floor(Math.random() * 4),
           marks: 10,
@@ -682,7 +682,7 @@ const BattlePage = () => {
                             {subject.icon}
                           </div>
                           <div>
-                            <p className="font-semibold">{subject.name}</p>
+                            <p className="font-semibold">{typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown')}</p>
                             <p className="text-sm text-gray-500">{subject.chapters.length} chapters</p>
                           </div>
                         </button>
@@ -711,7 +711,7 @@ const BattlePage = () => {
                                 </div>
                                 <div>
                                   <p className="font-medium">Waiting for opponent</p>
-                                  <p className="text-sm text-gray-500">{subject?.name}</p>
+                                  <p className="text-sm text-gray-500">{typeof subject?.name === 'string' ? subject?.name : (subject?.name.CBSE || 'Unknown')}</p>
                                 </div>
                               </div>
                               <Button onClick={() => joinBattle(battle)} size="sm">
@@ -787,7 +787,7 @@ const BattlePage = () => {
                             {subject.icon}
                           </div>
                           <div>
-                            <p className="font-semibold">{subject.name}</p>
+                            <p className="font-semibold">{typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown')}</p>
                             <p className="text-sm text-gray-500">vs AI ({DIFFICULTY_CONFIG[selectedDifficulty].label})</p>
                           </div>
                           <Bot className="w-5 h-5 ml-auto text-purple-400" />
@@ -827,7 +827,7 @@ const BattlePage = () => {
                           {subject.icon}
                         </div>
                         <div>
-                          <p className="font-semibold">{subject.name}</p>
+                          <p className="font-semibold">{typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown')}</p>
                           <p className="text-sm text-gray-500">{subject.chapters.length} chapters</p>
                         </div>
                       </button>

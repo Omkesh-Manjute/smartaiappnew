@@ -378,7 +378,7 @@ const TeacherDashboard = () => {
                       <SelectContent>
                         {subjects.map((subject) => (
                           <SelectItem key={String(subject.id)} value={String(subject.id)}>
-                            {subject.name}
+                            {typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -397,7 +397,7 @@ const TeacherDashboard = () => {
                       <SelectContent>
                         {selectedSubject?.chapters.map((chapter) => (
                           <SelectItem key={String(chapter.id)} value={String(chapter.id)}>
-                            {chapter.name}
+                            {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -596,7 +596,11 @@ const TeacherDashboard = () => {
                             <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                               <span className="flex items-center gap-1">
                                 <BookOpen className="w-4 h-4" />
-                                {subjects.find((s) => String(s.id) === String(hw.subjectId))?.name || 'Unknown'}
+                                {(() => {
+                                  const s = subjects.find((s) => String(s.id) === String(hw.subjectId));
+                                  if (!s?.name) return 'Unknown';
+                                  return typeof s.name === 'string' ? s.name : (s.name[user?.board || 'CBSE'] || 'Subject');
+                                })()}
                               </span>
                               <span className={`flex items-center gap-1 ${isOverdue ? 'text-red-500' : ''}`}>
                                 <Calendar className="w-4 h-4" />

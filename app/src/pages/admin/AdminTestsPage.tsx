@@ -78,7 +78,9 @@ const AdminTestsPage = () => {
   }, [tests, searchQuery, selectedSubject]);
 
   const getSubjectName = (id: string) => {
-    return subjects.find(s => s.id === id)?.name || 'Unknown Subject';
+    const s = subjects.find(s => s.id === id);
+    if (!s?.name) return 'Unknown Subject';
+    return typeof s.name === 'string' ? s.name : ((s.name as any).CBSE || 'Unknown Subject');
   };
 
   const getAuthorName = (id: string) => {
@@ -125,7 +127,9 @@ const AdminTestsPage = () => {
             >
               <option value="all">All Subjects</option>
               {subjects.map(subject => (
-                <option key={subject.id} value={subject.id}>{subject.name}</option>
+                <option key={subject.id} value={subject.id}>
+                  {typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unnamed Subject')}
+                </option>
               ))}
             </select>
           </div>
@@ -157,7 +161,10 @@ const AdminTestsPage = () => {
                     <div className="flex flex-col h-full">
                       <div className="mb-3">
                         <Badge className="mb-2 bg-blue-100 text-blue-700 hover:bg-blue-100 border-none">
-                          {getSubjectName(test.subjectId)}
+                          {(() => {
+                            const name = getSubjectName(test.subjectId);
+                            return typeof name === 'string' ? name : ((name as any).CBSE || 'Unknown Subject');
+                          })()}
                         </Badge>
                         <h3 className="font-bold text-lg leading-tight line-clamp-2">{test.title}</h3>
                       </div>

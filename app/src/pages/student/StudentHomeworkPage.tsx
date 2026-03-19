@@ -195,9 +195,10 @@ const StudentHomeworkPage = () => {
               const submission = submissionByHomework.get(String(item.id));
               const dueDate = new Date(item.dueDate);
               const overdue = !submission && dueDate.getTime() < Date.now();
-              const subjectName =
-                subjects.find((subject) => String(subject.id) === String(item.subjectId))?.name ||
-                'Unknown Subject';
+              const subject = subjects.find((s) => String(s.id) === String(item.subjectId));
+              const subjectName = subject?.name 
+                ? (typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject'))
+                : 'Unknown Subject';
 
               return (
                 <motion.div

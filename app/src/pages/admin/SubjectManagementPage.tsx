@@ -76,7 +76,11 @@ const SubjectManagementPage = () => {
   const [isImportingContent, setIsImportingContent] = useState(false);
 
   const sortedSubjects = useMemo(
-    () => [...subjects].sort((a, b) => a.name.localeCompare(b.name)),
+    () => [...subjects].sort((a, b) => {
+      const nameA = typeof a.name === 'string' ? a.name : (a.name.CBSE || '');
+      const nameB = typeof b.name === 'string' ? b.name : (b.name.CBSE || '');
+      return nameA.localeCompare(nameB);
+    }),
     [subjects]
   );
 
@@ -255,8 +259,8 @@ const SubjectManagementPage = () => {
   const startEditSubject = (subject: Subject) => {
     setEditingSubjectId(subject.id);
     setNewSubject({
-      name: subject.name,
-      description: subject.description,
+      name: typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || ''),
+      description: typeof subject.description === 'string' ? subject.description : (subject.description.CBSE || ''),
       icon: subject.icon,
       color: subject.color,
       grade: subject.grade,
@@ -371,7 +375,7 @@ const SubjectManagementPage = () => {
   const startEditChapter = (chapter: Chapter) => {
     setEditingChapterId(chapter.id);
     const name = typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || '');
-    const description = chapter.description || '';
+    const description = typeof chapter.description === 'string' ? chapter.description : (chapter.description.CBSE || '');
     setEditingChapterData({ name, description });
   };
 
@@ -650,7 +654,6 @@ const SubjectManagementPage = () => {
           const subject: Subject = {
             id: subjectId,
             name: subjectName,
-            description: subjectName + ' description',
             description: item.description || `${subjectName} for Class ${gradeNum}`,
             icon: item.icon || '[BK]',
             color: item.color || colorOptions[subjectsCreated % colorOptions.length],

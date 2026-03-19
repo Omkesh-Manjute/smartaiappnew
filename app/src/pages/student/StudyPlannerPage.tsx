@@ -72,7 +72,7 @@ const StudyPlannerPage = () => {
         if (chapter) {
           tasks.push({
             id: `task_${i}_${idx}`,
-            title: `Study ${chapter.name}`,
+            title: `Study ${typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || 'Unknown')}`,
             description: `Complete chapter content and practice MCQs`,
             subjectId: subject.id,
             chapterId: chapter.id,
@@ -246,7 +246,7 @@ const StudyPlannerPage = () => {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          {subject.icon} {subject.name}
+                          {subject.icon} {typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown')}
                         </button>
                       ))}
                     </div>
@@ -341,7 +341,16 @@ const StudyPlannerPage = () => {
                                   <p className={`font-medium ${task.completed ? 'line-through text-gray-400' : ''}`}>
                                     {task.title}
                                   </p>
-                                  <p className="text-xs text-gray-500">{task.duration} mins</p>
+                                  <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                                    <span>{task.duration} mins</span>
+                                    <span>
+                                      {(() => {
+                                        const subject = subjects.find((s) => String(s.id) === String(task.subjectId));
+                                        if (!subject) return 'Unknown Subject';
+                                        return typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'Unknown');
+                                      })()}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             ))}

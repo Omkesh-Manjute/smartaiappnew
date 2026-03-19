@@ -242,16 +242,20 @@ const TutorPage = () => {
         content: m.message,
       }));
 
-      const subjectName = selectedSubject
-        ? subjects.find(s => s.id === selectedSubject)?.name
+      const subjectObj = selectedSubject
+        ? subjects.find(s => s.id === selectedSubject)
+        : undefined;
+
+      const subjectName = subjectObj?.name
+        ? (typeof subjectObj.name === 'string' ? subjectObj.name : (subjectObj.name[user?.board || 'CBSE'] || 'Subject'))
         : undefined;
       
       const chapterObj = selectedSubject && selectedChapter
         ? subjects.find(s => s.id === selectedSubject)?.chapters.find(c => c.id === selectedChapter)
         : undefined;
 
-      const chapterName = chapterObj 
-        ? (typeof chapterObj.name === 'string' ? chapterObj.name : (chapterObj.name[user.board || 'CBSE'] || chapterObj.name.CBSE))
+      const chapterName = chapterObj?.name
+        ? (typeof chapterObj.name === 'string' ? chapterObj.name : (chapterObj.name[user?.board || 'CBSE'] || 'Chapter'))
         : undefined;
 
       // --- Layer 1: Local Search ---
@@ -483,7 +487,7 @@ const TutorPage = () => {
                     : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
                   }`}
               >
-                {subject.name}
+                {typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}
               </button>
             ))}
           </div>
@@ -512,7 +516,7 @@ const TutorPage = () => {
                 </button>
                 {selectedSubjectData.chapters
                   .filter(c => {
-                    const name = typeof c.name === 'string' ? c.name : (c.name[user?.board || 'CBSE'] || c.name.CBSE);
+                    const name = typeof c.name === 'string' ? c.name : ((c.name as any)[user?.board || 'CBSE'] || (c.name as any).CBSE || 'Chapter');
                     return name.toLowerCase().includes(chapterSearch.toLowerCase());
                   })
                   .map((chapter) => (
@@ -577,7 +581,10 @@ const TutorPage = () => {
                         onClick={() => {
                           setInput(q.text);
                           if (q.subject) {
-                            const sub = subjects.find((s) => s.name.toLowerCase().includes(q.subject!));
+                            const sub = subjects.find((s) => {
+                              const sName = typeof s.name === 'string' ? s.name : (s.name[user?.board || 'CBSE'] || 'Subject');
+                              return sName.toLowerCase().includes(q.subject!);
+                            });
                             if (sub) setSelectedSubject(sub.id);
                           }
                         }}

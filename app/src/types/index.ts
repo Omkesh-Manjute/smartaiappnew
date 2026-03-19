@@ -50,8 +50,8 @@ export interface Topic {
 export interface ChapterContent {
   explanation: string;
   mcq: MCQ[];
-  short_questions?: string[];
-  extra_questions?: string[];
+  short_questions?: { question: string; answer: string }[];
+  extra_questions?: { question: string; answer: string }[];
 }
 
 export interface MCQ {

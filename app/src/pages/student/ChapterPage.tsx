@@ -221,7 +221,7 @@ const ChapterPage = () => {
               <h1 className="text-lg font-bold">
                 {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
               </h1>
-              <p className="text-sm text-gray-500">{subject.name}</p>
+              <p className="text-sm text-gray-500">{typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}</p>
             </div>
           </div>
         </div>
@@ -473,7 +473,7 @@ const ChapterPage = () => {
                   {!showMcqResults ? (
                     <Button
                       onClick={submitMcqs}
-                      disabled={Object.keys(mcqAnswers).length < (typeof chapter.content === 'object' ? ((chapter.content as any)[user?.board || 'CBSE']?.mcq?.length || 0) : chapter.mcqs.length)}
+                      disabled={Object.keys(mcqAnswers).length < ((typeof chapter.content === 'object' && (chapter.content as any)[user?.board || 'CBSE']?.mcq?.length) || chapter.mcqs.length || 0)}
                       className="w-full"
                     >
                       Submit Answers
