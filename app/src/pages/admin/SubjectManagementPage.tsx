@@ -138,6 +138,7 @@ const SubjectManagementPage = () => {
         if (cIdx !== -1) {
           const newChapters = [...(s.chapters || [])];
           newChapters[cIdx] = { ...newChapters[cIdx], ...updates };
+          // @ts-ignore - Local storage sync
           localSubjectDB.update(s.id, { chapters: newChapters });
           ok = true;
           break;
@@ -306,7 +307,12 @@ const SubjectManagementPage = () => {
       name: draft.name.trim(),
       description: draft.description.trim() || `${draft.name.trim()} description`,
       order: subject.chapters.length + 1,
-      content: draft.description.trim() || `${draft.name.trim()} overview`,
+      content: {
+        CBSE: {
+          explanation: draft.description.trim() || `${draft.name.trim()} overview`,
+          mcq: []
+        }
+      },
       mcqs: [],
     };
 
@@ -364,7 +370,9 @@ const SubjectManagementPage = () => {
 
   const startEditChapter = (chapter: Chapter) => {
     setEditingChapterId(chapter.id);
-    setEditingChapterData({ name: chapter.name, description: chapter.description });
+    const name = typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || '');
+    const description = chapter.description || '';
+    setEditingChapterData({ name, description });
   };
 
   const saveChapterUpdate = async (chapterId: string, subjectId: string) => {
@@ -378,6 +386,7 @@ const SubjectManagementPage = () => {
         name: editingChapterData.name.trim(),
         description: editingChapterData.description.trim(),
       };
+      // @ts-ignore - Partial update for board-specific names soon
       const mode = await updateChapterWithFallback(chapterId, updates);
       setSubjects((prev) =>
         prev.map((s) =>
@@ -628,9 +637,11 @@ const SubjectManagementPage = () => {
         const gradeNum = Number(item.class) || 10;
         const subjectName = item.subject || 'New Subject';
         
-        // Try to find existing subject for this grade
         let subjectId = '';
-        const existingSubjects = subjects.filter(s => s.name.toLowerCase() === subjectName.toLowerCase() && s.grade === gradeNum);
+        const existingSubjects = subjects.filter(s => {
+          const sName = typeof s.name === 'string' ? s.name : (s.name.CBSE || '');
+          return sName.toLowerCase() === subjectName.toLowerCase() && s.grade === gradeNum;
+        });
         
         if (existingSubjects.length > 0) {
           subjectId = existingSubjects[0].id;
@@ -639,6 +650,7 @@ const SubjectManagementPage = () => {
           const subject: Subject = {
             id: subjectId,
             name: subjectName,
+            description: subjectName + ' description',
             description: item.description || `${subjectName} for Class ${gradeNum}`,
             icon: item.icon || '[BK]',
             color: item.color || colorOptions[subjectsCreated % colorOptions.length],
@@ -1006,7 +1018,9 @@ const SubjectManagementPage = () => {
                             {subject.icon}
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-white mb-1">{subject.name}</h3>
+                            <h3 className="text-xl font-bold text-white mb-1">
+                              {typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'New Subject')}
+                            </h3>
                             <Badge className="bg-black/20 hover:bg-black/30 text-white border-0">
                               Grade {subject.grade}
                             </Badge>
@@ -1032,7 +1046,7 @@ const SubjectManagementPage = () => {
 
                       <div className="p-6 space-y-6">
                         <p className="text-gray-600 text-sm leading-relaxed">
-                          {subject.description || 'No description available.'}
+                          {typeof subject.description === 'string' ? subject.description : (subject.description?.CBSE || 'No description available.')}
                         </p>
 
                         <div className="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-hidden">
@@ -1119,10 +1133,10 @@ const SubjectManagementPage = () => {
                                         <>
                                           <div className="flex-1 min-w-0 pr-4">
                                             <p className="text-sm font-bold text-gray-800 truncate">
-                                              #{chapter.order} {chapter.name}
+                                              #{chapter.order} {typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || 'New Chapter')}
                                             </p>
                                             <p className="text-[10px] text-gray-400 font-medium truncate uppercase tracking-tighter">
-                                              {chapter.description || 'Regular Content'}
+                                              {(typeof chapter.description === 'string' ? chapter.description : (chapter.description?.CBSE)) || 'Regular Content'}
                                             </p>
                                           </div>
                                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">

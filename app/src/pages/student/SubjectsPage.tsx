@@ -99,7 +99,9 @@ const SubjectsPage = () => {
                 {selectedSubject.icon}
               </div>
               <div>
-                <h1 className="text-xl font-bold">{selectedSubject.name}</h1>
+                <h1 className="text-xl font-bold">
+                  {typeof selectedSubject.name === 'string' ? selectedSubject.name : (selectedSubject.name[user?.board || 'CBSE'] || 'Subject')}
+                </h1>
                 <p className="text-sm text-gray-500">{selectedSubject.chapters.length} chapters</p>
               </div>
             </div>
@@ -238,8 +240,12 @@ const SubjectsPage = () => {
                   <span className="text-5xl">{subject.icon}</span>
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="text-lg font-semibold mb-1">{subject.name}</h3>
-                  <p className="text-sm text-gray-500 mb-3">{subject.description}</p>
+                  <h3 className="text-lg font-semibold mb-1">
+                    {typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-3">
+                    {typeof subject.description === 'string' ? subject.description : (subject.description?.[user?.board || 'CBSE'] || 'No description')}
+                  </p>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">{subject.chapters.length} chapters</span>

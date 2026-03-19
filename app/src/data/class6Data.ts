@@ -3,8 +3,14 @@ import type { Subject } from '@/types';
 export const class6Subjects: Subject[] = [
   {
     id: 'sci-6',
-    name: 'Science',
-    description: 'Explore the world of science with CBSE and State Board curriculum',
+    name: {
+      CBSE: 'Science',
+      STATE: 'General Science'
+    },
+    description: {
+      CBSE: 'Explore the world of science with CBSE curriculum',
+      STATE: 'General Science for Maharashtra State Board'
+    },
     icon: '🔬',
     color: 'bg-green-500',
     grade: 6,
@@ -17,7 +23,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Food: Where Does It Come From',
           STATE: 'Food and Nutrition'
         },
-        description: 'Understanding sources of food and nutrition',
+        description: {
+          CBSE: 'Food: Where Does It Come From - CBSE focus on sources',
+          STATE: 'Food and Nutrition - State Board focus on health'
+        },
         order: 1,
         content: {
           CBSE: {
@@ -33,9 +42,9 @@ export const class6Subjects: Subject[] = [
               { question: "Name two sources of food", answer: "Plants and animals" }
             ],
             extra_questions: [
-              "Explain sources of food with examples",
-              "Describe different plant parts used as food",
-              "Explain types of animals based on food habits"
+              { question: "Explain sources of food with examples", answer: "Plants (cereals) and animals (milk)" },
+              { question: "Describe different plant parts used as food", answer: "Roots, stems, leaves, fruits" },
+              { question: "Explain types of animals based on food habits", answer: "Herbivores, carnivores, omnivores" }
             ]
           },
           STATE: {
@@ -51,9 +60,8 @@ export const class6Subjects: Subject[] = [
               { question: "Name two sources of food", answer: "Plants and animals" }
             ],
             extra_questions: [
-              "Explain sources of food with examples",
-              "Describe different plant parts used as food",
-              "Explain types of animals based on food habits"
+              { question: "Explain sources of food with examples", answer: "Plants (cereals) and animals (milk)" },
+              { question: "Describe different plant parts used as food", answer: "Roots, stems, leaves, fruits" }
             ]
           }
         },
@@ -65,8 +73,8 @@ export const class6Subjects: Subject[] = [
               CBSE: {
                 explanation: "Food is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
                 mcq: [
-                  { id: 'T1-Q1', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3 },
-                  { id: 'T1-Q2', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2 }
+                  { id: 'T1-Q1', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3, explanation: 'Food gives everything needed.', difficulty: 'easy' },
+                  { id: 'T1-Q2', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2, explanation: 'Both plants and animals.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Why do we need food?', answer: 'For energy, growth and protection' }
@@ -75,8 +83,8 @@ export const class6Subjects: Subject[] = [
               STATE: {
                 explanation: "Food is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
                 mcq: [
-                  { id: 'T1-Q1-S', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3 },
-                  { id: 'T1-Q2-S', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2 }
+                  { id: 'T1-Q1-S', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3, explanation: 'Food gives everything needed.', difficulty: 'easy' },
+                  { id: 'T1-Q2-S', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2, explanation: 'Both plants and animals.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Why do we need food?', answer: 'For energy, growth and protection' }
@@ -91,7 +99,7 @@ export const class6Subjects: Subject[] = [
               CBSE: {
                 explanation: "We eat different parts of plants such as roots, stems, leaves, fruits, flowers and seeds. For example, carrot is root, potato is stem, spinach is leaf, and wheat is seed.",
                 mcq: [
-                  { id: 'T2-Q1', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0 }
+                  { id: 'T2-Q1', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0, explanation: 'Carrot is a root.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Name two roots we eat', answer: 'Carrot and radish' }
@@ -100,7 +108,7 @@ export const class6Subjects: Subject[] = [
               STATE: {
                 explanation: "We eat different parts of plants such as roots, stems, leaves, fruits, flowers and seeds. For example, carrot is root, potato is stem, spinach is leaf, and wheat is seed.",
                 mcq: [
-                  { id: 'T2-Q1-S', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0 }
+                  { id: 'T2-Q1-S', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0, explanation: 'Carrot is a root.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Name two roots we eat', answer: 'Carrot and radish' }
@@ -115,7 +123,7 @@ export const class6Subjects: Subject[] = [
               CBSE: {
                 explanation: "Animals also provide food products such as milk, eggs, meat and honey. Milk from cow, buffalo and goat is used to make butter, curd and cheese.",
                 mcq: [
-                  { id: 'T3-Q1', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1 }
+                  { id: 'T3-Q1', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1, explanation: 'Milk comes from animals.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Name two animal food items', answer: 'Milk and eggs' }
@@ -124,7 +132,7 @@ export const class6Subjects: Subject[] = [
               STATE: {
                 explanation: "Animals also provide food products such as milk, eggs, meat and honey. Milk from cow, buffalo and goat is used to make butter, curd and cheese.",
                 mcq: [
-                  { id: 'T3-Q1-S', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1 }
+                  { id: 'T3-Q1-S', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1, explanation: 'Milk comes from animals.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Name two animal food items', answer: 'Milk and eggs' }
@@ -139,7 +147,7 @@ export const class6Subjects: Subject[] = [
               CBSE: {
                 explanation: "Animals are classified based on their eating habits. Herbivores eat plants, carnivores eat animals, and omnivores eat both plants and animals.",
                 mcq: [
-                  { id: 'T4-Q1', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1 }
+                  { id: 'T4-Q1', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1, explanation: 'Cow eats plants.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Define herbivores', answer: 'Animals that eat only plants' }
@@ -148,7 +156,7 @@ export const class6Subjects: Subject[] = [
               STATE: {
                 explanation: "Animals are classified based on their eating habits. Herbivores eat plants, carnivores eat animals, and omnivores eat both plants and animals.",
                 mcq: [
-                  { id: 'T4-Q1-S', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1 }
+                  { id: 'T4-Q1-S', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1, explanation: 'Cow eats plants.', difficulty: 'easy' }
                 ],
                 short_questions: [
                   { question: 'Define herbivores', answer: 'Animals that eat only plants' }
@@ -166,7 +174,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Components of Food',
           STATE: 'Nutrition and Food'
         },
-        description: 'Learning about carbohydrates, proteins, fats, vitamins and minerals',
+        description: {
+          CBSE: 'Components of Food - CBSE coverage of basic nutrients',
+          STATE: 'Nutrition and Food - State Board focus on nutrition'
+        },
         order: 2,
         content: {
           CBSE: {
@@ -201,12 +212,12 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
-                mcq: [{ id: 'T2-Q1', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1 }],
+                mcq: [{ id: 'T2-Q1', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1, explanation: 'Nutrients are good for us.', difficulty: 'easy' }],
                 short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
               },
               STATE: {
                 explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
-                mcq: [{ id: 'T2-Q1-S', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1 }],
+                mcq: [{ id: 'T2-Q1-S', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1, explanation: 'Nutrients are good for us.', difficulty: 'easy' }],
                 short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
               }
             }
@@ -217,12 +228,12 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
-                mcq: [{ id: 'T2-Q2', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0 }],
+                mcq: [{ id: 'T2-Q2', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Protein builds body.', difficulty: 'easy' }],
                 short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
               },
               STATE: {
                 explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
-                mcq: [{ id: 'T2-Q2-S', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0 }],
+                mcq: [{ id: 'T2-Q2-S', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Protein builds body.', difficulty: 'easy' }],
                 short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
               }
             }
@@ -233,11 +244,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
-                mcq: [{ id: 'T2-Q3', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q3', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'Oil has fat.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
-                mcq: [{ id: 'T2-Q3-S', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q3-S', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'Oil has fat.', difficulty: 'easy' }]
               }
             }
           },
@@ -247,11 +258,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
-                mcq: [{ id: 'T2-Q4', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q4', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0, explanation: 'Protein for growth.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
-                mcq: [{ id: 'T2-Q4-S', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q4-S', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0, explanation: 'Protein for growth.', difficulty: 'easy' }]
               }
             }
           },
@@ -261,11 +272,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
-                mcq: [{ id: 'T2-Q5', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q5', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0, explanation: 'Vit A for eyes.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
-                mcq: [{ id: 'T2-Q5-S', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q5-S', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0, explanation: 'Vit A for eyes.', difficulty: 'easy' }]
               }
             }
           },
@@ -289,11 +300,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
-                mcq: [{ id: 'T2-Q7', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q7', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0, explanation: 'Vit C for scurvy.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
-                mcq: [{ id: 'T2-Q7-S', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q7-S', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0, explanation: 'Vit C for scurvy.', difficulty: 'easy' }]
               }
             }
           },
@@ -303,11 +314,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Practice more to master the components of food.",
-                mcq: [{ id: 'T2-Q8', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q8', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0, explanation: 'Energy from carbs.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Practice more to master the nutrition topics.",
-                mcq: [{ id: 'T2-Q8-S', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T2-Q8-S', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0, explanation: 'Energy from carbs.', difficulty: 'easy' }]
               }
             }
           }
@@ -321,7 +332,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Fibre to Fabric',
           STATE: 'Clothing and Fibres'
         },
-        description: 'How clothes are made from fibers',
+        description: {
+          CBSE: 'Fibre to Fabric - CBSE focus on basic process',
+          STATE: 'Clothing and Fibres - State Board focus on materials'
+        },
         order: 3,
         content: {
           CBSE: {
@@ -354,11 +368,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
-                mcq: [{ id: 'T3-Q1', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q1', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn makes fabric.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
-                mcq: [{ id: 'T3-Q1-S', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q1-S', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn makes fabric.', difficulty: 'easy' }]
               }
             }
           },
@@ -368,11 +382,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
-                mcq: [{ id: 'T3-Q2', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q2', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is man-made.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
-                mcq: [{ id: 'T3-Q2-S', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q2-S', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is man-made.', difficulty: 'easy' }]
               }
             }
           },
@@ -382,11 +396,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
-                mcq: [{ id: 'T3-Q3', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q3', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1, explanation: 'Cotton from fruits.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
-                mcq: [{ id: 'T3-Q3-S', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q3-S', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1, explanation: 'Cotton from fruits.', difficulty: 'easy' }]
               }
             }
           },
@@ -396,11 +410,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
-                mcq: [{ id: 'T3-Q4', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q4', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0, explanation: 'Charkha for spinning.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
-                mcq: [{ id: 'T3-Q4-S', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q4-S', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0, explanation: 'Charkha for spinning.', difficulty: 'easy' }]
               }
             }
           },
@@ -410,11 +424,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
-                mcq: [{ id: 'T3-Q5', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q5', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1, explanation: 'Two yarns for weaving.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
-                mcq: [{ id: 'T3-Q5-S', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T3-Q5-S', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1, explanation: 'Two yarns for weaving.', difficulty: 'easy' }]
               }
             }
           },
@@ -424,11 +438,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
-                mcq: [{ id: 'T3-Q6', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q6', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0, explanation: 'No clothes then.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
-                mcq: [{ id: 'T3-Q6-S', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q6-S', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0, explanation: 'No clothes then.', difficulty: 'easy' }]
               }
             }
           },
@@ -438,11 +452,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Master the journey from fibre to fabric.",
-                mcq: [{ id: 'T3-Q7', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q7', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0, explanation: 'Cotton is natural.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Master the clothing and fibres topics.",
-                mcq: [{ id: 'T3-Q7-S', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T3-Q7-S', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0, explanation: 'Cotton is natural.', difficulty: 'easy' }]
               }
             }
           }
@@ -456,7 +470,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Sorting Materials into Groups',
           STATE: 'Materials Around Us'
         },
-        description: 'Learning about properties and grouping of materials',
+        description: {
+          CBSE: 'Sorting Materials into Groups - CBSE focus on classification',
+          STATE: 'Materials Around Us - State Board focus on properties'
+        },
         order: 4,
         content: {
           CBSE: {
@@ -491,11 +508,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Objects around us have different shapes, colours and uses. All objects are made from materials.",
-                mcq: [{ id: 'T4-Q1', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q1', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0, explanation: 'Everything is material.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Objects around us have different shapes, colours and uses. All objects are made from materials.",
-                mcq: [{ id: 'T4-Q1-S', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q1-S', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0, explanation: 'Everything is material.', difficulty: 'easy' }]
               }
             }
           },
@@ -505,11 +522,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "We group materials to make it easier to study and use them.",
-                mcq: [{ id: 'T4-Q2', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q2', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1, explanation: 'To study easily.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "We group materials to make it easier to study and use them.",
-                mcq: [{ id: 'T4-Q2-S', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q2-S', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1, explanation: 'To study easily.', difficulty: 'easy' }]
               }
             }
           },
@@ -519,11 +536,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Materials are grouped based on their properties such as appearance, hardness, solubility, floating and transparency.",
-                mcq: [{ id: 'T4-Q3', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q3', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1, explanation: 'Properties for sorting.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Materials are grouped based on their properties such as appearance, hardness, solubility, floating and transparency.",
-                mcq: [{ id: 'T4-Q3-S', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q3-S', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1, explanation: 'Properties for sorting.', difficulty: 'easy' }]
               }
             }
           },
@@ -533,11 +550,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Lustrous materials are shiny (like metals), while others are dull (like wood).",
-                mcq: [{ id: 'T4-Q4', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q4', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1, explanation: 'Lustre is shine.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Lustrous materials are shiny (like metals), while others are dull (like wood).",
-                mcq: [{ id: 'T4-Q4-S', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q4-S', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1, explanation: 'Lustre is shine.', difficulty: 'easy' }]
               }
             }
           },
@@ -547,11 +564,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Hard materials cannot be easily compressed, while soft materials can be easily pressed.",
-                mcq: [{ id: 'T4-Q5', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q5', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1, explanation: 'Stone is hard.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Hard materials cannot be easily compressed, while soft materials can be easily pressed.",
-                mcq: [{ id: 'T4-Q5-S', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q5-S', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1, explanation: 'Stone is hard.', difficulty: 'easy' }]
               }
             }
           },
@@ -561,11 +578,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Materials that dissolve in water are soluble, while those that do not are insoluble.",
-                mcq: [{ id: 'T4-Q6', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q6', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0, explanation: 'Sugar dissolves.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Materials that dissolve in water are soluble, while those that do not are insoluble.",
-                mcq: [{ id: 'T4-Q6-S', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q6-S', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0, explanation: 'Sugar dissolves.', difficulty: 'easy' }]
               }
             }
           },
@@ -575,11 +592,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Some materials float on water (like wood) while others sink (like stone).",
-                mcq: [{ id: 'T4-Q7', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q7', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1, explanation: 'Wood floats.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Some materials float on water (like wood) while others sink (like stone).",
-                mcq: [{ id: 'T4-Q7-S', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q7-S', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1, explanation: 'Wood floats.', difficulty: 'easy' }]
               }
             }
           },
@@ -589,11 +606,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Transparent materials are see-through, translucent are partial, and opaque cannot be seen through.",
-                mcq: [{ id: 'T4-Q8', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q8', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1, explanation: 'We can see through glass.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Transparent materials are see-through, translucent are partial, and opaque cannot be seen through.",
-                mcq: [{ id: 'T4-Q8-S', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T4-Q8-S', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1, explanation: 'We can see through glass.', difficulty: 'easy' }]
               }
             }
           },
@@ -603,11 +620,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Practice grouping materials based on properties.",
-                mcq: [{ id: 'T4-Q9', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q9', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0, explanation: 'Salt is soluble.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Review materials and their properties.",
-                mcq: [{ id: 'T4-Q9-S', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0 }]
+                mcq: [{ id: 'T4-Q9-S', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0, explanation: 'Salt is soluble.', difficulty: 'easy' }]
               }
             }
           }
@@ -621,7 +638,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Separation of Substances',
           STATE: 'Separation Methods'
         },
-        description: 'Methods of separating substances from mixtures',
+        description: {
+          CBSE: 'Separation of Substances - CBSE focus on basic methods',
+          STATE: 'Separation Methods - State Board focus on techniques'
+        },
         order: 5,
         content: {
           CBSE: {
@@ -656,11 +676,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "We separate substances to remove unwanted materials, to obtain useful components and to make substances pure.",
-                mcq: [{ id: 'T5-Q1', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q1', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1, explanation: 'To get pure stuff.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "We separate substances to remove unwanted materials, to obtain useful components and to make substances pure.",
-                mcq: [{ id: 'T5-Q1-S', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q1-S', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1, explanation: 'To get pure stuff.', difficulty: 'easy' }]
               }
             }
           },
@@ -670,11 +690,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Handpicking is used when impurities are few and large, like removing stones from rice.",
-                mcq: [{ id: 'T5-Q2', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q2', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1, explanation: 'Hand for large bits.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Handpicking is used when impurities are few and large, like removing stones from rice.",
-                mcq: [{ id: 'T5-Q2-S', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q2-S', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1, explanation: 'Hand for large bits.', difficulty: 'easy' }]
               }
             }
           },
@@ -684,11 +704,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Threshing is the process of separating grains from stalks.",
-                mcq: [{ id: 'T5-Q3', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q3', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0, explanation: 'Threshing for grain.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Threshing is the process of separating grains from stalks.",
-                mcq: [{ id: 'T5-Q3-S', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q3-S', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0, explanation: 'Threshing for grain.', difficulty: 'easy' }]
               }
             }
           },
@@ -698,11 +718,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Winnowing is used to separate lighter components like husk from heavier grains using wind.",
-                mcq: [{ id: 'T5-Q4', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q4', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0, explanation: 'Wind for light bits.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Winnowing is used to separate lighter components like husk from heavier grains using wind.",
-                mcq: [{ id: 'T5-Q4-S', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q4-S', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0, explanation: 'Wind for light bits.', difficulty: 'easy' }]
               }
             }
           },
@@ -712,11 +732,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Sieving is used to separate particles of different sizes using a sieve.",
-                mcq: [{ id: 'T5-Q5', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q5', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1, explanation: 'Sieve for size.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Sieving is used to separate particles of different sizes using a sieve.",
-                mcq: [{ id: 'T5-Q5-S', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q5-S', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1, explanation: 'Sieve for size.', difficulty: 'easy' }]
               }
             }
           },
@@ -726,11 +746,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Heavier particles settle down (sedimentation), then clear liquid is poured off (decantation).",
-                mcq: [{ id: 'T5-Q6', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q6', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1, explanation: 'Settling at bottom.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Heavier particles settle down (sedimentation), then clear liquid is poured off (decantation).",
-                mcq: [{ id: 'T5-Q6-S', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1 }]
+                mcq: [{ id: 'T5-Q6-S', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1, explanation: 'Settling at bottom.', difficulty: 'easy' }]
               }
             }
           },
@@ -740,11 +760,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Filtration separates insoluble solids from liquids using filter paper or cloth.",
-                mcq: [{ id: 'T5-Q7', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q7', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0, explanation: 'Filter for solids.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Filtration separates insoluble solids from liquids using filter paper or cloth.",
-                mcq: [{ id: 'T5-Q7-S', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q7-S', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0, explanation: 'Filter for solids.', difficulty: 'easy' }]
               }
             }
           },
@@ -754,11 +774,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Evaporation is used to obtain solids from liquids by heating.",
-                mcq: [{ id: 'T5-Q8', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q8', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0, explanation: 'Heat removes water.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Evaporation is used to obtain solids from liquids by heating.",
-                mcq: [{ id: 'T5-Q8-S', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0 }]
+                mcq: [{ id: 'T5-Q8-S', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0, explanation: 'Heat removes water.', difficulty: 'easy' }]
               }
             }
           },
@@ -768,11 +788,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Practice more to master separation methods.",
-                mcq: [{ id: 'T5-Q9', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3 }]
+                mcq: [{ id: 'T5-Q9', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3, explanation: 'All methods help.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Master the methods of separating substances.",
-                mcq: [{ id: 'T5-Q9-S', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3 }]
+                mcq: [{ id: 'T5-Q9-S', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3, explanation: 'All methods help.', difficulty: 'easy' }]
               }
             }
           }
@@ -786,7 +806,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Changes Around Us',
           STATE: 'Physical Changes'
         },
-        description: 'Learning about reversible, irreversible, physical and chemical changes',
+        description: {
+          CBSE: 'Changes Around Us - CBSE focus on irreversible and reversible changes',
+          STATE: 'Physical Changes - State Board focus on types of changes'
+        },
         order: 6,
         content: {
           CBSE: {
@@ -821,11 +844,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "A change is any alteration in the shape, size, colour, state or position of an object.",
-                mcq: [{ id: 'T6-Q1', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q1', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1, explanation: 'Change = different.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "A change is any alteration in the shape, size, colour, state or position of an object.",
-                mcq: [{ id: 'T6-Q1-S', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q1-S', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1, explanation: 'Change = different.', difficulty: 'easy' }]
               }
             }
           },
@@ -835,11 +858,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Reversible changes can return to original state, but irreversible changes are permanent.",
-                mcq: [{ id: 'T6-Q2', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q2', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0, explanation: 'Water to ice again.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Reversible changes can return to original state, but irreversible changes are permanent.",
-                mcq: [{ id: 'T6-Q2-S', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q2-S', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0, explanation: 'Water to ice again.', difficulty: 'easy' }]
               }
             }
           },
@@ -849,11 +872,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "In a physical change, no new substance is formed. In a chemical change, a new substance is formed.",
-                mcq: [{ id: 'T6-Q3', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q3', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0, explanation: 'No new stuff.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "In a physical change, no new substance is formed. In a chemical change, a new substance is formed.",
-                mcq: [{ id: 'T6-Q3-S', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q3-S', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0, explanation: 'No new stuff.', difficulty: 'easy' }]
               }
             }
           },
@@ -863,11 +886,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Heat can bring changes like melting and expansion. Cooling can cause contraction and freezing.",
-                mcq: [{ id: 'T6-Q4', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q4', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1, explanation: 'Heat melts ice.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Heat can bring changes like melting and expansion. Cooling can cause contraction and freezing.",
-                mcq: [{ id: 'T6-Q4-S', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q4-S', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1, explanation: 'Heat melts ice.', difficulty: 'easy' }]
               }
             }
           },
@@ -877,11 +900,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Force (push or pull) can change the shape, size or motion of objects.",
-                mcq: [{ id: 'T6-Q5', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q5', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0, explanation: 'Force = push/pull.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Force (push or pull) can change the shape, size or motion of objects.",
-                mcq: [{ id: 'T6-Q5-S', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q5-S', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0, explanation: 'Force = push/pull.', difficulty: 'easy' }]
               }
             }
           },
@@ -891,11 +914,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Materials expand when heated and contract when cooled.",
-                mcq: [{ id: 'T6-Q6', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q6', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0, explanation: 'Heat makes bigger.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Materials expand when heated and contract when cooled.",
-                mcq: [{ id: 'T6-Q6-S', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q6-S', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0, explanation: 'Heat makes bigger.', difficulty: 'easy' }]
               }
             }
           },
@@ -905,11 +928,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Slow changes take time (like rusting), while fast changes happen quickly (like burning).",
-                mcq: [{ id: 'T6-Q7', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q7', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1, explanation: 'Takes days/months.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Slow changes take time (like rusting), while fast changes happen quickly (like burning).",
-                mcq: [{ id: 'T6-Q7-S', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1 }]
+                mcq: [{ id: 'T6-Q7-S', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1, explanation: 'Takes days/months.', difficulty: 'easy' }]
               }
             }
           },
@@ -919,11 +942,11 @@ export const class6Subjects: Subject[] = [
             content: {
               CBSE: {
                 explanation: "Practice more to master the concepts of changes around us.",
-                mcq: [{ id: 'T6-Q8', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q8', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0, explanation: 'Wax can freeze.', difficulty: 'easy' }]
               },
               STATE: {
                 explanation: "Master the physical and chemical changes topics.",
-                mcq: [{ id: 'T6-Q8-S', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0 }]
+                mcq: [{ id: 'T6-Q8-S', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0, explanation: 'Wax can freeze.', difficulty: 'easy' }]
               }
             }
           }
@@ -937,7 +960,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Getting to Know Plants',
           STATE: 'Plants and Environment'
         },
-        description: 'Structure and functions of plant parts',
+        description: {
+          CBSE: 'Structure and functions of plant parts',
+          STATE: 'Plants and their surroundings'
+        },
         order: 7,
         content: '',
         mcqs: [],
@@ -950,7 +976,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Body Movements',
           STATE: 'Human Body Movement'
         },
-        description: 'How humans and animals move',
+        description: {
+          CBSE: 'How humans and animals move',
+          STATE: 'Body structure and movement'
+        },
         order: 8,
         content: '',
         mcqs: [],
@@ -963,7 +992,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Living Organisms and Their Surroundings',
           STATE: 'Living Things and Habitat'
         },
-        description: 'Habitats and adaptations',
+        description: {
+          CBSE: 'Habitats and adaptations',
+          STATE: 'Living world and its variety'
+        },
         order: 9,
         content: '',
         mcqs: [],
@@ -976,7 +1008,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Motion and Measurement of Distances',
           STATE: 'Measurement and Motion'
         },
-        description: 'History of transport and measurement units',
+        description: {
+          CBSE: 'History of transport and measurement units',
+          STATE: 'Motion and types of motion'
+        },
         order: 10,
         content: '',
         mcqs: [],
@@ -989,7 +1024,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Light, Shadows and Reflections',
           STATE: 'Light and Shadow'
         },
-        description: 'Properties of light and shadow formation',
+        description: {
+          CBSE: 'Properties of light and shadow formation',
+          STATE: 'Light and transparency'
+        },
         order: 11,
         content: '',
         mcqs: [],
@@ -1002,7 +1040,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Electricity and Circuits',
           STATE: 'Basic Electricity'
         },
-        description: 'Electric cells, bulbs, and circuits',
+        description: {
+          CBSE: 'Electric cells, bulbs, and circuits',
+          STATE: 'Electricity in daily life'
+        },
         order: 12,
         content: '',
         mcqs: [],
@@ -1015,7 +1056,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Fun with Magnets',
           STATE: 'Magnetism'
         },
-        description: 'Discovery and properties of magnets',
+        description: {
+          CBSE: 'Discovery and properties of magnets',
+          STATE: 'Introduction to magnetism'
+        },
         order: 13,
         content: '',
         mcqs: [],
@@ -1028,7 +1072,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Water',
           STATE: 'Water Resources'
         },
-        description: 'Importance of water and water cycle',
+        description: {
+          CBSE: 'Importance of water and water cycle',
+          STATE: 'Water as a natural resource'
+        },
         order: 14,
         content: '',
         mcqs: [],
@@ -1041,7 +1088,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Air Around Us',
           STATE: 'Air and Atmosphere'
         },
-        description: 'Composition and importance of air',
+        description: {
+          CBSE: 'Composition and importance of air',
+          STATE: 'Air and its properties'
+        },
         order: 15,
         content: '',
         mcqs: [],
@@ -1054,7 +1104,10 @@ export const class6Subjects: Subject[] = [
           CBSE: 'Garbage In Garbage Out',
           STATE: 'Waste Management'
         },
-        description: 'Waste disposal and recycling',
+        description: {
+          CBSE: 'Waste disposal and recycling',
+          STATE: 'Keeping our surroundings clean'
+        },
         order: 16,
         content: '',
         mcqs: [],

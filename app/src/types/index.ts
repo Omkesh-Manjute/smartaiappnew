@@ -18,8 +18,8 @@ export interface User {
 
 export interface Subject {
   id: string;
-  name: string;
-  description: string;
+  name: string | { [key in Board]?: string };
+  description: string | { [key in Board]?: string };
   icon: string;
   color: string;
   grade: number;
@@ -31,7 +31,7 @@ export interface Chapter {
   id: string;
   subjectId: string;
   name: string | { [key in Board]?: string };
-  description: string;
+  description: string | { [key in Board]?: string };
   order: number;
   content: string | { [key in Board]?: ChapterContent };
   videoUrl?: string;

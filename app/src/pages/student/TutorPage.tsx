@@ -245,8 +245,13 @@ const TutorPage = () => {
       const subjectName = selectedSubject
         ? subjects.find(s => s.id === selectedSubject)?.name
         : undefined;
-      const chapterName = selectedSubject && selectedChapter
-        ? subjects.find(s => s.id === selectedSubject)?.chapters.find(c => c.id === selectedChapter)?.name
+      
+      const chapterObj = selectedSubject && selectedChapter
+        ? subjects.find(s => s.id === selectedSubject)?.chapters.find(c => c.id === selectedChapter)
+        : undefined;
+
+      const chapterName = chapterObj 
+        ? (typeof chapterObj.name === 'string' ? chapterObj.name : (chapterObj.name[user.board || 'CBSE'] || chapterObj.name.CBSE))
         : undefined;
 
       // --- Layer 1: Local Search ---
@@ -506,7 +511,10 @@ const TutorPage = () => {
                   All Chapters
                 </button>
                 {selectedSubjectData.chapters
-                  .filter(c => c.name.toLowerCase().includes(chapterSearch.toLowerCase()))
+                  .filter(c => {
+                    const name = typeof c.name === 'string' ? c.name : (c.name[user?.board || 'CBSE'] || c.name.CBSE);
+                    return name.toLowerCase().includes(chapterSearch.toLowerCase());
+                  })
                   .map((chapter) => (
                   <button
                     key={chapter.id}
@@ -516,7 +524,7 @@ const TutorPage = () => {
                         : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
                       }`}
                   >
-                    {chapter.name}
+                    {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE)}
                   </button>
                 ))}
               </div>

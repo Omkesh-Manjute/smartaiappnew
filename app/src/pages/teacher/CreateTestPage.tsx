@@ -149,17 +149,21 @@ const CreateTestPage = () => {
 
     setIsGenerating(true);
     try {
+      const chapterName = selectedChapter
+        ? (typeof selectedChapter.name === 'string' ? selectedChapter.name : (selectedChapter.name[user?.board || 'CBSE'] || selectedChapter.name.CBSE))
+        : undefined;
+
       const generatedQuestions = trimmedPrompt
         ? await generateTestQuestionsFromPrompt({
             subject: selectedSubject?.name || '',
-            chapter: selectedChapter?.name,
+            chapter: chapterName,
             prompt: trimmedPrompt,
             numQuestions: testData.numQuestions,
             difficulty: testData.difficulty,
           })
         : await generateTestQuestions({
             subject: selectedSubject?.name || '',
-            chapter: selectedChapter?.name || '',
+            chapter: chapterName || '',
             topic: trimmedTopic,
             numQuestions: testData.numQuestions,
             difficulty: testData.difficulty,
@@ -327,7 +331,9 @@ const CreateTestPage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {selectedSubject?.chapters.map((c) => (
-                          <SelectItem key={String(c.id)} value={String(c.id)}>{c.name}</SelectItem>
+                          <SelectItem key={String(c.id)} value={String(c.id)}>
+                            {typeof c.name === 'string' ? c.name : (c.name[user?.board || 'CBSE'] || c.name.CBSE)}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

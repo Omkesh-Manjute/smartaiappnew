@@ -107,7 +107,7 @@ const HeatmapPage = () => {
 
     weakSubjects.slice(0, 3).forEach(({ subject }) => {
       suggestions.push({
-        text: `Practice ${subject.name} in Battle Quiz`,
+        text: `Practice ${typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')} in Battle Quiz`,
         action: () => navigate('/student/battle'),
         icon: Swords,
         color: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -123,7 +123,7 @@ const HeatmapPage = () => {
 
     if (weakSubjects.length > 0) {
       suggestions.push({
-        text: `Ask AI Tutor about ${weakSubjects[0].subject.name}`,
+        text: `Ask AI Tutor about ${typeof weakSubjects[0].subject.name === 'string' ? weakSubjects[0].subject.name : (weakSubjects[0].subject.name[user?.board || 'CBSE'] || 'Subject')}`,
         action: () => navigate('/student/tutor'),
         icon: Bot,
         color: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -242,7 +242,7 @@ const HeatmapPage = () => {
                           </div>
                           <div className="flex-1">
                             <div className="flex justify-between items-center">
-                              <h3 className="font-semibold">{subject.name}</h3>
+                              <h3 className="font-semibold">{typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}</h3>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${mastery >= 80 ? 'bg-green-100 text-green-700' :
                                   mastery >= 60 ? 'bg-yellow-100 text-yellow-700' :
                                     mastery >= 40 ? 'bg-orange-100 text-orange-700' :
@@ -272,7 +272,9 @@ const HeatmapPage = () => {
                                     key={chapter.id}
                                     className="p-2 rounded-lg bg-gray-50"
                                   >
-                                    <p className="text-xs text-gray-600 truncate">{chapter.name}</p>
+                                    <p className="text-xs text-gray-600 truncate">
+                                      {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE)}
+                                    </p>
                                     <div className="flex items-center gap-2 mt-1">
                                       <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                         <div
