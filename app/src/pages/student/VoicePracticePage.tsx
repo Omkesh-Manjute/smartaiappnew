@@ -327,11 +327,14 @@ const VoicePracticePage = () => {
     if (!user) return;
     (async () => {
       try {
+        console.log('Fetching voice practice history for student:', user.id);
         const records = await voicePracticeDB.getByStudent(user.id);
         const normalized: PracticeRecord[] = records.map((item: any) => ({
           ...item,
-          practicedAt: new Date(item.practicedAt),
+          // Ensure practicedAt is a Date object, even if it comes as a string from DB
+          practicedAt: item.practicedAt instanceof Date ? item.practicedAt : new Date(item.practicedAt),
         }));
+        console.log('Normalized history records:', normalized.length);
         setHistory(normalized);
       } catch (error) {
         console.error('Failed to load voice practice history:', error);
@@ -553,9 +556,14 @@ const VoicePracticePage = () => {
       practicedAt: new Date(),
     };
 
-    setHistory((prev) => [...prev, record]);
+    setHistory((prev) => {
+      const updated = [...prev, record];
+      console.log('Updated history state:', updated.length);
+      return updated;
+    });
 
     try {
+      console.log('Saving voice practice record to DB:', record.id);
       await voicePracticeDB.create(record);
     } catch (error) {
       console.error('Failed to save voice practice record:', error);
@@ -926,8 +934,6 @@ const VoicePracticePage = () => {
                       </Button>
                       <Button
                         variant="outline"
-                        size="sm"
-                        onClick={() => { resetAttemptState(); startListening(); }}
                         className="flex-1 border-cyan-300 text-cyan-700 hover:bg-cyan-100"
                       >
                         <Mic className="w-4 h-4 mr-1" />
