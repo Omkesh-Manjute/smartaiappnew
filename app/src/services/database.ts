@@ -417,16 +417,29 @@ export const initializeSampleData = () => {
     const existingSubjects = getAll<Subject>(DB_KEYS.SUBJECTS);
     const existingTests = getAll<Test>(DB_KEYS.TESTS);
     const deletedIds = JSON.parse(localStorage.getItem(DB_KEYS.DELETED_SUBJECTS) || '[]');
+    const deletedChapterIds = JSON.parse(localStorage.getItem(DB_KEYS.DELETED_CHAPTERS) || '[]');
     
     let subjectsUpdated = false;
     let testsUpdated = false;
     
     class5Subjects.forEach(s => {
       if (!existingSubjects.find(e => e.id === s.id) && !deletedIds.includes(s.id)) {
-        existingSubjects.push(s);
+        // Filter chapters
+        const filteredChapters = (s.chapters || []).filter(c => !deletedChapterIds.includes(c.id));
+        existingSubjects.push({ ...s, chapters: filteredChapters });
         subjectsUpdated = true;
+      } else if (existingSubjects.find(e => e.id === s.id)) {
+        // Filter chapters of existing sample subjects if some were deleted
+        const sIdx = existingSubjects.findIndex(e => e.id === s.id);
+        const currentCount = existingSubjects[sIdx].chapters?.length || 0;
+        const filtered = (existingSubjects[sIdx].chapters || []).filter(c => !deletedChapterIds.includes(c.id));
+        if (filtered.length !== currentCount) {
+          existingSubjects[sIdx].chapters = filtered;
+          subjectsUpdated = true;
+        }
       }
     });
+
     class5Tests.forEach(t => {
       if (!existingTests.find(e => e.id === t.id)) {
         existingTests.push(t);
