@@ -24,6 +24,7 @@ const DB_KEYS = {
   SCHOOLS: 'smart_learning_schools',
   NOTIFICATIONS: 'smart_learning_notifications',
   CURRENT_USER: 'smart_learning_current_user',
+  DELETED_SUBJECTS: 'smart_learning_deleted_subjects',
 };
 
 // Generic CRUD operations
@@ -95,7 +96,14 @@ export const subjectDB = {
   },
   create: (subject: Subject) => create<Subject>(DB_KEYS.SUBJECTS, subject),
   update: (id: string, updates: Partial<Subject>) => update<Subject>(DB_KEYS.SUBJECTS, id, updates),
-  delete: (id: string) => remove<Subject>(DB_KEYS.SUBJECTS, id),
+  delete: (id: string) => {
+    const deletedIds = JSON.parse(localStorage.getItem(DB_KEYS.DELETED_SUBJECTS) || '[]');
+    if (!deletedIds.includes(id)) {
+      deletedIds.push(id);
+      localStorage.setItem(DB_KEYS.DELETED_SUBJECTS, JSON.stringify(deletedIds));
+    }
+    return remove<Subject>(DB_KEYS.SUBJECTS, id);
+  },
 };
 
 // Test Operations
@@ -407,10 +415,13 @@ export const initializeSampleData = () => {
     // Merge Class 5 data if not already present
     const existingSubjects = getAll<Subject>(DB_KEYS.SUBJECTS);
     const existingTests = getAll<Test>(DB_KEYS.TESTS);
+    const deletedIds = JSON.parse(localStorage.getItem(DB_KEYS.DELETED_SUBJECTS) || '[]');
+    
     let subjectsUpdated = false;
     let testsUpdated = false;
+    
     class5Subjects.forEach(s => {
-      if (!existingSubjects.find(e => e.id === s.id)) {
+      if (!existingSubjects.find(e => e.id === s.id) && !deletedIds.includes(s.id)) {
         existingSubjects.push(s);
         subjectsUpdated = true;
       }
