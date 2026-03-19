@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -261,35 +262,46 @@ const ChapterPage = () => {
                   </div>
                 </div>
 
-                <div className="prose max-w-none">
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
-                    {(() => {
-                      const displayContent = contentLang === 'hi' && translatedContent['hi'] 
-                        ? translatedContent['hi'] 
-                        : chapter.content;
-                      
-                      // Split into sentences (preserving punctuation and spacing)
-                      const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
-                      
-                      return sentences.map((sentence, idx) => {
-                        const isHighlighted = isSpeaking && currentSentenceIndex === idx;
-                        
-                        return (
-                          <span 
-                            key={idx}
-                            id={isHighlighted ? 'current-tts-word' : undefined}
-                            className={`transition-all duration-300 rounded ${
-                              isHighlighted 
-                                ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
-                                : ''
-                            }`}
-                          >
-                            {sentence}
-                          </span>
-                        );
-                      });
-                    })()}
-                  </div>
+                <div className="prose prose-indigo max-w-none dark:prose-invert">
+                  {(() => {
+                    const displayContent = contentLang === 'hi' && translatedContent['hi'] 
+                      ? translatedContent['hi'] 
+                      : chapter.content;
+                    
+                    // Split into sentences (preserving punctuation and spacing) for TTS highlighting
+                    const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
+                    
+                    if (isSpeaking) {
+                      return (
+                        <div className="text-gray-700 leading-relaxed text-lg">
+                          {sentences.map((sentence, idx) => {
+                            const isHighlighted = currentSentenceIndex === idx;
+                            return (
+                              <span 
+                                key={idx}
+                                id={isHighlighted ? 'current-tts-word' : undefined}
+                                className={`transition-all duration-300 rounded ${
+                                  isHighlighted 
+                                    ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
+                                    : ''
+                                }`}
+                              >
+                                <ReactMarkdown allowedElements={['p', 'span', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']}>
+                                  {sentence}
+                                </ReactMarkdown>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <ReactMarkdown className="text-gray-700 leading-relaxed text-lg">
+                        {displayContent}
+                      </ReactMarkdown>
+                    );
+                  })()}
                 </div>
 
                 {chapter.videoUrl && (

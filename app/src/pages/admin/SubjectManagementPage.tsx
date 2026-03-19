@@ -282,14 +282,26 @@ const SubjectManagementPage = () => {
   const deleteSubject = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
     try {
+      // 1. Always attempt cloud delete
+      let cloudDeleted = false;
       try {
         await subjectDB.delete(id);
+        cloudDeleted = true;
       } catch (error) {
-        console.warn('Cloud subject delete failed. Falling back to local:', error);
-        localSubjectDB.delete(id);
+        console.warn('Cloud subject delete failed:', error);
       }
+
+      // 2. Always clear local storage to prevent reappearing
+      localSubjectDB.delete(id);
+
+      // 3. Update UI state
       setSubjects((prev) => prev.filter((subject) => subject.id !== id));
-      toast.success('Subject deleted');
+      
+      if (cloudDeleted) {
+        toast.success('Subject deleted from cloud and local storage');
+      } else {
+        toast.info('Subject removed from local view. Cloud sync failed.');
+      }
     } catch (error) {
       console.error('Failed to delete subject:', error);
       toast.error('Could not delete subject');
@@ -336,7 +348,17 @@ const SubjectManagementPage = () => {
   const deleteChapter = async (chapterId: string, subjectId: string) => {
     if (!window.confirm('Delete this chapter?')) return;
     try {
+      // 1. Delete from Cloud
       const mode = await deleteChapterWithFallback(chapterId);
+      
+      // 2. Clear from local state even if cloud delete was primarily intended
+      // Local fallback stores chapters inside the subject object in localSubjectDB
+      const subject = subjects.find(s => s.id === subjectId);
+      if (subject) {
+        const updatedChapters = subject.chapters.filter(ch => ch.id !== chapterId);
+        await localSubjectDB.update(subjectId, { ...subject, chapters: updatedChapters });
+      }
+
       setSubjects((prev) =>
         prev.map((s) =>
           s.id === subjectId
