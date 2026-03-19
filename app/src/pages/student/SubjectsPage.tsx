@@ -29,13 +29,21 @@ const SubjectsPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const allSubjects = await subjectDB.getAll();
+        const data = await subjectDB.getAll();
         const activeBoard = user?.board || 'CBSE';
         
-        // Filter subjects based on the selected board
-        const filteredSubjects = allSubjects.filter(
-          (s) => !s.boards_supported || s.boards_supported.includes(activeBoard)
-        );
+        console.log('Fetched subjects:', data); // Debug log
+        
+        // Final fallback: If data is empty but we have local subjects, use them for now
+        if (data.length === 0) {
+          console.warn('No subjects in cloud');
+        }
+
+        const filteredSubjects = data.filter((s) => {
+          // If boards_supported is empty or undefined, assume it supports all boards or at least default to showing it
+          const supportsBoard = !activeBoard || !s.boards_supported || s.boards_supported.length === 0 || s.boards_supported.includes(activeBoard as any);
+          return supportsBoard;
+        });
         
         setSubjects(filteredSubjects);
 

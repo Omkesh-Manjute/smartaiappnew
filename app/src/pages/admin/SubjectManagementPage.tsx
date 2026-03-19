@@ -24,7 +24,9 @@ import {
   Edit2,
   Save,
   X,
+  Database,
 } from 'lucide-react';
+import { seedSampleData } from '@/services/supabaseDB';
 import type { Chapter, Subject, Test } from '@/types';
 
 const colorOptions = [
@@ -74,6 +76,7 @@ const SubjectManagementPage = () => {
   const [testUploadFile, setTestUploadFile] = useState<File | null>(null);
   const [contentUploadFile, setContentUploadFile] = useState<File | null>(null);
   const [isImportingContent, setIsImportingContent] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const sortedSubjects = useMemo(
     () => [...subjects].sort((a, b) => {
@@ -750,6 +753,21 @@ const SubjectManagementPage = () => {
     }
   };
 
+  const handleSeedCloudData = async () => {
+    if (!window.confirm('This will seed the cloud database with initial sample data. Continue?')) return;
+    setIsSeeding(true);
+    try {
+      await seedSampleData();
+      toast.success('Cloud seeding complete!');
+      await loadSubjects();
+    } catch (error) {
+      console.error('Seeding failed:', error);
+      toast.error('Cloud seeding failed');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
@@ -761,14 +779,29 @@ const SubjectManagementPage = () => {
               </button>
               <h1 className="text-xl font-bold">Subject & Chapter Management</h1>
             </div>
-            <Button onClick={() => {
-              setEditingSubjectId(null);
-              setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
-              setShowAddForm(true);
-            }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Subject
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleSeedCloudData} 
+                className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                disabled={isSeeding}
+              >
+                {isSeeding ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Database className="w-4 h-4 mr-2" />
+                )}
+                Seed Cloud Data
+              </Button>
+              <Button onClick={() => {
+                setEditingSubjectId(null);
+                setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
+                setShowAddForm(true);
+              }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Subject
+              </Button>
+            </div>
           </div>
         </div>
       </header>
