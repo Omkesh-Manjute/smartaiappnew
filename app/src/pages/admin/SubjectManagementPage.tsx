@@ -72,6 +72,8 @@ const SubjectManagementPage = () => {
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiFile, setAiFile] = useState<File | null>(null);
   const [testUploadFile, setTestUploadFile] = useState<File | null>(null);
+  const [contentUploadFile, setContentUploadFile] = useState<File | null>(null);
+  const [isImportingContent, setIsImportingContent] = useState(false);
 
   const sortedSubjects = useMemo(
     () => [...subjects].sort((a, b) => a.name.localeCompare(b.name)),
@@ -592,6 +594,135 @@ const SubjectManagementPage = () => {
     }
   };
 
+  const handleBulkImport = async () => {
+    if (!contentUploadFile) {
+      toast.error('Please select a JSON content file');
+      return;
+    }
+
+    setIsImportingContent(true);
+    try {
+      const rawText = await contentUploadFile.text();
+      const parsed = JSON.parse(rawText);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+
+      let subjectsCreated = 0;
+      let chaptersCreated = 0;
+      let mcqsCreated = 0;
+
+      for (const item of items) {
+        // 1. Get or Create Subject
+        // Map "class" to "grade" and "subject" to subject name
+        const gradeNum = Number(item.class) || 10;
+        const subjectName = item.subject || 'New Subject';
+        
+        // Try to find existing subject for this grade
+        let subjectId = '';
+        const existingSubjects = subjects.filter(s => s.name.toLowerCase() === subjectName.toLowerCase() && s.grade === gradeNum);
+        
+        if (existingSubjects.length > 0) {
+          subjectId = existingSubjects[0].id;
+        } else {
+          subjectId = `sub_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const subject: Subject = {
+            id: subjectId,
+            name: subjectName,
+            description: item.description || `${subjectName} for Class ${gradeNum}`,
+            icon: item.icon || '[BK]',
+            color: item.color || colorOptions[subjectsCreated % colorOptions.length],
+            grade: gradeNum,
+            chapters: [],
+          };
+          await createSubjectWithFallback(subject);
+          subjectsCreated++;
+        }
+
+        // 2. Create Chapter
+        const chapterName = item.chapter || 'New Chapter';
+        const chapterId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        
+        // Consolidate content from topics
+        let consolidatedContent = '';
+        const allMcqs: any[] = [];
+
+        if (Array.isArray(item.topics)) {
+          item.topics.forEach((t: any, idx: number) => {
+            consolidatedContent += `### ${t.topic_name || `Topic ${idx+1}`}\n\n`;
+            consolidatedContent += `${t.explanation || ''}\n\n`;
+            
+            if (Array.isArray(t.examples) && t.examples.length > 0) {
+              consolidatedContent += `**Examples:**\n${t.examples.map((ex: string) => `- ${ex}`).join('\n')}\n\n`;
+            }
+            
+            if (Array.isArray(t.key_points) && t.key_points.length > 0) {
+              consolidatedContent += `**Key Points:**\n${t.key_points.map((kp: string) => `- ${kp}`).join('\n')}\n\n`;
+            }
+
+            if (Array.isArray(t.rules) && t.rules.length > 0) {
+              consolidatedContent += `**Rules:**\n${t.rules.map((r: string) => `- ${r}`).join('\n')}\n\n`;
+            }
+
+            // Sub-topics
+            if (Array.isArray(t.sub_topics)) {
+              t.sub_topics.forEach((st: any) => {
+                consolidatedContent += `#### ${st.type || 'Sub-topic'}\n${st.explanation || ''}\n`;
+                if (Array.isArray(st.examples)) {
+                  consolidatedContent += `${st.examples.map((ex: string) => `- ${ex}`).join('\n')}\n`;
+                }
+                consolidatedContent += '\n';
+              });
+            }
+
+            // Extract MCQs
+            if (Array.isArray(t.mcq)) {
+              t.mcq.forEach((m: any) => {
+                let correctAnswer = m.answer;
+                if (typeof correctAnswer === 'string' && m.options.includes(correctAnswer)) {
+                  correctAnswer = m.options.indexOf(correctAnswer);
+                }
+                allMcqs.push({
+                  id: m.id || `mcq_${Math.random().toString(36).slice(2, 10)}`,
+                  question: m.question,
+                  options: m.options,
+                  correctAnswer: Number(correctAnswer) || 0,
+                  explanation: m.explanation || '',
+                  difficulty: m.difficulty || 'easy',
+                });
+              });
+            }
+          });
+        }
+
+        const chapter: Chapter = {
+          id: chapterId,
+          subjectId: subjectId,
+          name: chapterName,
+          description: item.description || `${chapterName} overview`,
+          order: 1, // Default to 1 or calculate based on existing
+          content: consolidatedContent || item.chapter_explanation || '',
+          mcqs: [],
+        };
+
+        await createChapterWithFallback(chapter);
+        chaptersCreated++;
+
+        if (allMcqs.length > 0) {
+          await mcqDB.createBulk(allMcqs, chapterId);
+          mcqsCreated += allMcqs.length;
+        }
+      }
+
+      toast.success(`Import complete: ${subjectsCreated} Subjects, ${chaptersCreated} Chapters, ${mcqsCreated} MCQs`);
+      setContentUploadFile(null);
+      await loadSubjects();
+    } catch (error) {
+      console.error('Bulk import failed:', error);
+      toast.error('Failed to import content. Check console for details.');
+    } finally {
+      setIsImportingContent(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
@@ -657,17 +788,56 @@ const SubjectManagementPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="h-full">
+          <Card className="h-full border-2 border-indigo-200 shadow-md ring-1 ring-indigo-500/10">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="flex items-center gap-2 text-indigo-600">
+                <Layers className="w-5 h-5" />
+                Bulk Content Import
+              </CardTitle>
+              <Badge className="bg-indigo-600 text-white animate-pulse">RECOMMENDED</Badge>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              <div className="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 mb-2">
+                <p className="text-xs text-indigo-800 leading-relaxed font-bold">
+                  USE THIS FOR: Class, Subject, Chapters & Topics (JSON)
+                </p>
+              </div>
+              <Input
+                type="file"
+                accept=".json"
+                onChange={(event) => setContentUploadFile(event.target.files?.[0] || null)}
+              />
+              <Button 
+                onClick={handleBulkImport} 
+                disabled={isImportingContent} 
+                className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg"
+              >
+                {isImportingContent ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Import JSON Content
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="h-full opacity-80 hover:opacity-100 transition-opacity">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-600">
+              <CardTitle className="flex items-center gap-2 text-gray-600">
                 <FileUp className="w-5 h-5" />
-                Bulk Test Upload
+                Bulk MCQ/Test Only
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 mb-2">
-                <p className="text-xs text-blue-800 leading-relaxed font-medium">
-                  Upload tests in JSON format. Each test needs a title, subjectId, and questions array.
+              <div className="bg-gray-100 p-3 rounded-lg border border-gray-200 mb-2">
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  Only use this for stand-alone tests (No chapters/subjects).
                 </p>
               </div>
               <Input
@@ -684,7 +854,7 @@ const SubjectManagementPage = () => {
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload JSON
+                    Upload Test JSON
                   </>
                 )}
               </Button>
