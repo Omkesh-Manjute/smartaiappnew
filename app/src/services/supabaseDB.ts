@@ -208,6 +208,18 @@ export const subjectDB = {
   },
 
   delete: async (id: string): Promise<boolean> => {
+    // 1. Get all chapters for this subject
+    const { data: chapters } = await supabase.from('chapters').select('id').eq('subject_id', id);
+    
+    if (chapters && chapters.length > 0) {
+      const chapterIds = chapters.map(c => c.id);
+      // 2. Delete all MCQs for these chapters
+      await supabase.from('mcqs').delete().in('chapter_id', chapterIds);
+      // 3. Delete all chapters
+      await supabase.from('chapters').delete().in('id', chapterIds);
+    }
+
+    // 4. Finally delete the subject
     const { error } = await supabase.from('subjects').delete().eq('id', id);
     return !error;
   },
