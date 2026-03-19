@@ -352,7 +352,12 @@ const SubjectManagementPage = () => {
       const mode = await deleteChapterWithFallback(chapterId);
       
       // 2. Clear from local state even if cloud delete was primarily intended
-      // Local fallback stores chapters inside the subject object in localSubjectDB
+      const deletedChapterIds = JSON.parse(localStorage.getItem('smart_learning_deleted_chapters') || '[]');
+      if (!deletedChapterIds.includes(chapterId)) {
+        deletedChapterIds.push(chapterId);
+        localStorage.setItem('smart_learning_deleted_chapters', JSON.stringify(deletedChapterIds));
+      }
+
       const subject = subjects.find(s => s.id === subjectId);
       if (subject) {
         const updatedChapters = subject.chapters.filter(ch => ch.id !== chapterId);
@@ -366,7 +371,7 @@ const SubjectManagementPage = () => {
             : s
         )
       );
-      toast.success(mode === 'cloud' ? 'Chapter deleted' : 'Chapter deleted (local)');
+      toast.success(mode === 'cloud' ? 'Chapter deleted from all sync' : 'Chapter deleted (local)');
     } catch (error) {
       toast.error('Failed to delete chapter');
     }

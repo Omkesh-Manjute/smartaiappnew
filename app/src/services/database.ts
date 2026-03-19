@@ -25,6 +25,7 @@ const DB_KEYS = {
   NOTIFICATIONS: 'smart_learning_notifications',
   CURRENT_USER: 'smart_learning_current_user',
   DELETED_SUBJECTS: 'smart_learning_deleted_subjects',
+  DELETED_CHAPTERS: 'smart_learning_deleted_chapters',
 };
 
 // Generic CRUD operations
