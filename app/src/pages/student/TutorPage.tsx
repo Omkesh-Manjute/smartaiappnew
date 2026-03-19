@@ -298,9 +298,9 @@ const TutorPage = () => {
       const errText = error?.message || '';
       let friendlyMsg = '❌ Could not reach AI. Please try again.';
       if (errText.includes('API key') || errText.includes('403') || errText.includes('401')) {
-        friendlyMsg = '🔑 Invalid or missing Gemini API key. Get a free key at https://aistudio.google.com/apikey and set VITE_GEMINI_API_KEY in your .env file.';
-      } else if (errText.includes('quota') || errText.includes('429')) {
-        friendlyMsg = '⏳ Gemini API quota exceeded. Please wait a moment and try again.';
+        friendlyMsg = '🔑 Invalid or missing AI API key. Please check your settings or .env file.';
+      } else if (error.message?.includes('quota') || error.message?.includes('429')) {
+        friendlyMsg = '⏳ AI provider quota exceeded. Please wait a moment and try again.';
       }
       const updatedMessage = { ...userMessage, response: friendlyMsg };
       setMessages((prev) =>
@@ -376,7 +376,7 @@ const TutorPage = () => {
               <div>
                 <h1 className="font-bold">AI Tutor</h1>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">Powered by Gemini</p>
+                  <p className="text-xs text-gray-500">Powered by Smart Learning</p>
                   <span className="w-1 h-1 bg-gray-300 rounded-full" />
                   <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${usage.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
                     {usage.isPremium ? 'PREMIUM' : `FREE PLAN (${usage.limit} questions/day)`}
@@ -550,7 +550,7 @@ const TutorPage = () => {
                     <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 mb-2">
                       Hello! I'm your AI Tutor
                     </h2>
-                    <p className="text-gray-500 mb-6 text-sm">Powered by Google's Gemini AI</p>
+                    <p className="text-gray-500 mb-6 text-sm">Powered by Smart Learning</p>
                     
                     <div className="inline-flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-full mb-8 border border-purple-100/50">
                       <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
@@ -796,7 +796,7 @@ const TutorPage = () => {
             </Button>
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">
-            AI Tutor is powered by Gemini Flash • Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
+            AI Tutor is powered by Smart Learning • Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
           </p>
         </div>
       </div>

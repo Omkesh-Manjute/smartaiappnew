@@ -84,7 +84,7 @@ const AdminAISettingsPage = () => {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  {[
-                   { id: 'gemini', name: 'Google Gemini', desc: 'Fast & Rich Explanations', icon: Sparkles, color: 'text-indigo-600' },
+                   { id: 'gemini', name: 'Smart Model (A)', desc: 'Fast & Rich Explanations', icon: Sparkles, color: 'text-indigo-600' },
                    { id: 'groq', name: 'Groq (Llama 3)', desc: 'Ultrafast Performance', icon: Radio, color: 'text-orange-600' },
                    { id: 'openai', name: 'OpenAI GPT', desc: 'High Reasoning (Coming Soon)', icon: Brain, color: 'text-emerald-600', disabled: true }
                  ].map((provider) => (
