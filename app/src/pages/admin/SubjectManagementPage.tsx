@@ -173,34 +173,19 @@ const SubjectManagementPage = () => {
   const loadSubjects = async () => {
     setIsLoading(true);
     try {
-      // 1. Get local subjects (source of pre-installed data)
-      const localData = localSubjectDB.getAll();
-      const normalizedLocal = localData.map(normalizeSubject);
-      
-      let merged = [...normalizedLocal];
-      let cloudSynced = false;
-
-      // 2. Try to get cloud subjects
+      // 1. Prioritize Cloud Data - The single source of truth for synced data
       try {
         const cloudData = await subjectDB.getAll();
         const normalizedCloud = cloudData.map(normalizeSubject);
+        setSubjects(normalizedCloud);
         
-        // Merge cloud into local, cloud overwrites local if ID matches
-        normalizedCloud.forEach(cloudS => {
-          const index = merged.findIndex(s => s.id === cloudS.id);
-          if (index !== -1) {
-            merged[index] = cloudS;
-          } else {
-            merged.push(cloudS);
-          }
-        });
-        cloudSynced = true;
+        // Update local storage to match cloud (sync)
+        localStorage.setItem('smart_learning_subjects', JSON.stringify(normalizedCloud));
       } catch (cloudError) {
-        console.warn('Cloud sync skipped or failed during load:', cloudError);
-      }
-
-      setSubjects(merged);
-      if (!cloudSynced && merged.length > 0) {
+        console.warn('Cloud load failed, using local fallback:', cloudError);
+        // 2. Fallback to Local only if cloud is unreachable
+        const localData = localSubjectDB.getAll();
+        setSubjects(localData.map(normalizeSubject));
         toast.info('Showing local data. Cloud sync unavailable.');
       }
     } catch (error) {
