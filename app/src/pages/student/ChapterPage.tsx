@@ -271,36 +271,30 @@ const ChapterPage = () => {
                     // Split into sentences (preserving punctuation and spacing) for TTS highlighting
                     const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
                     
-                    if (isSpeaking) {
-                      return (
-                        <div className="text-gray-700 leading-relaxed text-lg">
-                          {sentences.map((sentence, idx) => {
-                            const isHighlighted = currentSentenceIndex === idx;
-                            return (
-                              <span 
-                                key={idx}
-                                id={isHighlighted ? 'current-tts-word' : undefined}
-                                className={`transition-all duration-300 rounded ${
-                                  isHighlighted 
-                                    ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
-                                    : ''
-                                }`}
-                              >
-                                <ReactMarkdown allowedElements={['p', 'span', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']}>
-                                  {sentence}
-                                </ReactMarkdown>
-                              </span>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-
                     return (
                       <div className="text-gray-700 leading-relaxed text-lg">
-                        <ReactMarkdown>
-                          {displayContent}
-                        </ReactMarkdown>
+                        {sentences.map((sentence, idx) => {
+                          const isHighlighted = isSpeaking && currentSentenceIndex === idx;
+                          return (
+                            <span 
+                              key={idx}
+                              id={isHighlighted ? 'current-tts-word' : undefined}
+                              className={`transition-all duration-300 rounded inline-block ${
+                                isHighlighted 
+                                  ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
+                                  : ''
+                              }`}
+                            >
+                              <ReactMarkdown 
+                                components={{
+                                  p: ({children}) => <>{children}</>,
+                                }}
+                              >
+                                {sentence}
+                              </ReactMarkdown>
+                            </span>
+                          );
+                        })}
                       </div>
                     );
                   })()}
