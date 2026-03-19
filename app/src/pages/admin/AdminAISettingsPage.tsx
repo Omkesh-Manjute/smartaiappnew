@@ -261,42 +261,15 @@ const AdminAISettingsPage = () => {
 
           <Card className="border-red-100 shadow-sm border-2">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Database Synchronization</CardTitle>
-              <CardDescription>Restore missing subjects and tests by syncing sample data to Supabase.</CardDescription>
+              <CardTitle className="text-lg">Database Health Check</CardTitle>
+              <CardDescription>Verify connection status with Supabase and local storage.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-red-50/50 rounded-xl border border-red-100">
                 <div className="space-y-1">
-                  <p className="font-bold text-red-900">Restore Sample Data</p>
-                  <p className="text-xs text-red-700">This will push the initial Class 5 Subjects and Tests to your database.</p>
+                  <p className="font-bold text-red-900">Database Connection</p>
+                  <p className="text-xs text-red-700">Check if your database is healthy and reachable.</p>
                 </div>
-                <Button 
-                  variant="destructive" 
-                  className="w-full sm:w-auto font-bold shadow-md"
-                  onClick={async () => {
-                    const confirm = window.confirm('Bhai, kya aap sure ho? Ye sabhi sample subjects aur tests ko Supabase me sync kar dega.');
-                    if (!confirm) return;
-                    
-                    const loadingToast = toast.loading('Syncing sample data to Supabase...');
-                    try {
-                      const { seedSampleData } = await import('@/services/supabaseDB');
-                      const stats = await seedSampleData();
-                      
-                      const totalFail = stats.subjects.fail + stats.chapters.fail + stats.mcqs.fail + stats.tests.fail;
-                      if (totalFail > 0) {
-                        toast.error(`Partial success: ${stats.subjects.success} subjects, ${stats.tests.success} tests. (${totalFail} items failed - check console)`, { id: loadingToast, duration: 5000 });
-                      } else {
-                        toast.success(`Restored: ${stats.subjects.success} subjects, ${stats.chapters.success} chapters, ${stats.mcqs.success} MCQs, ${stats.tests.success} tests!`, { id: loadingToast, duration: 5000 });
-                      }
-                    } catch (error) {
-                      console.error('Seed error:', error);
-                      toast.error('Failed to restore sample data. Check console for details.', { id: loadingToast });
-                    }
-                  }}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Restore Now
-                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full sm:w-auto font-bold"
