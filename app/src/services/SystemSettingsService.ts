@@ -15,7 +15,7 @@ export interface AISettings {
 
 const DEFAULT_SETTINGS: AISettings = {
   id: '00000000-0000-0000-0000-000000000001',
-  ai_provider: 'gemini',
+  ai_provider: 'groq',
   gemini_model: 'gemini-1.5-flash',
   groq_model: 'llama-3.1-70b-versatile',
   sarvam_speaker: 'anushka',

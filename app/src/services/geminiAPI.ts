@@ -184,17 +184,7 @@ Format your response as a valid JSON array with this exact structure:
 Important: Return ONLY the JSON array, no markdown formatting, no additional text.
 `;
 
-    const text = await callGemini(
-      [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      {
-        temperature: 0.7,
-        maxOutputTokens: 8192,
-      }
-    );
+    const text = await callIntelligence(prompt);
 
     // Extract JSON from the response
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -252,13 +242,7 @@ Rules:
 - No markdown, no extra text, JSON only
 `;
 
-    const text = await callGemini(
-      [{ parts: [{ text: prompt }] }],
-      {
-        temperature: 0.6,
-        maxOutputTokens: 8192,
-      }
-    );
+    const text = await callIntelligence(prompt);
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
@@ -360,13 +344,7 @@ Rules:
 - Return JSON only, no markdown
 `;
 
-    const text = await callGemini(
-      [{ parts: [{ text: prompt }] }],
-      {
-        temperature: 0.5,
-        maxOutputTokens: 8192,
-      }
-    );
+    const text = await callIntelligence(prompt);
 
     const parsed = extractJsonObject(text) as SubjectBlueprint;
     return normalizeBlueprint(parsed);
@@ -522,17 +500,7 @@ Generate a detailed study plan with daily schedules. Format as JSON:
 Return ONLY the JSON object, no markdown formatting.
 `;
 
-    const text = await callGemini(
-      [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-      }
-    );
+    const text = await callIntelligence(prompt);
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -581,13 +549,7 @@ Format as JSON:
 Return ONLY the JSON object.
 `;
 
-    const text = await callGemini(
-      [{ parts: [{ text: prompt }] }],
-      {
-        temperature: 0.5,
-        maxOutputTokens: 2048,
-      }
-    );
+    const text = await callIntelligence(prompt);
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -690,10 +652,7 @@ Give feedback as JSON:
 }
 Return ONLY JSON, no markdown.`;
 
-    const text = await callGemini(
-      [{ parts: [{ text: prompt }] }],
-      { temperature: 0.6, maxOutputTokens: 1024 }
-    );
+    const text = await callIntelligence(prompt);
 
     const parsed = extractJsonObject(text);
     return {
