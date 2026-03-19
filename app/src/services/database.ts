@@ -4,7 +4,7 @@ import type {
   ConceptMastery, VoicePractice, TutorMessage, ParentChild,
   School, Notification, Badge
 } from '@/types';
-import { class5Subjects, class5Tests } from '@/data/class5Data';
+import { class6Subjects } from '@/data/class6Data';
 
 const DB_KEYS = {
   USERS: 'smart_learning_users',
@@ -424,159 +424,11 @@ export const initializeSampleData = () => {
     return;
   }
 
-  // Sample Subjects
-  const subjects: Subject[] = [
-    {
-      id: 'math-10',
-      name: 'Mathematics',
-      description: 'Learn algebra, geometry, and more',
-      icon: '🔢',
-      color: 'bg-blue-500',
-      grade: 10,
-      chapters: [
-        {
-          id: 'math-10-ch1',
-          subjectId: 'math-10',
-          name: 'Real Numbers',
-          description: 'Understanding real numbers and their properties',
-          order: 1,
-          content: 'Real numbers include rational and irrational numbers...',
-          mcqs: [
-            {
-              id: 'q1',
-              question: 'Which of the following is an irrational number?',
-              options: ['22/7', '√2', '0.5', '3.14'],
-              correctAnswer: 1,
-              explanation: '√2 cannot be expressed as a fraction',
-              difficulty: 'medium',
-            },
-            {
-              id: 'q2',
-              question: 'The decimal expansion of 1/7 is:',
-              options: ['Terminating', 'Non-terminating repeating', 'Non-terminating non-repeating', 'None'],
-              correctAnswer: 1,
-              explanation: '1/7 = 0.142857142857...',
-              difficulty: 'easy',
-            },
-          ],
-        },
-        {
-          id: 'math-10-ch2',
-          subjectId: 'math-10',
-          name: 'Polynomials',
-          description: 'Study of algebraic expressions',
-          order: 2,
-          content: 'Polynomials are expressions consisting of variables and coefficients...',
-          mcqs: [
-            {
-              id: 'q3',
-              question: 'Degree of polynomial 3x² + 5x + 7 is:',
-              options: ['1', '2', '3', '0'],
-              correctAnswer: 1,
-              explanation: 'Highest power of x is 2',
-              difficulty: 'easy',
-            },
-          ],
-        },
-        {
-          id: 'math-10-ch3',
-          subjectId: 'math-10',
-          name: 'Linear Equations',
-          description: 'Solving linear equations in two variables',
-          order: 3,
-          content: 'Linear equations in two variables have the form ax + by + c = 0...',
-          mcqs: [
-            {
-              id: 'q4',
-              question: 'A linear equation in two variables has:',
-              options: ['One solution', 'Two solutions', 'Infinite solutions', 'No solution'],
-              correctAnswer: 2,
-              explanation: 'Linear equations in two variables have infinitely many solutions',
-              difficulty: 'medium',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'science-10',
-      name: 'Science',
-      description: 'Physics, Chemistry, and Biology',
-      icon: '🔬',
-      color: 'bg-green-500',
-      grade: 10,
-      chapters: [
-        {
-          id: 'science-10-ch1',
-          subjectId: 'science-10',
-          name: 'Chemical Reactions',
-          description: 'Types of chemical reactions',
-          order: 1,
-          content: 'Chemical reactions involve transformation of substances...',
-          mcqs: [
-            {
-              id: 'q5',
-              question: 'Rusting of iron is an example of:',
-              options: ['Physical change', 'Chemical change', 'Both', 'None'],
-              correctAnswer: 1,
-              explanation: 'Rusting involves formation of new substance (iron oxide)',
-              difficulty: 'easy',
-            },
-          ],
-        },
-        {
-          id: 'science-10-ch2',
-          subjectId: 'science-10',
-          name: 'Acids, Bases and Salts',
-          description: 'Properties of acids and bases',
-          order: 2,
-          content: 'Acids are sour in taste and turn blue litmus red...',
-          mcqs: [
-            {
-              id: 'q6',
-              question: 'pH of pure water is:',
-              options: ['0', '7', '14', '1'],
-              correctAnswer: 1,
-              explanation: 'Pure water is neutral with pH 7',
-              difficulty: 'easy',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'english-10',
-      name: 'English',
-      description: 'Grammar, Literature, and Writing',
-      icon: '📖',
-      color: 'bg-purple-500',
-      grade: 10,
-      chapters: [
-        {
-          id: 'english-10-ch1',
-          subjectId: 'english-10',
-          name: 'Grammar Fundamentals',
-          description: 'Parts of speech and sentence structure',
-          order: 1,
-          content: 'Grammar is the system of a language...',
-          mcqs: [
-            {
-              id: 'q7',
-              question: 'Which is a noun?',
-              options: ['Quickly', 'Beautiful', 'Table', 'Run'],
-              correctAnswer: 2,
-              explanation: 'Table is a naming word (noun)',
-              difficulty: 'easy',
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
-  // Merge Class 5 subjects
-  const allSubjects = [...subjects, ...class5Subjects];
-  localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(allSubjects));
+  // Seed initial subjects ONLY IF empty
+  const existingSubjects = localStorage.getItem(DB_KEYS.SUBJECTS);
+  if (!existingSubjects || JSON.parse(existingSubjects).length === 0) {
+    localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(class6Subjects));
+  }
 
   // Sample Users
   const users: User[] = [
@@ -670,7 +522,12 @@ export const initializeSampleData = () => {
 
   localStorage.setItem(DB_KEYS.PARENT_CHILDREN, JSON.stringify(parentChildren));
 
-  localStorage.setItem(DB_KEYS.TESTS, JSON.stringify(class5Tests));
+  // Seed initial tests ONLY IF empty
+  const existingTests = localStorage.getItem(DB_KEYS.TESTS);
+  if (!existingTests || JSON.parse(existingTests).length === 0) {
+    // We can keep class5Tests or just seed an empty array for now
+    localStorage.setItem(DB_KEYS.TESTS, JSON.stringify([]));
+  }
 
   // Mark as seeded so we don't restore deletions on next refresh
   localStorage.setItem(DB_KEYS.IS_SEEDED, 'true');
