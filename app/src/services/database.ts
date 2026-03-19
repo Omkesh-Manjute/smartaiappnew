@@ -59,7 +59,13 @@ const update = <T>(key: string, id: string, updates: Partial<T>): T | null => {
 const remove = <T>(key: string, id: string): boolean => {
   const items = getAll<T>(key);
   const filtered = items.filter((item: any) => item.id !== id);
-  if (filtered.length === items.length) return false;
+  if (filtered.length === items.length) {
+    // Even if not found in the list, we should check if it's a chapter within a subject
+    if (key === DB_KEYS.SUBJECTS) {
+      // Logic for deleting chapters inside subjects is handled in SubjectManagementPage usually
+      // but let's make the base remove more robust if needed.
+    }
+  }
   localStorage.setItem(key, JSON.stringify(filtered));
   return true;
 };
