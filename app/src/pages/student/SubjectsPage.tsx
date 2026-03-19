@@ -30,10 +30,17 @@ const SubjectsPage = () => {
     const loadData = async () => {
       try {
         const allSubjects = await subjectDB.getAll();
-        setSubjects(allSubjects);
+        const activeBoard = user?.board || 'CBSE';
+        
+        // Filter subjects based on the selected board
+        const filteredSubjects = allSubjects.filter(
+          (s) => !s.boards_supported || s.boards_supported.includes(activeBoard)
+        );
+        
+        setSubjects(filteredSubjects);
 
         if (subjectId) {
-          const subject = allSubjects.find((s) => s.id === subjectId);
+          const subject = filteredSubjects.find((s) => s.id === subjectId);
           if (subject) {
             setSelectedSubject(subject);
           } else {
@@ -156,14 +163,18 @@ const SubjectsPage = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{chapter.name}</h3>
+                            <h3 className="font-semibold">
+                              {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+                            </h3>
                             {isCompleted && (
                               <Badge className="bg-green-100 text-green-700">
                                 Completed
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">{chapter.description}</p>
+                          <p className="text-sm text-gray-500">
+                            {typeof chapter.description === 'string' ? chapter.description : (chapter.description as any)?.[user?.board || 'CBSE'] || ''}
+                          </p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                             <span className="flex items-center gap-1">
                               <FileText className="w-3 h-3" />

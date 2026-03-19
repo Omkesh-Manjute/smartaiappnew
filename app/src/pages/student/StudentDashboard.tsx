@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/contexts/GamificationContext';
-import { subjectDB, testAttemptDB, homeworkDB, homeworkSubmissionDB } from '@/services/supabaseDB';
+import { subjectDB, testAttemptDB, homeworkDB, homeworkSubmissionDB, userDB } from '@/services/supabaseDB';
+import { BoardSelector } from '@/components/BoardSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +28,7 @@ import {
   AlertCircle,
   Clock3,
 } from 'lucide-react';
-import type { Subject, TestAttempt, Homework, HomeworkSubmission } from '@/types';
+import type { Subject, TestAttempt, Homework, HomeworkSubmission, Board } from '@/types';
 
 
 const StudentDashboard = () => {
@@ -38,6 +39,7 @@ const StudentDashboard = () => {
   const [recentTests, setRecentTests] = useState<TestAttempt[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [homeworkSubmissions, setHomeworkSubmissions] = useState<HomeworkSubmission[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<Board | undefined>(user?.board);
 
   useEffect(() => {
     if (user) {
@@ -52,15 +54,17 @@ const StudentDashboard = () => {
       // Check for time-based/study achievements on load
       checkAchievements('study');
 
+      // Load subjects and filter by Grade 6 (per user request)
       const allSubjects = await subjectDB.getAll();
-      setSubjects(allSubjects);
+      const class6Subjects = allSubjects.filter(s => s.grade === 6);
+      setSubjects(class6Subjects);
 
       const attempts = await testAttemptDB.getByStudent(user.id);
       setRecentTests(attempts.slice(-5).reverse());
 
       // Load homework for student's subjects
       const allHomework: Homework[] = [];
-      for (const subject of allSubjects) {
+      for (const subject of class6Subjects) {
         const subjectHomework = await homeworkDB.getBySubject(subject.id);
         allHomework.push(...subjectHomework);
       }
@@ -71,6 +75,19 @@ const StudentDashboard = () => {
       setHomeworkSubmissions(submissions);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+    }
+  };
+
+  const handleBoardSelect = async (board: Board) => {
+    if (!user) return;
+    try {
+      await userDB.update(user.id, { board });
+      setSelectedBoard(board);
+      // Optional: update local user context if possible, 
+      // but for now local state + reload next time is fine
+      window.location.reload(); 
+    } catch (error) {
+      console.error('Failed to update board:', error);
     }
   };
 
@@ -111,12 +128,28 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="bg-gray-50/50">
+    <div className="bg-gray-50/50 min-h-screen">
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full overflow-x-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column */}
-          <div className="lg:col-span-8 space-y-6 min-w-0">
+        
+        {!selectedBoard ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="space-y-8 py-12"
+          >
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-black text-slate-900">Select Your Educational Board</h2>
+              <p className="text-slate-600 max-w-lg mx-auto">
+                Choose your board to see the curriculum specifically designed for your studies.
+              </p>
+            </div>
+            <BoardSelector selectedBoard={selectedBoard} onSelect={handleBoardSelect} />
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column */}
+            <div className="lg:col-span-8 space-y-6 min-w-0">
             {/* Welcome Banner */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -406,10 +439,10 @@ const StudentDashboard = () => {
                 </div>
               </motion.div>
             )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
-
     </div>
   );
 };

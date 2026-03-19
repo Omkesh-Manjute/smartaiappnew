@@ -1,228 +1,1105 @@
 import type { Subject } from '@/types';
 
-// ─────────────────────────────────────────────
-//  CLASS 6 – SUBJECTS & CHAPTERS (CBSE/NCERT)
-// ─────────────────────────────────────────────
 export const class6Subjects: Subject[] = [
-  // ── SCIENCE ────────────────────────────────
   {
-    id: 'science-6',
+    id: 'sci-6',
     name: 'Science',
-    description: 'CBSE/NCERT Science for Class 6',
+    description: 'Explore the world of science with CBSE and State Board curriculum',
     icon: '🔬',
     color: 'bg-green-500',
     grade: 6,
+    boards_supported: ['CBSE', 'STATE'],
     chapters: [
       {
         id: 'sci-6-ch1',
-        subjectId: 'science-6',
-        name: 'Food: Where Does It Come From',
-        description: 'Explore where the food we eat comes from.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Food: Where Does It Come From',
+          STATE: 'Food and Nutrition'
+        },
+        description: 'Understanding sources of food and nutrition',
         order: 1,
-        content: `## Chapter 1: Food – Where Does It Come From\n\n### Topic 1: Sources of Food\nFood is essential for all living beings because it provides energy, helps in growth and protects from diseases. We get food mainly from two sources: plants and animals. Plants provide us fruits, vegetables, cereals, pulses, oils and spices. Animals give us milk, eggs, meat and honey. Different people eat different types of food depending on region and culture.\n\n**Key Points:**\n- Food is needed for energy, growth and protection\n- Main sources: Plants and Animals\n- Plants give cereals, fruits, vegetables\n- Animals give milk, eggs, meat\n\n---\n\n### Topic 2: Plant Parts as Food\nDifferent parts of plants are eaten as food. For example, roots (carrot, beetroot), stems (potato), leaves (spinach), fruits (tomato), seeds (wheat, rice). Plants are the primary source of food because even animals depend on plants directly or indirectly.\n\n**Key Points:**\n- Roots, stems, leaves, fruits, seeds are eaten\n- Plants are primary source of food\n- Different plant parts give different nutrients\n\n---\n\n### Topic 3: Food Habits of Animals\nAnimals are classified based on their food habits. Herbivores eat plants (cow, goat), carnivores eat other animals (lion, tiger), and omnivores eat both plants and animals (humans, bears). Different animals require different types of food.\n\n**Key Points:**\n- Herbivores eat plants\n- Carnivores eat animals\n- Omnivores eat both\n\n---\n\n### Practice Questions\n1. **Why do we need food?**\n   *Answer: For energy, growth and protection from diseases*\n2. **Name two animal food products?**\n   *Answer: Milk and eggs*\n3. **Name two roots we eat?**\n   *Answer: Carrot and beetroot*\n4. **Define herbivore?**\n   *Answer: Animals that eat only plants*\n`,
-        mcqs: [
-          { id: 'sci-6-ch1-q1', question: 'Main sources of food are?', options: ['Plants', 'Animals', 'Both', 'Water'], correctAnswer: 2, explanation: 'Food comes from both plants and animals.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q2', question: 'Milk comes from?', options: ['Plants', 'Animals', 'Soil', 'Air'], correctAnswer: 1, explanation: 'Milk is an animal product.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q3', question: 'Which is plant food?', options: ['Egg', 'Meat', 'Rice', 'Fish'], correctAnswer: 2, explanation: 'Rice is a grain obtained from plants.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q4', question: 'Which part of plant is potato?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 1, explanation: 'Potato is a modified underground stem.', difficulty: 'medium' },
-          { id: 'sci-6-ch1-q5', question: 'Spinach is which part?', options: ['Leaf', 'Root', 'Stem', 'Seed'], correctAnswer: 0, explanation: 'We eat the leaves of the spinach plant.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q6', question: 'Wheat is?', options: ['Fruit', 'Seed', 'Root', 'Leaf'], correctAnswer: 1, explanation: 'Wheat grains are seeds of the plant.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q7', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1, explanation: 'Cows eat only plants and grass.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q8', question: 'Lion eats?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 1, explanation: 'Lions are carnivores and eat other animals.', difficulty: 'easy' },
-          { id: 'sci-6-ch1-q9', question: 'Human is?', options: ['Herbivore', 'Carnivore', 'Omnivore', 'None'], correctAnswer: 2, explanation: 'Humans eat both plants and animal products.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Food: Where Does It Come From (CBSE)\n\nFood is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
+            mcq: [
+              { id: 'sci-6-ch1-q1-cbse', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3, explanation: 'Food provides energy, growth, and protection.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q2-cbse', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2, explanation: 'We get food from both plants and animals.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q3-cbse', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0, explanation: 'Carrot is the root part of the plant.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q4-cbse', question: 'Lion eats?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 1, explanation: 'Lion is a carnivore and eats other animals.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "Why do we need food?", answer: "For energy, growth and protection" },
+              { question: "Name two sources of food", answer: "Plants and animals" }
+            ],
+            extra_questions: [
+              "Explain sources of food with examples",
+              "Describe different plant parts used as food",
+              "Explain types of animals based on food habits"
+            ]
+          },
+          STATE: {
+            explanation: "## Food and Nutrition (State Board)\n\nNutrition is the process of providing or obtaining the food necessary for health and growth. Food is essential for all living beings. It provides energy, helps in growth and protects from diseases.",
+            mcq: [
+              { id: 'sci-6-ch1-q1-state', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3, explanation: 'Food provides energy, growth, and protection.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q2-state', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2, explanation: 'We get food from both plants and animals.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q3-state', question: 'Potato is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 1, explanation: 'Potato is an underground stem.', difficulty: 'easy' },
+              { id: 'sci-6-ch1-q4-state', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1, explanation: 'Cow is a herbivore and eats plants.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "Why do we need food?", answer: "For energy, growth and protection" },
+              { question: "Name two sources of food", answer: "Plants and animals" }
+            ],
+            extra_questions: [
+              "Explain sources of food with examples",
+              "Describe different plant parts used as food",
+              "Explain types of animals based on food habits"
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'Need and Sources of Food',
+            content: {
+              CBSE: {
+                explanation: "Food is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
+                mcq: [
+                  { id: 'T1-Q1', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3 },
+                  { id: 'T1-Q2', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2 }
+                ],
+                short_questions: [
+                  { question: 'Why do we need food?', answer: 'For energy, growth and protection' }
+                ]
+              },
+              STATE: {
+                explanation: "Food is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
+                mcq: [
+                  { id: 'T1-Q1-S', question: 'Food is needed for?', options: ['Energy', 'Growth', 'Protection', 'All'], correctAnswer: 3 },
+                  { id: 'T1-Q2-S', question: 'Main sources of food?', options: ['Plants', 'Animals', 'Both', 'None'], correctAnswer: 2 }
+                ],
+                short_questions: [
+                  { question: 'Why do we need food?', answer: 'For energy, growth and protection' }
+                ]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Plant Parts as Food',
+            content: {
+              CBSE: {
+                explanation: "We eat different parts of plants such as roots, stems, leaves, fruits, flowers and seeds. For example, carrot is root, potato is stem, spinach is leaf, and wheat is seed.",
+                mcq: [
+                  { id: 'T2-Q1', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0 }
+                ],
+                short_questions: [
+                  { question: 'Name two roots we eat', answer: 'Carrot and radish' }
+                ]
+              },
+              STATE: {
+                explanation: "We eat different parts of plants such as roots, stems, leaves, fruits, flowers and seeds. For example, carrot is root, potato is stem, spinach is leaf, and wheat is seed.",
+                mcq: [
+                  { id: 'T2-Q1-S', question: 'Carrot is?', options: ['Root', 'Stem', 'Leaf', 'Fruit'], correctAnswer: 0 }
+                ],
+                short_questions: [
+                  { question: 'Name two roots we eat', answer: 'Carrot and radish' }
+                ]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Animal Products as Food',
+            content: {
+              CBSE: {
+                explanation: "Animals also provide food products such as milk, eggs, meat and honey. Milk from cow, buffalo and goat is used to make butter, curd and cheese.",
+                mcq: [
+                  { id: 'T3-Q1', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1 }
+                ],
+                short_questions: [
+                  { question: 'Name two animal food items', answer: 'Milk and eggs' }
+                ]
+              },
+              STATE: {
+                explanation: "Animals also provide food products such as milk, eggs, meat and honey. Milk from cow, buffalo and goat is used to make butter, curd and cheese.",
+                mcq: [
+                  { id: 'T3-Q1-S', question: 'Milk is?', options: ['Plant product', 'Animal product', 'Mineral', 'None'], correctAnswer: 1 }
+                ],
+                short_questions: [
+                  { question: 'Name two animal food items', answer: 'Milk and eggs' }
+                ]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Food Habits of Animals',
+            content: {
+              CBSE: {
+                explanation: "Animals are classified based on their eating habits. Herbivores eat plants, carnivores eat animals, and omnivores eat both plants and animals.",
+                mcq: [
+                  { id: 'T4-Q1', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1 }
+                ],
+                short_questions: [
+                  { question: 'Define herbivores', answer: 'Animals that eat only plants' }
+                ]
+              },
+              STATE: {
+                explanation: "Animals are classified based on their eating habits. Herbivores eat plants, carnivores eat animals, and omnivores eat both plants and animals.",
+                mcq: [
+                  { id: 'T4-Q1-S', question: 'Cow is?', options: ['Carnivore', 'Herbivore', 'Omnivore', 'None'], correctAnswer: 1 }
+                ],
+                short_questions: [
+                  { question: 'Define herbivores', answer: 'Animals that eat only plants' }
+                ]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch2',
-        subjectId: 'science-6',
-        name: 'Components of Food',
-        description: 'Learn about nutrients, balanced diet and deficiency diseases.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Components of Food',
+          STATE: 'Nutrition and Food'
+        },
+        description: 'Learning about carbohydrates, proteins, fats, vitamins and minerals',
         order: 2,
-        content: `## Chapter 2: Components of Food\n\n### Topic 1: Nutrients\nNutrients are the important substances present in food that help our body grow, get energy and stay healthy. The main nutrients are carbohydrates, proteins, fats, vitamins and minerals.\n\n**Key Points:**\n- Nutrients are essential for body\n- Main nutrients: carbs, protein, fats, vitamins, minerals\n\n---\n\n### Topic 2: Types of Nutrients\nCarbohydrates and fats give energy. Proteins help in growth and repair. Vitamins and minerals protect us from diseases. A balanced diet contains all nutrients in proper amounts.\n\n**Key Points:**\n- Carbs = energy\n- Proteins = growth\n- Vitamins = protection\n\n---\n\n### Topic 3: Balanced Diet\nA balanced diet is one that contains all nutrients in correct proportion. Lack of nutrients causes deficiency diseases like night blindness and weakness.\n\n**Key Points:**\n- Balanced diet is important\n- Prevents diseases\n- Includes all nutrients\n`,
-        mcqs: [
-          { id: 'sci-6-ch2-q1', question: 'Which is a nutrient?', options: ['Carbohydrate', 'Stone', 'Plastic', 'Air'], correctAnswer: 0, explanation: 'Carbohydrates are one of the main nutrients needed by our body.', difficulty: 'easy' },
-          { id: 'sci-6-ch2-q2', question: 'Nutrients help in?', options: ['Growth', 'Energy', 'Health', 'All'], correctAnswer: 3, explanation: 'Nutrients provide energy, help in growth, and maintain overall health.', difficulty: 'easy' },
-          { id: 'sci-6-ch2-q3', question: 'Which gives energy?', options: ['Protein', 'Vitamin', 'Carbohydrate', 'Mineral'], correctAnswer: 2, explanation: 'Carbohydrates and fats are energy-giving nutrients.', difficulty: 'easy' },
-          { id: 'sci-6-ch2-q4', question: 'Protein helps in?', options: ['Energy', 'Growth', 'Digestion', 'None'], correctAnswer: 1, explanation: 'Proteins are body-building nutrients that help in growth and repair.', difficulty: 'easy' },
-          { id: 'sci-6-ch2-q5', question: 'Balanced diet contains?', options: ['Only carbs', 'Only protein', 'All nutrients', 'None'], correctAnswer: 2, explanation: 'A balanced diet provides all necessary nutrients in the right proportions.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Components of Food (CBSE)\n\nNutrients are the important substances present in food that help our body grow, get energy and stay healthy. The main nutrients are carbohydrates, proteins, fats, vitamins and minerals.",
+            mcq: [
+              { id: 'sci-6-ch2-q1-cbse', question: 'Energy giving nutrient?', options: ['Protein', 'Carbohydrate', 'Vitamin', 'Mineral'], correctAnswer: 1, explanation: 'Carbohydrates are the primary source of energy.', difficulty: 'easy' },
+              { id: 'sci-6-ch2-q2-cbse', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Proteins are body-building nutrients.', difficulty: 'easy' },
+              { id: 'sci-6-ch2-q3-cbse', question: 'Night blindness is due to?', options: ['Vitamin A', 'Vitamin C', 'Protein', 'Fat'], correctAnswer: 0, explanation: 'Vitamin A deficiency causes night blindness.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What are nutrients?", answer: "Substances in food needed for growth and energy" },
+              { question: "What is balanced diet?", answer: "Diet with all nutrients in correct amount" }
+            ]
+          },
+          STATE: {
+            explanation: "## Nutrition and Food (State Board)\n\nNutrients are the important substances present in food that help our body grow, get energy and stay healthy. The main nutrients are carbohydrates, proteins, fats, vitamins and minerals.",
+            mcq: [
+              { id: 'sci-6-ch2-q1-state', question: 'Energy giving nutrient?', options: ['Protein', 'Carbohydrate', 'Vitamin', 'Mineral'], correctAnswer: 1, explanation: 'Carbohydrates provide energy.', difficulty: 'easy' },
+              { id: 'sci-6-ch2-q2-state', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Proteins help in growth and repair.', difficulty: 'easy' },
+              { id: 'sci-6-ch2-q3-state', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0, explanation: 'Vitamin C deficiency causes scurvy.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What are nutrients?", answer: "Substances in food needed for growth and energy" },
+              { question: "Name five nutrients", answer: "Carbohydrates, proteins, fats, vitamins, minerals" }
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'What are Nutrients',
+            content: {
+              CBSE: {
+                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
+                mcq: [{ id: 'T2-Q1', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1 }],
+                short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
+              },
+              STATE: {
+                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
+                mcq: [{ id: 'T2-Q1-S', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1 }],
+                short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Types of Nutrients',
+            content: {
+              CBSE: {
+                explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
+                mcq: [{ id: 'T2-Q2', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0 }],
+                short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
+              },
+              STATE: {
+                explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
+                mcq: [{ id: 'T2-Q2-S', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0 }],
+                short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Carbohydrates and Fats',
+            content: {
+              CBSE: {
+                explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
+                mcq: [{ id: 'T2-Q3', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
+                mcq: [{ id: 'T2-Q3-S', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Proteins',
+            content: {
+              CBSE: {
+                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
+                mcq: [{ id: 'T2-Q4', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
+                mcq: [{ id: 'T2-Q4-S', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T5',
+            name: 'Vitamins and Minerals',
+            content: {
+              CBSE: {
+                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
+                mcq: [{ id: 'T2-Q5', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
+                mcq: [{ id: 'T2-Q5-S', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T6',
+            name: 'Balanced Diet',
+            content: {
+              CBSE: {
+                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
+                short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
+              },
+              STATE: {
+                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
+                short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
+              }
+            }
+          },
+          {
+            id: 'T7',
+            name: 'Deficiency Diseases',
+            content: {
+              CBSE: {
+                explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
+                mcq: [{ id: 'T2-Q7', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
+                mcq: [{ id: 'T2-Q7-S', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T8',
+            name: 'Extra Practice',
+            content: {
+              CBSE: {
+                explanation: "Practice more to master the components of food.",
+                mcq: [{ id: 'T2-Q8', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Practice more to master the nutrition topics.",
+                mcq: [{ id: 'T2-Q8-S', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0 }]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch3',
-        subjectId: 'science-6',
-        name: 'Fibre to Fabric',
-        description: 'Learn about fibres, yarn, fabric, and processes like spinning and weaving.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Fibre to Fabric',
+          STATE: 'Clothing and Fibres'
+        },
+        description: 'How clothes are made from fibers',
         order: 3,
-        content: `## Chapter 3: Fibre to Fabric\n\n### Topic 1: Fibre and Fabric\nFibres are thin thread-like structures that are used to make yarn. Yarn is then woven or knitted to make fabric (cloth). Fibres can be natural (cotton, wool) or synthetic.\n\n**Key Points:**\n- Fibres → Yarn → Fabric\n- Natural fibres: cotton, wool\n- Fabric is cloth material\n\n---\n\n### Topic 2: Spinning and Weaving\nSpinning is the process of making yarn from fibres. Weaving is the process of making fabric from yarn using looms.\n\n**Key Points:**\n- Spinning makes yarn\n- Weaving makes fabric\n- Looms are used for weaving\n\n---\n\n### Practice Questions\n1. **What is fibre?**\n   *Answer: Thin thread-like structure*\n`,
-        mcqs: [
-          { id: 'sci-6-ch3-q1', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Fabric is made by weaving or knitting yarn.', difficulty: 'easy' },
-          { id: 'sci-6-ch3-q2', question: 'Cotton is?', options: ['Synthetic', 'Natural', 'Metal', 'Liquid'], correctAnswer: 1, explanation: 'Cotton is a natural fibre obtained from plants.', difficulty: 'easy' },
-          { id: 'sci-6-ch3-q3', question: 'Spinning means?', options: ['Making cloth', 'Making yarn', 'Cutting cloth', 'None'], correctAnswer: 1, explanation: 'Spinning is the process of twisting fibres together to make yarn.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Fibre to Fabric (CBSE)\n\nClothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+            mcq: [
+              { id: 'sci-6-ch3-q1-cbse', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn is the intermediate stage between fiber and fabric.', difficulty: 'easy' },
+              { id: 'sci-6-ch3-q2-cbse', question: 'Cotton is?', options: ['Natural', 'Synthetic', 'Metal', 'None'], correctAnswer: 0, explanation: 'Cotton is a natural fiber obtained from plants.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What is fibre?", answer: "A thin thread-like structure" },
+              { question: "Name two plant fibres", answer: "Cotton and jute" }
+            ]
+          },
+          STATE: {
+            explanation: "## Clothing and Fibres (State Board)\n\nClothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+            mcq: [
+              { id: 'sci-6-ch3-q1-state', question: 'Yarn is made from?', options: ['Fabric', 'Fibres', 'Cloth', 'None'], correctAnswer: 1, explanation: 'Fibres are twisted together to make yarn.', difficulty: 'easy' },
+              { id: 'sci-6-ch3-q2-state', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is a man-made or synthetic fiber.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What is fibre?", answer: "A thin thread-like structure" },
+              { question: "What is spinning?", answer: "Making yarn from fibres" }
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'Introduction to Fibre and Fabric',
+            content: {
+              CBSE: {
+                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
+                mcq: [{ id: 'T3-Q1', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
+                mcq: [{ id: 'T3-Q1-S', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Types of Fibres',
+            content: {
+              CBSE: {
+                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
+                mcq: [{ id: 'T3-Q2', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
+                mcq: [{ id: 'T3-Q2-S', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Plant Fibres (Cotton and Jute)',
+            content: {
+              CBSE: {
+                explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
+                mcq: [{ id: 'T3-Q3', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
+                mcq: [{ id: 'T3-Q3-S', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Spinning of Yarn',
+            content: {
+              CBSE: {
+                explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
+                mcq: [{ id: 'T3-Q4', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
+                mcq: [{ id: 'T3-Q4-S', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T5',
+            name: 'Yarn to Fabric (Weaving and Knitting)',
+            content: {
+              CBSE: {
+                explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
+                mcq: [{ id: 'T3-Q5', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
+                mcq: [{ id: 'T3-Q5-S', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T6',
+            name: 'History of Clothing Material',
+            content: {
+              CBSE: {
+                explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
+                mcq: [{ id: 'T3-Q6', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
+                mcq: [{ id: 'T3-Q6-S', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T7',
+            name: 'Extra Practice',
+            content: {
+              CBSE: {
+                explanation: "Master the journey from fibre to fabric.",
+                mcq: [{ id: 'T3-Q7', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Master the clothing and fibres topics.",
+                mcq: [{ id: 'T3-Q7-S', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0 }]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch4',
-        subjectId: 'science-6',
-        name: 'Sorting Materials into Groups',
-        description: 'Classifying materials based on properties like hardness, solubility and transparency.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Sorting Materials into Groups',
+          STATE: 'Materials Around Us'
+        },
+        description: 'Learning about properties and grouping of materials',
         order: 4,
-        content: `## Chapter 4: Sorting Materials into Groups\n\n### Topic 1: Materials Around Us\nObjects are made from different materials like wood, metal, plastic, glass. Materials are grouped based on their properties like hardness, solubility and transparency.\n\n**Key Points:**\n- Objects made of materials\n- Grouping based on properties\n- Examples: metal, wood, plastic\n`,
-        mcqs: [
-          { id: 'sci-6-ch4-q1', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Hard', 'Soft'], correctAnswer: 1, explanation: 'Glass allows light to pass through, so it is transparent.', difficulty: 'easy' },
-          { id: 'sci-6-ch4-q2', question: 'Wood is?', options: ['Metal', 'Material', 'Gas', 'Liquid'], correctAnswer: 1, explanation: 'Wood is a solid material used for making various objects.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Sorting Materials into Groups (CBSE)\n\nThere are many objects around us. All objects are made from one or more materials such as wood, metal, plastic, glass or cloth. We group materials to make it easier to study and use them.",
+            mcq: [
+              { id: 'sci-6-ch4-q1-cbse', question: 'Objects around us are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0, explanation: 'Materials are the substances used to make objects.', difficulty: 'easy' },
+              { id: 'sci-6-ch4-q2-cbse', question: 'Which of the following is lustrous?', options: ['Wood', 'Iron', 'Plastic', 'Paper'], correctAnswer: 1, explanation: 'Metals like iron are generally lustrous (shiny).', difficulty: 'easy' },
+              { id: 'sci-6-ch4-q3-cbse', question: 'Which is soluble in water?', options: ['Sugar', 'Sand', 'Stone', 'Wood'], correctAnswer: 0, explanation: 'Sugar dissolves completely in water.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "Why do we group materials?", answer: "To make study and use easier" },
+              { question: "What is lustre?", answer: "The shine on materials like metals" }
+            ]
+          },
+          STATE: {
+            explanation: "## Materials Around Us (State Board)\n\nThere are many objects around us. All objects are made from materials. Materials are grouped based on their properties such as appearance, hardness, and transparency.",
+            mcq: [
+              { id: 'sci-6-ch4-q1-state', question: 'Materials are grouped based on?', options: ['Color', 'Properties', 'Size', 'None'], correctAnswer: 1, explanation: 'Properties help in systematic classification.', difficulty: 'easy' },
+              { id: 'sci-6-ch4-q2-state', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1, explanation: 'Stone cannot be easily compressed or scratched.', difficulty: 'easy' },
+              { id: 'sci-6-ch4-q3-state', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1, explanation: 'We can see clearly through glass.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What are objects?", answer: "Things around us like table, chair, book" },
+              { question: "Why grouping is important?", answer: "To make study and use easier" }
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'Objects Around Us',
+            content: {
+              CBSE: {
+                explanation: "Objects around us have different shapes, colours and uses. All objects are made from materials.",
+                mcq: [{ id: 'T4-Q1', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Objects around us have different shapes, colours and uses. All objects are made from materials.",
+                mcq: [{ id: 'T4-Q1-S', question: 'Objects are made from?', options: ['Materials', 'Water', 'Air', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Why Do We Group Materials',
+            content: {
+              CBSE: {
+                explanation: "We group materials to make it easier to study and use them.",
+                mcq: [{ id: 'T4-Q2', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "We group materials to make it easier to study and use them.",
+                mcq: [{ id: 'T4-Q2-S', question: 'Why do we group materials?', options: ['For fun', 'For study', 'For confusion', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Properties of Materials',
+            content: {
+              CBSE: {
+                explanation: "Materials are grouped based on their properties such as appearance, hardness, solubility, floating and transparency.",
+                mcq: [{ id: 'T4-Q3', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Materials are grouped based on their properties such as appearance, hardness, solubility, floating and transparency.",
+                mcq: [{ id: 'T4-Q3-S', question: 'Materials are grouped based on?', options: ['Colour', 'Properties', 'Size', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Appearance (Lustre)',
+            content: {
+              CBSE: {
+                explanation: "Lustrous materials are shiny (like metals), while others are dull (like wood).",
+                mcq: [{ id: 'T4-Q4', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Lustrous materials are shiny (like metals), while others are dull (like wood).",
+                mcq: [{ id: 'T4-Q4-S', question: 'Lustrous means?', options: ['Dull', 'Shiny', 'Soft', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T5',
+            name: 'Hardness',
+            content: {
+              CBSE: {
+                explanation: "Hard materials cannot be easily compressed, while soft materials can be easily pressed.",
+                mcq: [{ id: 'T4-Q5', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Hard materials cannot be easily compressed, while soft materials can be easily pressed.",
+                mcq: [{ id: 'T4-Q5-S', question: 'Stone is?', options: ['Soft', 'Hard', 'Liquid', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T6',
+            name: 'Soluble and Insoluble',
+            content: {
+              CBSE: {
+                explanation: "Materials that dissolve in water are soluble, while those that do not are insoluble.",
+                mcq: [{ id: 'T4-Q6', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Materials that dissolve in water are soluble, while those that do not are insoluble.",
+                mcq: [{ id: 'T4-Q6-S', question: 'Sugar is?', options: ['Soluble', 'Insoluble', 'Hard', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T7',
+            name: 'Floating and Sinking',
+            content: {
+              CBSE: {
+                explanation: "Some materials float on water (like wood) while others sink (like stone).",
+                mcq: [{ id: 'T4-Q7', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Some materials float on water (like wood) while others sink (like stone).",
+                mcq: [{ id: 'T4-Q7-S', question: 'Wood in water?', options: ['Sink', 'Float', 'Dissolve', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T8',
+            name: 'Transparency',
+            content: {
+              CBSE: {
+                explanation: "Transparent materials are see-through, translucent are partial, and opaque cannot be seen through.",
+                mcq: [{ id: 'T4-Q8', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Transparent materials are see-through, translucent are partial, and opaque cannot be seen through.",
+                mcq: [{ id: 'T4-Q8-S', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T9',
+            name: 'Extra Practice',
+            content: {
+              CBSE: {
+                explanation: "Practice grouping materials based on properties.",
+                mcq: [{ id: 'T4-Q9', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Review materials and their properties.",
+                mcq: [{ id: 'T4-Q9-S', question: 'Which dissolves in water?', options: ['Salt', 'Sand', 'Stone', 'Wood'], correctAnswer: 0 }]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch5',
-        subjectId: 'science-6',
-        name: 'Separation of Substances',
-        description: 'Methods for separating components of mixtures like handpicking, winnowing, and filtration.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Separation of Substances',
+          STATE: 'Separation Methods'
+        },
+        description: 'Methods of separating substances from mixtures',
         order: 5,
-        content: `## Chapter 5: Separation of Substances\n\n### Topic 1: Methods of Separation\nWe separate substances to remove unwanted materials or to get useful components. Methods include handpicking, winnowing, sieving, filtration.\n\n**Key Points:**\n- Handpicking\n- Winnowing\n- Filtration\n\n---\n\n### Practice Questions\n1. **Name some methods used to separate substances?**\n   *Answer: Handpicking, winnowing, sieving, and filtration.*\n`,
-        mcqs: [
-          { id: 'sci-6-ch5-q1', question: 'Winnowing is used for?', options: ['Water', 'Grains', 'Milk', 'Air'], correctAnswer: 1, explanation: 'Winnowing is used to separate heavier and lighter components of a mixture by wind or by blowing air, commonly used for grains.', difficulty: 'easy' },
-          { id: 'sci-6-ch5-q2', question: 'Filtration removes?', options: ['Solid from liquid', 'Gas', 'Light', 'Heat'], correctAnswer: 0, explanation: 'Filtration is a process used to separate solids from liquids using a filter medium.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Separation of Substances (CBSE)\n\nWe separate substances to remove unwanted materials, to obtain useful components and to make substances pure. Common methods include handpicking, winnowing, sieving, sedimentation, decantation and filtration.",
+            mcq: [
+              { id: 'sci-6-ch5-q1-cbse', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1, explanation: 'Separation is essential to remove unwanted or harmful materials.', difficulty: 'easy' },
+              { id: 'sci-6-ch5-q2-cbse', question: 'Which method uses wind?', options: ['Winnowing', 'Filtration', 'Sieving', 'None'], correctAnswer: 0, explanation: 'Winnowing uses the power of wind to separate lighter husk from heavier grains.', difficulty: 'easy' },
+              { id: 'sci-6-ch5-q3-cbse', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0, explanation: 'Evaporation is used to separate dissolved solids from liquids.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "Why is separation important?", answer: "To remove unwanted substances and get useful ones" },
+              { question: "What is handpicking?", answer: "Separating large impurities by hand" }
+            ]
+          },
+          STATE: {
+            explanation: "## Separation Methods (State Board)\n\nWe use various methods like filtration, evaporation, and decantation to separate mixtures into their components. These methods are based on the physical properties of the substances.",
+            mcq: [
+              { id: 'sci-6-ch5-q1-state', question: 'Tea leaves are separated by?', options: ['Filtration', 'Winnowing', 'Handpicking', 'None'], correctAnswer: 0, explanation: 'Filtration is used to separate solid tea leaves from liquid tea.', difficulty: 'easy' },
+              { id: 'sci-6-ch5-q2-state', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1, explanation: 'Sieves have holes of a specific size to filter out larger particles.', difficulty: 'easy' },
+              { id: 'sci-6-ch5-q3-state', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3, explanation: 'All these methods are used in complex water treatment.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What is threshing?", answer: "Separating grains from stalks" },
+              { question: "Define evaporation", answer: "Liquid turning into vapor by heating" }
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'Need for Separation',
+            content: {
+              CBSE: {
+                explanation: "We separate substances to remove unwanted materials, to obtain useful components and to make substances pure.",
+                mcq: [{ id: 'T5-Q1', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "We separate substances to remove unwanted materials, to obtain useful components and to make substances pure.",
+                mcq: [{ id: 'T5-Q1-S', question: 'Why do we separate substances?', options: ['For fun', 'To remove impurities', 'To waste time', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Handpicking',
+            content: {
+              CBSE: {
+                explanation: "Handpicking is used when impurities are few and large, like removing stones from rice.",
+                mcq: [{ id: 'T5-Q2', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Handpicking is used when impurities are few and large, like removing stones from rice.",
+                mcq: [{ id: 'T5-Q2-S', question: 'Handpicking is used for?', options: ['Small particles', 'Large impurities', 'Liquids', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Threshing',
+            content: {
+              CBSE: {
+                explanation: "Threshing is the process of separating grains from stalks.",
+                mcq: [{ id: 'T5-Q3', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Threshing is the process of separating grains from stalks.",
+                mcq: [{ id: 'T5-Q3-S', question: 'Threshing separates?', options: ['Grain and stalk', 'Water and sand', 'Milk and cream', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Winnowing',
+            content: {
+              CBSE: {
+                explanation: "Winnowing is used to separate lighter components like husk from heavier grains using wind.",
+                mcq: [{ id: 'T5-Q4', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Winnowing is used to separate lighter components like husk from heavier grains using wind.",
+                mcq: [{ id: 'T5-Q4-S', question: 'Winnowing separates?', options: ['Heavy from light', 'Liquid', 'Gas', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T5',
+            name: 'Sieving',
+            content: {
+              CBSE: {
+                explanation: "Sieving is used to separate particles of different sizes using a sieve.",
+                mcq: [{ id: 'T5-Q5', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Sieving is used to separate particles of different sizes using a sieve.",
+                mcq: [{ id: 'T5-Q5-S', question: 'Sieving is based on?', options: ['Weight', 'Size', 'Colour', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T6',
+            name: 'Sedimentation and Decantation',
+            content: {
+              CBSE: {
+                explanation: "Heavier particles settle down (sedimentation), then clear liquid is poured off (decantation).",
+                mcq: [{ id: 'T5-Q6', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Heavier particles settle down (sedimentation), then clear liquid is poured off (decantation).",
+                mcq: [{ id: 'T5-Q6-S', question: 'Sedimentation means?', options: ['Mixing', 'Settling down', 'Heating', 'None'], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T7',
+            name: 'Filtration',
+            content: {
+              CBSE: {
+                explanation: "Filtration separates insoluble solids from liquids using filter paper or cloth.",
+                mcq: [{ id: 'T5-Q7', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Filtration separates insoluble solids from liquids using filter paper or cloth.",
+                mcq: [{ id: 'T5-Q7-S', question: 'Filtration separates?', options: ['Solid-liquid', 'Gas', 'Heat', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T8',
+            name: 'Evaporation',
+            content: {
+              CBSE: {
+                explanation: "Evaporation is used to obtain solids from liquids by heating.",
+                mcq: [{ id: 'T5-Q8', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Evaporation is used to obtain solids from liquids by heating.",
+                mcq: [{ id: 'T5-Q8-S', question: 'Salt is obtained by?', options: ['Evaporation', 'Filtration', 'Sieving', 'None'], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T9',
+            name: 'Extra Practice',
+            content: {
+              CBSE: {
+                explanation: "Practice more to master separation methods.",
+                mcq: [{ id: 'T5-Q9', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3 }]
+              },
+              STATE: {
+                explanation: "Master the methods of separating substances.",
+                mcq: [{ id: 'T5-Q9-S', question: 'Water purification uses?', options: ['Sedimentation', 'Decantation', 'Filtration', 'All'], correctAnswer: 3 }]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch6',
-        subjectId: 'science-6',
-        name: 'Changes Around Us',
-        description: 'Learn about reversible and irreversible changes.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Changes Around Us',
+          STATE: 'Physical Changes'
+        },
+        description: 'Learning about reversible, irreversible, physical and chemical changes',
         order: 6,
-        content: `## Chapter 6: Changes Around Us\n\n### Topic 1: Types of Changes\nChanges can be reversible or irreversible. Reversible changes can be undone (melting), while irreversible cannot be reversed (burning).\n\n**Key Points:**\n- Reversible change: Can be undone (e.g., melting of ice)\n- Irreversible change: Cannot be undone (e.g., burning of paper)\n`,
-        mcqs: [
-          { id: 'sci-6-ch6-q1', question: 'Melting ice is?', options: ['Reversible', 'Irreversible', 'None', 'Both'], correctAnswer: 0, explanation: 'Ice can be melted into water, and water can be frozen back into ice.', difficulty: 'easy' },
-          { id: 'sci-6-ch6-q2', question: 'Burning paper is?', options: ['Reversible', 'Irreversible', 'Both', 'None'], correctAnswer: 1, explanation: 'Once paper is burnt, it turns into ash and cannot be turned back into paper.', difficulty: 'easy' },
-        ]
+        content: {
+          CBSE: {
+            explanation: "## Changes Around Us (CBSE)\n\nA change is any alteration in the shape, size, colour, state or position of an object. Some changes can be reversed (like melting ice), while others cannot be reversed (like burning paper).",
+            mcq: [
+              { id: 'sci-6-ch6-q1-cbse', question: 'Melting ice is?', options: ['Reversible', 'Irreversible', 'Chemical', 'None'], correctAnswer: 0, explanation: 'Ice can be frozen back into water, so it is reversible.', difficulty: 'easy' },
+              { id: 'sci-6-ch6-q2-cbse', question: 'Burning paper is?', options: ['Reversible', 'Irreversible', 'Both', 'None'], correctAnswer: 1, explanation: 'Once paper is burnt, it cannot be turned back into paper.', difficulty: 'easy' },
+              { id: 'sci-6-ch6-q3-cbse', question: 'Heating causes?', options: ['Expansion', 'Contraction', 'No change', 'None'], correctAnswer: 0, explanation: 'Most materials expand when heated.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What is a reversible change?", answer: "A change that can be undone to get back the original substance" },
+              { question: "Give example of fast change", answer: "Burning of matchstick" }
+            ]
+          },
+          STATE: {
+            explanation: "## Physical Changes (State Board)\n\nA change is any alteration in an object. Physical changes usually do not form new substances and are often reversible. Chemical changes form new substances and are usually permanent.",
+            mcq: [
+              { id: 'sci-6-ch6-q1-state', question: 'Physical change example?', options: ['Melting wax', 'Burning paper', 'Cooking', 'None'], correctAnswer: 0, explanation: 'Melting wax does not create a new chemical substance.', difficulty: 'easy' },
+              { id: 'sci-6-ch6-q2-state', question: 'Chemical change example?', options: ['Burning paper', 'Melting ice', 'Cutting wood', 'None'], correctAnswer: 0, explanation: 'Burning creates ash and smoke, which are new substances.', difficulty: 'easy' },
+              { id: 'sci-6-ch6-q3-state', question: 'Rusting is?', options: ['Fast', 'Slow', 'Both', 'None'], correctAnswer: 1, explanation: 'Rusting takes a long time to happen.', difficulty: 'easy' }
+            ],
+            short_questions: [
+              { question: "What is chemical change?", answer: "Change where new substance is formed" },
+              { question: "Expansion occurs due to?", answer: "Heat" }
+            ]
+          }
+        },
+        topics: [
+          {
+            id: 'T1',
+            name: 'What is a Change',
+            content: {
+              CBSE: {
+                explanation: "A change is any alteration in the shape, size, colour, state or position of an object.",
+                mcq: [{ id: 'T6-Q1', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "A change is any alteration in the shape, size, colour, state or position of an object.",
+                mcq: [{ id: 'T6-Q1-S', question: 'Change means?', options: ["No difference", "Difference in object", "Same thing", "None"], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T2',
+            name: 'Reversible and Irreversible Changes',
+            content: {
+              CBSE: {
+                explanation: "Reversible changes can return to original state, but irreversible changes are permanent.",
+                mcq: [{ id: 'T6-Q2', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Reversible changes can return to original state, but irreversible changes are permanent.",
+                mcq: [{ id: 'T6-Q2-S', question: 'Melting ice is?', options: ["Reversible", "Irreversible", "Chemical", "None"], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T3',
+            name: 'Physical and Chemical Changes',
+            content: {
+              CBSE: {
+                explanation: "In a physical change, no new substance is formed. In a chemical change, a new substance is formed.",
+                mcq: [{ id: 'T6-Q3', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "In a physical change, no new substance is formed. In a chemical change, a new substance is formed.",
+                mcq: [{ id: 'T6-Q3-S', question: 'Physical change example?', options: ["Melting wax", "Burning paper", "Cooking", "None"], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T4',
+            name: 'Changes Caused by Heating and Cooling',
+            content: {
+              CBSE: {
+                explanation: "Heat can bring changes like melting and expansion. Cooling can cause contraction and freezing.",
+                mcq: [{ id: 'T6-Q4', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Heat can bring changes like melting and expansion. Cooling can cause contraction and freezing.",
+                mcq: [{ id: 'T6-Q4-S', question: 'Ice becomes water by?', options: ["Cooling", "Heating", "Mixing", "None"], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T5',
+            name: 'Changes Caused by Force',
+            content: {
+              CBSE: {
+                explanation: "Force (push or pull) can change the shape, size or motion of objects.",
+                mcq: [{ id: 'T6-Q5', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Force (push or pull) can change the shape, size or motion of objects.",
+                mcq: [{ id: 'T6-Q5-S', question: 'Force means?', options: ["Push or pull", "Heat", "Light", "None"], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T6',
+            name: 'Expansion and Contraction',
+            content: {
+              CBSE: {
+                explanation: "Materials expand when heated and contract when cooled.",
+                mcq: [{ id: 'T6-Q6', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Materials expand when heated and contract when cooled.",
+                mcq: [{ id: 'T6-Q6-S', question: 'Heating causes?', options: ["Expansion", "Contraction", "No change", "None"], correctAnswer: 0 }]
+              }
+            }
+          },
+          {
+            id: 'T7',
+            name: 'Slow and Fast Changes',
+            content: {
+              CBSE: {
+                explanation: "Slow changes take time (like rusting), while fast changes happen quickly (like burning).",
+                mcq: [{ id: 'T6-Q7', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1 }]
+              },
+              STATE: {
+                explanation: "Slow changes take time (like rusting), while fast changes happen quickly (like burning).",
+                mcq: [{ id: 'T6-Q7-S', question: 'Rusting is?', options: ["Fast", "Slow", "Both", "None"], correctAnswer: 1 }]
+              }
+            }
+          },
+          {
+            id: 'T8',
+            name: 'Extra Practice',
+            content: {
+              CBSE: {
+                explanation: "Practice more to master the concepts of changes around us.",
+                mcq: [{ id: 'T6-Q8', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0 }]
+              },
+              STATE: {
+                explanation: "Master the physical and chemical changes topics.",
+                mcq: [{ id: 'T6-Q8-S', question: 'Which is reversible?', options: ["Melting wax", "Burning paper", "Cooking food", "None"], correctAnswer: 0 }]
+              }
+            }
+          }
+        ],
+        mcqs: []
       },
       {
         id: 'sci-6-ch7',
-        subjectId: 'science-6',
-        name: 'Getting to Know Plants',
-        description: 'Study of different parts of plants like roots, stems, and leaves.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Getting to Know Plants',
+          STATE: 'Plants and Environment'
+        },
+        description: 'Structure and functions of plant parts',
         order: 7,
-        content: `## Chapter 7: Getting to Know Plants\n\n### Topic 1: Parts of Plants\nPlants have roots, stem, leaves, flowers. Roots absorb water, leaves make food (photosynthesis).\n\n**Key Points:**\n- Roots absorb water and minerals from the soil\n- Leaves make food by photosynthesis\n- Stem supports the plant and conducts water\n`,
-        mcqs: [
-          { id: 'sci-6-ch7-q1', question: 'Leaves make food by?', options: ['Respiration', 'Photosynthesis', 'Digestion', 'Breathing'], correctAnswer: 1, explanation: 'Photosynthesis is the process by which green plants prepare their food.', difficulty: 'easy' },
-          { id: 'sci-6-ch7-q2', question: 'Roots absorb?', options: ['Air', 'Water', 'Light', 'Heat'], correctAnswer: 1, explanation: 'Roots stay underground and absorb water and nutrients for the plant.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch8',
-        subjectId: 'science-6',
-        name: 'Body Movements',
-        description: 'Learn about joints and how muscles and bones help in movement.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Body Movements',
+          STATE: 'Human Body Movement'
+        },
+        description: 'How humans and animals move',
         order: 8,
-        content: `## Chapter 8: Body Movements\n\n### Topic 1: Joints and Movement\nMovement in body happens due to muscles and bones. Joints like hinge joint, ball and socket joint help in movement.\n\n**Key Points:**\n- Bones support the body and protect internal organs\n- Muscles help in movement by contracting and relaxing\n- Different joints allow different types of movements\n`,
-        mcqs: [
-          { id: 'sci-6-ch8-q1', question: 'Elbow joint is?', options: ['Hinge', 'Ball', 'Fixed', 'None'], correctAnswer: 0, explanation: 'The hinge joint allows movement in only one direction, like the hinge of a door.', difficulty: 'easy' },
-          { id: 'sci-6-ch8-q2', question: 'Shoulder joint is?', options: ['Ball and socket', 'Hinge', 'Fixed', 'None'], correctAnswer: 0, explanation: 'The ball and socket joint allows movement in all directions.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch9',
-        subjectId: 'science-6',
-        name: 'Living Organisms and Their Surroundings',
-        description: 'Characteristics of living things and their habitats.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Living Organisms and Their Surroundings',
+          STATE: 'Living Things and Habitat'
+        },
+        description: 'Habitats and adaptations',
         order: 9,
-        content: `## Chapter 9: Living Organisms and Their Surroundings\n\n### Topic 1: Characteristics of Living Things\nLiving things grow, breathe, reproduce and respond to environment.\n\n**Key Points:**\n- Growth: All living things grow over time\n- Respiration: Process of taking in oxygen and giving out CO2\n- Reproduction: Process of producing more of their own kind\n`,
-        mcqs: [
-          { id: 'sci-6-ch9-q1', question: 'Living things can?', options: ['Grow', 'Move', 'Reproduce', 'All'], correctAnswer: 3, explanation: 'Growth, movement, and reproduction are all characteristics of living organisms.', difficulty: 'easy' },
-          { id: 'sci-6-ch9-q2', question: 'Non-living things?', options: ['Grow', 'Do not grow', 'Breathe', 'Eat'], correctAnswer: 1, explanation: 'Non-living things do not have biological processes like growth or breathing.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch10',
-        subjectId: 'science-6',
-        name: 'Motion and Measurement of Distances',
-        description: 'Basics of motion and standard units of measurement.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Motion and Measurement of Distances',
+          STATE: 'Measurement and Motion'
+        },
+        description: 'History of transport and measurement units',
         order: 10,
-        content: `## Chapter 10: Motion and Measurement of Distances\n\n### Topic 1: Types of Motion\nMotion is movement of object. Types include rectilinear, circular and periodic motion.\n\n**Key Points:**\n- Rectilinear motion: Motion in a straight line\n- Circular motion: Motion in a circle\n- Periodic motion: Motion that repeats at regular intervals\n`,
-        mcqs: [
-          { id: 'sci-6-ch10-q1', question: 'Swing motion is?', options: ['Circular', 'Periodic', 'Rectilinear', 'None'], correctAnswer: 1, explanation: 'The motion of a swing repeats itself after a fixed interval, so it is periodic.', difficulty: 'easy' },
-          { id: 'sci-6-ch10-q2', question: 'Earth rotation is?', options: ['Circular', 'Linear', 'Static', 'None'], correctAnswer: 0, explanation: 'The rotation of Earth on its axis is a circular/rotational motion.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch11',
-        subjectId: 'science-6',
-        name: 'Light, Shadows and Reflections',
-        description: 'Properties of light, shadows, and reflection.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Light, Shadows and Reflections',
+          STATE: 'Light and Shadow'
+        },
+        description: 'Properties of light and shadow formation',
         order: 11,
-        content: `## Chapter 11: Light, Shadows and Reflections\n\n### Topic 1: Light and Its Properties\nLight is a form of energy that helps us see objects. Light travels in a straight line, which is called rectilinear propagation of light. Without light, we cannot see anything.\n\n**Key Points:**\n- Light helps us see objects\n- Light travels in straight line\n- Source of light: Sun, bulb\n\n---\n\n### Topic 2: Transparent, Opaque, Translucent\nTransparent objects allow light to pass (glass), opaque block light (wood), translucent allow partial light (paper).\n\n**Key Points:**\n- Transparent: Clear visibility\n- Opaque: No visibility\n- Translucent: Partial visibility\n\n---\n\n### Topic 3: Shadows and Reflection\nShadow forms when an object blocks light. Reflection occurs when light bounces from a surface like a mirror.\n\n**Key Points:**\n- Shadows show the shape of objects\n- Mirrors change the direction of light\n\n---\n\n### Practice Questions\n1. **What is light?**\n   *Answer: A form of energy that helps us see.*\n`,
-        mcqs: [
-          { id: 'sci-6-ch11-q1', question: 'Light travels in?', options: ['Circle', 'Straight line', 'Zig-zag', 'None'], correctAnswer: 1, explanation: 'Light always travels in a straight line.', difficulty: 'easy' },
-          { id: 'sci-6-ch11-q2', question: 'Main source of light is?', options: ['Moon', 'Sun', 'Earth', 'Water'], correctAnswer: 1, explanation: 'The Sun is the primary natural source of light for Earth.', difficulty: 'easy' },
-          { id: 'sci-6-ch11-q3', question: 'Glass is?', options: ['Opaque', 'Transparent', 'Translucent', 'None'], correctAnswer: 1, explanation: 'Light passes clearly through glass.', difficulty: 'easy' },
-          { id: 'sci-6-ch11-q4', question: 'Shadow is formed when?', options: ['Light passes', 'Light blocked', 'Heat', 'None'], correctAnswer: 1, explanation: 'A shadow is formed when an opaque object comes in the path of light.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch12',
-        subjectId: 'science-6',
-        name: 'Electricity and Circuits',
-        description: 'Electric current, circuits, and devices.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Electricity and Circuits',
+          STATE: 'Basic Electricity'
+        },
+        description: 'Electric cells, bulbs, and circuits',
         order: 12,
-        content: `## Chapter 12: Electricity and Circuits\n\n### Topic 1: Electric Current\nElectric current is the flow of electric charges in a circuit. It flows from positive terminal to negative terminal.\n\n**Key Points:**\n- Flow of electric charges\n- Needs closed circuit\n- Battery is source\n\n---\n\n### Topic 2: Electric Circuit\nA complete path through which current flows is called a circuit. If the circuit is broken, current stops.\n\n**Key Points:**\n- Closed circuit: Current flows\n- Open circuit: Current stops\n\n---\n\n### Topic 3: Electric Devices\nDevices like bulbs, switches and wires help control electricity. A switch turns circuit ON/OFF.\n\n**Key Points:**\n- Switch controls the circuit\n- Bulb glows when current passes\n`,
-        mcqs: [
-          { id: 'sci-6-ch12-q1', question: 'Electric current flows in?', options: ['Open circuit', 'Closed circuit', 'Air', 'Water'], correctAnswer: 1, explanation: ' Electricity needs a continuous closed path to flow.', difficulty: 'easy' },
-          { id: 'sci-6-ch12-q2', question: 'Source of electricity?', options: ['Battery', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'A battery or electric cell provides electrical energy.', difficulty: 'easy' },
-          { id: 'sci-6-ch12-q3', question: 'Broken circuit is?', options: ['Closed', 'Open', 'None', 'Full'], correctAnswer: 1, explanation: 'An open circuit has a break, so no current flows.', difficulty: 'easy' },
-          { id: 'sci-6-ch12-q4', question: 'Switch is used for?', options: ['Increase current', 'Control current', 'Store current', 'None'], correctAnswer: 1, explanation: 'A switch is used to either break the circuit or complete it.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch13',
-        subjectId: 'science-6',
-        name: 'Fun with Magnets',
-        description: 'Properties and uses of magnets.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Fun with Magnets',
+          STATE: 'Magnetism'
+        },
+        description: 'Discovery and properties of magnets',
         order: 13,
-        content: `## Chapter 13: Fun with Magnets\n\n### Topic 1: Magnets and Properties\nMagnets attract iron objects. They have two poles: north and south. Like poles repel and unlike poles attract.\n\n**Key Points:**\n- Attract iron\n- Two poles: North (N) & South (S)\n- Like poles repel, unlike attract\n\n---\n\n### Topic 2: Uses of Magnets\nMagnets are used in compass, fridge doors, cranes to lift iron.\n\n**Key Points:**\n- Compass for directions\n- Magnetic separation in industries\n`,
-        mcqs: [
-          { id: 'sci-6-ch13-q1', question: 'Magnets attract?', options: ['Plastic', 'Iron', 'Wood', 'Water'], correctAnswer: 1, explanation: 'Magnets attract magnetic materials like iron, cobalt, and nickel.', difficulty: 'easy' },
-          { id: 'sci-6-ch13-q2', question: 'Like poles?', options: ['Attract', 'Repel', 'Mix', 'None'], correctAnswer: 1, explanation: 'Same poles (N-N or S-S) always push each other away.', difficulty: 'easy' },
-          { id: 'sci-6-ch13-q3', question: 'Compass shows?', options: ['Time', 'Direction', 'Speed', 'Heat'], correctAnswer: 1, explanation: 'Magnetic needle of a compass always points towards North-South direction.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch14',
-        subjectId: 'science-6',
-        name: 'Water',
-        description: 'Importance of water, water cycle, and conservation.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Water',
+          STATE: 'Water Resources'
+        },
+        description: 'Importance of water and water cycle',
         order: 14,
-        content: `## Chapter 14: Water\n\n### Topic 1: Sources of Water\nWater is found in rivers, lakes, oceans and underground. It is essential for all living beings.\n\n**Key Points:**\n- Essential for life\n- Sources: river, lake, rain\n- Used in daily life\n\n---\n\n### Topic 2: Water Cycle\nWater evaporates, forms clouds and falls as rain. This process is called water cycle.\n\n**Key Points:**\n- Evaporation and Condensation\n- Continuous movement of water\n\n---\n\n### Topic 3: Conservation of Water\nWater should be saved by rainwater harvesting and avoiding wastage.\n\n**Key Points:**\n- Save every drop\n- Rainwater harvesting\n`,
-        mcqs: [
-          { id: 'sci-6-ch14-q1', question: 'Water is needed for?', options: ['Plants', 'Animals', 'Humans', 'All'], correctAnswer: 3, explanation: 'Water is the basis of life for all organisms.', difficulty: 'easy' },
-          { id: 'sci-6-ch14-q2', question: 'Water cycle includes?', options: ['Evaporation', 'Condensation', 'Rain', 'All'], correctAnswer: 3, explanation: 'It is a complex cycle involving all these processes.', difficulty: 'easy' },
-          { id: 'sci-6-ch14-q3', question: 'Saving water is?', options: ['Important', 'Not needed', 'Waste', 'None'], correctAnswer: 0, explanation: 'Fresh water is limited, so conservation is vital.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch15',
-        subjectId: 'science-6',
-        name: 'Air Around Us',
-        description: 'Composition and importance of air.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Air Around Us',
+          STATE: 'Air and Atmosphere'
+        },
+        description: 'Composition and importance of air',
         order: 15,
-        content: `## Chapter 15: Air Around Us\n\n### Topic 1: Composition of Air\nAir contains nitrogen, oxygen, carbon dioxide and other gases. Oxygen is needed for breathing.\n\n**Key Points:**\n- Air is mixture of gases\n- Oxygen for breathing\n- CO2 for plants (Photosynthesis)\n\n---\n\n### Topic 2: Importance of Air\nAir is needed for breathing, burning and flying.\n\n**Key Points:**\n- Supports combustion (burning)\n- Needed by all living beings\n`,
-        mcqs: [
-          { id: 'sci-6-ch15-q1', question: 'Air contains?', options: ['Only oxygen', 'Only nitrogen', 'Many gases', 'None'], correctAnswer: 2, explanation: 'Air is a mixture of several gases like Nitrogen, Oxygen, CO2, etc.', difficulty: 'easy' },
-          { id: 'sci-6-ch15-q2', question: 'Air is needed for?', options: ['Breathing', 'Burning', 'Flying', 'All'], correctAnswer: 3, explanation: 'Air performs many vital functions for survival and science.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       },
       {
         id: 'sci-6-ch16',
-        subjectId: 'science-6',
-        name: 'Garbage In Garbage Out',
-        description: 'Waste management and vermicomposting.',
+        subjectId: 'sci-6',
+        name: {
+          CBSE: 'Garbage In Garbage Out',
+          STATE: 'Waste Management'
+        },
+        description: 'Waste disposal and recycling',
         order: 16,
-        content: `## Chapter 16: Garbage In Garbage Out\n\n### Topic 1: Types of Waste\nWaste can be biodegradable (decomposes) and non-biodegradable (does not decompose).\n\n**Key Points:**\n- Biodegradable waste: Kitchen waste, paper\n- Non-biodegradable waste: Plastic, glass, metal\n- Waste management needed\n\n---\n\n### Topic 2: Waste Management\nWe should reduce, reuse and recycle waste to protect environment.\n\n**Key Points:**\n- 3R principle\n- Segregation of waste\n\n---\n\n### Topic 3: Composting\nBiodegradable waste can be converted into manure using composting.\n\n**Key Points:**\n- Redworms are used in Vermicomposting\n- Natural manure for plants\n`,
-        mcqs: [
-          { id: 'sci-6-ch16-q1', question: 'Plastic is?', options: ['Biodegradable', 'Non-biodegradable', 'Both', 'None'], correctAnswer: 1, explanation: 'Plastic does not rot or decompose naturally.', difficulty: 'easy' },
-          { id: 'sci-6-ch16-q2', question: '3R means?', options: ['Reduce Reuse Recycle', 'Run Rest Read', 'None', 'All'], correctAnswer: 0, explanation: 'These are the three pillars of effective waste management.', difficulty: 'easy' },
-          { id: 'sci-6-ch16-q3', question: 'Compost is?', options: ['Waste', 'Manure', 'Plastic', 'Metal'], correctAnswer: 1, explanation: 'Compost is nutrient-rich organic manure.', difficulty: 'easy' },
-        ]
+        content: '',
+        mcqs: [],
+        topics: []
       }
+    ]
+  },
+  {
+    id: 'math-6',
+    name: 'Mathematics',
+    description: 'Master Class 6 Mathematics with interactive solutions',
+    icon: '🔢',
+    color: 'bg-blue-500',
+    grade: 6,
+    boards_supported: ['CBSE', 'STATE'],
+    chapters: [
+      { id: 'math-6-ch1', subjectId: 'math-6', name: 'Knowing Our Numbers', description: '', order: 1, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch2', subjectId: 'math-6', name: 'Whole Numbers', description: '', order: 2, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch3', subjectId: 'math-6', name: 'Playing with Numbers', description: '', order: 3, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch4', subjectId: 'math-6', name: 'Basic Geometry', description: '', order: 4, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch5', subjectId: 'math-6', name: 'Shapes', description: '', order: 5, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch6', subjectId: 'math-6', name: 'Integers', description: '', order: 6, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch7', subjectId: 'math-6', name: 'Fractions', description: '', order: 7, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch8', subjectId: 'math-6', name: 'Decimals', description: '', order: 8, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch9', subjectId: 'math-6', name: 'Data Handling', description: '', order: 9, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch10', subjectId: 'math-6', name: 'Mensuration', description: '', order: 10, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch11', subjectId: 'math-6', name: 'Algebra', description: '', order: 11, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch12', subjectId: 'math-6', name: 'Ratio and Proportion', description: '', order: 12, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch13', subjectId: 'math-6', name: 'Symmetry', description: '', order: 13, content: '', mcqs: [], topics: [] },
+      { id: 'math-6-ch14', subjectId: 'math-6', name: 'Practical Geometry', description: '', order: 14, content: '', mcqs: [], topics: [] }
+    ]
+  },
+  {
+    id: 'eng-6',
+    name: 'English',
+    description: 'Literature, Grammar, Reading and Writing for Class 6',
+    icon: '📖',
+    color: 'bg-purple-500',
+    grade: 6,
+    boards_supported: ['CBSE', 'STATE'],
+    chapters: [
+      { id: 'eng-6-mod1', subjectId: 'eng-6', name: 'Grammar', description: '', order: 1, content: '', mcqs: [], topics: [] },
+      { id: 'eng-6-mod2', subjectId: 'eng-6', name: 'Reading', description: '', order: 2, content: '', mcqs: [], topics: [] },
+      { id: 'eng-6-mod3', subjectId: 'eng-6', name: 'Writing', description: '', order: 3, content: '', mcqs: [], topics: [] },
+      { id: 'eng-6-mod4', subjectId: 'eng-6', name: 'Literature', description: '', order: 4, content: '', mcqs: [], topics: [] }
     ]
   }
 ];

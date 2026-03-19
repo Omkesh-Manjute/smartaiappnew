@@ -85,7 +85,12 @@ const ChapterPage = () => {
     if (newLang === 'hi' && !translatedContent['hi']) {
       setIsTranslating(true);
       try {
-        const translated = await translateContent(chapter.content, 'hi');
+        const activeBoard = user?.board || 'CBSE';
+        const contentToTranslate = typeof chapter.content === 'string' 
+          ? chapter.content 
+          : (chapter.content[activeBoard]?.explanation || '');
+          
+        const translated = await translateContent(contentToTranslate, 'hi');
         setTranslatedContent((prev) => ({ ...prev, hi: translated }));
       } catch (error: any) {
         toast.error(error.message || 'Translation failed. Please try again later.');
@@ -104,10 +109,21 @@ const ChapterPage = () => {
     if (isSpeaking) {
       stop();
     } else {
-      const displayContent = contentLang === 'hi' && translatedContent['hi'] 
-        ? translatedContent['hi'] 
-        : chapter.content;
-      const cleanedText = cleanTextForTTS(displayContent);
+      const activeBoard = user?.board || 'CBSE';
+      let contentToClean = '';
+      
+      if (contentLang === 'hi' && translatedContent['hi']) {
+        contentToClean = translatedContent['hi'];
+      } else {
+        const rawContent = chapter.content;
+        if (typeof rawContent === 'string') {
+          contentToClean = rawContent;
+        } else {
+          contentToClean = rawContent[activeBoard]?.explanation || '';
+        }
+      }
+      
+      const cleanedText = cleanTextForTTS(contentToClean);
       speak(cleanedText, contentLang);
     }
   };
@@ -121,13 +137,16 @@ const ChapterPage = () => {
     if (!chapter || !user) return;
 
     let correct = 0;
-    chapter.mcqs.forEach((mcq) => {
+    const activeBoard = user.board || 'CBSE';
+    const mcqs = (typeof chapter.content === 'object' && (chapter.content as any)[activeBoard]?.mcq) || chapter.mcqs;
+
+    mcqs.forEach((mcq: any) => {
       if (mcqAnswers[mcq.id] === mcq.correctAnswer) {
         correct++;
       }
     });
 
-    const score = Math.round((correct / chapter.mcqs.length) * 100);
+    const score = Math.round((correct / mcqs.length) * 100);
     setMcqScore(score);
     setShowMcqResults(true);
 
@@ -199,7 +218,9 @@ const ChapterPage = () => {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg font-bold">{chapter.name}</h1>
+              <h1 className="text-lg font-bold">
+                {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+              </h1>
               <p className="text-sm text-gray-500">{subject.name}</p>
             </div>
           </div>
@@ -216,7 +237,7 @@ const ChapterPage = () => {
             </TabsTrigger>
             <TabsTrigger value="practice" className="flex items-center gap-2">
               <HelpCircle className="w-4 h-4" />
-              Practice ({chapter.mcqs.length})
+              Practice ({(typeof chapter.content === 'object' ? (chapter.content as any)[user?.board || 'CBSE']?.mcq?.length : chapter.mcqs.length) || 0})
             </TabsTrigger>
           </TabsList>
 
@@ -224,7 +245,9 @@ const ChapterPage = () => {
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-                  <h2 className="text-xl font-semibold">{chapter.name}</h2>
+                  <h2 className="text-xl font-semibold">
+                    {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+                  </h2>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -264,9 +287,19 @@ const ChapterPage = () => {
 
                 <div className="prose prose-indigo max-w-none dark:prose-invert">
                   {(() => {
-                    const displayContent = contentLang === 'hi' && translatedContent['hi'] 
-                      ? translatedContent['hi'] 
-                      : chapter.content;
+                    const activeBoard = user?.board || 'CBSE';
+                    let displayContent = '';
+                    
+                    if (contentLang === 'hi' && translatedContent['hi']) {
+                      displayContent = translatedContent['hi'];
+                    } else {
+                      const rawContent = chapter.content;
+                      if (typeof rawContent === 'string') {
+                        displayContent = rawContent;
+                      } else {
+                        displayContent = rawContent[activeBoard]?.explanation || '';
+                      }
+                    }
                     
                     // Split into sentences (preserving punctuation and spacing) for TTS highlighting
                     const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
@@ -357,81 +390,90 @@ const ChapterPage = () => {
                 )}
 
                 <div className="space-y-6">
-                  {chapter.mcqs.map((mcq, index) => (
-                    <motion.div
-                      key={mcq.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="border rounded-xl p-4"
-                    >
-                      <p className="font-medium mb-3">
-                        {index + 1}. {mcq.question}
-                      </p>
-                      <div className="space-y-2">
-                        {mcq.options.map((option, optionIndex) => {
-                          const isSelected = mcqAnswers[mcq.id] === optionIndex;
-                          const isCorrect = mcq.correctAnswer === optionIndex;
-                          const showCorrect = showMcqResults && isCorrect;
-                          const showWrong = showMcqResults && isSelected && !isCorrect;
+                  {(() => {
+                    const activeBoard = user?.board || 'CBSE';
+                    const mcqs = (typeof chapter.content === 'object' && (chapter.content as any)[activeBoard]?.mcq) || chapter.mcqs;
+                    
+                    if (!mcqs || mcqs.length === 0) {
+                      return <p className="text-center py-8 text-gray-500 italic">No practice questions available for this chapter.</p>;
+                    }
 
-                          return (
-                            <button
-                              key={optionIndex}
-                              onClick={() => handleMcqAnswer(mcq.id, optionIndex)}
-                              disabled={showMcqResults}
-                              className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                                showCorrect
-                                  ? 'border-green-500 bg-green-50'
-                                  : showWrong
-                                  ? 'border-red-500 bg-red-50'
-                                  : isSelected
-                                  ? 'border-blue-500 bg-blue-50'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <span
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
-                                    showCorrect
-                                      ? 'bg-green-500 text-white'
-                                      : showWrong
-                                      ? 'bg-red-500 text-white'
-                                      : isSelected
-                                      ? 'bg-blue-500 text-white'
-                                      : 'bg-gray-200'
-                                  }`}
-                                >
-                                  {String.fromCharCode(65 + optionIndex)}
-                                </span>
-                                <span>{option}</span>
-                                {showCorrect && <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
+                    return mcqs.map((mcq: any, index: number) => (
+                      <motion.div
+                        key={mcq.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border rounded-xl p-4"
+                      >
+                        <p className="font-medium mb-3">
+                          {index + 1}. {mcq.question}
+                        </p>
+                        <div className="space-y-2">
+                          {mcq.options.map((option: string, optionIndex: number) => {
+                            const isSelected = mcqAnswers[mcq.id] === optionIndex;
+                            const isCorrect = mcq.correctAnswer === optionIndex;
+                            const showCorrect = showMcqResults && isCorrect;
+                            const showWrong = showMcqResults && isSelected && !isCorrect;
 
-                      {showMcqResults && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="mt-3 p-3 bg-blue-50 rounded-lg"
-                        >
-                          <p className="text-sm text-blue-800">
-                            <strong>Explanation:</strong> {mcq.explanation}
-                          </p>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  ))}
+                            return (
+                              <button
+                                key={optionIndex}
+                                onClick={() => handleMcqAnswer(mcq.id, optionIndex)}
+                                disabled={showMcqResults}
+                                className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                                  showCorrect
+                                    ? 'border-green-500 bg-green-50'
+                                    : showWrong
+                                    ? 'border-red-500 bg-red-50'
+                                    : isSelected
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
+                                      showCorrect
+                                        ? 'bg-green-500 text-white'
+                                        : showWrong
+                                        ? 'bg-red-500 text-white'
+                                        : isSelected
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-200'
+                                    }`}
+                                  >
+                                    {String.fromCharCode(65 + optionIndex)}
+                                  </span>
+                                  <span>{option}</span>
+                                  {showCorrect && <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showMcqResults && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-3 p-3 bg-blue-50 rounded-lg"
+                          >
+                            <p className="text-sm text-blue-800">
+                              <strong>Explanation:</strong> {mcq.explanation}
+                            </p>
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ));
+                  })()}
                 </div>
 
                 <div className="mt-6 flex justify-between">
                   {!showMcqResults ? (
                     <Button
                       onClick={submitMcqs}
-                      disabled={Object.keys(mcqAnswers).length < chapter.mcqs.length}
+                      disabled={Object.keys(mcqAnswers).length < (typeof chapter.content === 'object' ? ((chapter.content as any)[user?.board || 'CBSE']?.mcq?.length || 0) : chapter.mcqs.length)}
                       className="w-full"
                     >
                       Submit Answers

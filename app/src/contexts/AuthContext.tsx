@@ -17,7 +17,8 @@ interface AuthContextType {
     email: string,
     password: string,
     role: UserRole,
-    grade?: number
+    grade?: number,
+    board?: Board
   ) => Promise<boolean>;
   logout: () => Promise<void>;
 }
@@ -41,6 +42,7 @@ const mapToUser = (row: Record<string, unknown>): User => ({
   aiQuestionsToday: Number(row.ai_questions_today ?? 0),
   lastAiResetAt: typeof row.last_ai_reset_at === 'string' ? new Date(row.last_ai_reset_at) : undefined,
   schoolId: typeof row.school_id === 'string' ? row.school_id : undefined,
+  board: typeof row.board === 'string' ? row.board as Board : undefined,
   password: '',
 });
 
@@ -68,6 +70,7 @@ const buildFallbackUser = (
     isPremium: false,
     aiQuestionsToday: 0,
     schoolId: undefined,
+    board: authUser.user_metadata?.board as Board | undefined,
     password: '',
   };
 };
@@ -149,6 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             avatar: fallbackUser.avatar ?? null,
             ai_questions_today: 0,
             last_ai_reset_at: new Date().toISOString(),
+            board: fallbackUser.board ?? null,
           },
           { onConflict: 'id' }
         )
@@ -279,7 +283,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string,
     role: UserRole,
-    _grade?: number
+    _grade?: number,
+    board?: Board
   ): Promise<boolean> => {
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -290,6 +295,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: {
           name,
           role,
+          board,
         },
       },
     });
@@ -304,6 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       name,
       email: normalizedEmail,
       role,
+      board: board || null,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${normalizedEmail}`,
     });
 

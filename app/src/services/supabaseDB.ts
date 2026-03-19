@@ -4,7 +4,8 @@ import type {
   StudyGroup, GroupMessage, GamificationData, Battle,
   Homework, HomeworkSubmission,
   School, Notification, Badge, TeacherAnalytics,
-  StudentProgress, StudyPlan, ConceptMastery, ParentChild
+  StudentProgress, StudyPlan, ConceptMastery, ParentChild,
+  Board, Topic
 } from '@/types';
 import { class5Subjects, class5Tests } from '@/data/class5Data';
 import { class6Subjects } from '@/data/class6Data';
@@ -25,6 +26,7 @@ export const userDB = {
       avatar: u.avatar || undefined,
       createdAt: new Date(u.created_at),
       isPremium: u.is_premium,
+      board: u.board as Board | undefined,
       aiQuestionsToday: u.ai_questions_today || 0,
       lastAiResetAt: u.last_ai_reset_at ? new Date(u.last_ai_reset_at) : undefined,
       schoolId: u.school_id || undefined,
@@ -44,6 +46,7 @@ export const userDB = {
       avatar: d.avatar || undefined,
       createdAt: new Date(d.created_at),
       isPremium: d.is_premium,
+      board: d.board as Board | undefined,
       aiQuestionsToday: d.ai_questions_today || 0,
       lastAiResetAt: d.last_ai_reset_at ? new Date(d.last_ai_reset_at) : undefined,
       schoolId: d.school_id || undefined,
@@ -79,6 +82,7 @@ export const userDB = {
         role: updates.role,
         avatar: updates.avatar,
         is_premium: updates.isPremium,
+        board: updates.board,
         school_id: updates.schoolId,
       })
       .eq('id', id);
@@ -113,14 +117,16 @@ export const subjectDB = {
         icon: s.icon,
         color: s.color,
         grade: s.grade,
+        boards_supported: s.boards_supported as Board[] | undefined,
         chapters: (chapters as any[])?.map(ch => ({
           id: ch.id,
           subjectId: ch.subject_id,
-          name: ch.name,
+          name: ch.name_board || ch.name,
           description: ch.description,
           order: ch.order,
-          content: ch.content,
+          content: ch.content_board || ch.content,
           videoUrl: ch.video_url || undefined,
+          topics: ch.topics as Topic[] | undefined,
           mcqs: ch.mcqs?.map((mcq: any) => ({
             id: mcq.id,
             question: mcq.question,
@@ -152,14 +158,16 @@ export const subjectDB = {
       icon: s.icon,
       color: s.color,
       grade: s.grade,
+      boards_supported: s.boards_supported as Board[] | undefined,
       chapters: (chapters as any[])?.map(ch => ({
         id: ch.id,
         subjectId: ch.subject_id,
-        name: ch.name,
+        name: ch.name_board || ch.name,
         description: ch.description,
         order: ch.order,
-        content: ch.content,
+        content: ch.content_board || ch.content,
         videoUrl: ch.video_url || undefined,
+        topics: ch.topics as Topic[] | undefined,
         mcqs: ch.mcqs?.map((mcq: any) => ({
           id: mcq.id,
           question: mcq.question,
@@ -187,6 +195,7 @@ export const subjectDB = {
         icon: subject.icon,
         color: subject.color,
         grade: subject.grade,
+        boards_supported: subject.boards_supported,
       });
     if (error) throw error;
     return subject;
@@ -201,6 +210,7 @@ export const subjectDB = {
         icon: updates.icon,
         color: updates.color,
         grade: updates.grade,
+        boards_supported: updates.boards_supported,
       })
       .eq('id', id);
     if (error) return null;
@@ -233,10 +243,13 @@ export const chapterDB = {
       .insert({
         id: chapter.id,
         subject_id: chapter.subjectId,
-        name: chapter.name,
+        name: typeof chapter.name === 'string' ? chapter.name : null,
+        name_board: typeof chapter.name === 'object' ? chapter.name : null,
         description: chapter.description,
         order: chapter.order,
-        content: chapter.content,
+        content: typeof chapter.content === 'string' ? chapter.content : null,
+        content_board: typeof chapter.content === 'object' ? chapter.content : null,
+        topics: chapter.topics,
         video_url: chapter.videoUrl,
       });
     if (error) throw error;
@@ -247,10 +260,13 @@ export const chapterDB = {
     const { error } = await supabase
       .from('chapters')
       .update({
-        name: updates.name,
+        name: typeof updates.name === 'string' ? updates.name : undefined,
+        name_board: typeof updates.name === 'object' ? updates.name : undefined,
         description: updates.description,
         order: updates.order,
-        content: updates.content,
+        content: typeof updates.content === 'string' ? updates.content : undefined,
+        content_board: typeof updates.content === 'object' ? updates.content : undefined,
+        topics: updates.topics,
         video_url: updates.videoUrl,
         image_url: (updates as any).imageUrl,
         updated_at: new Date().toISOString(),
@@ -266,8 +282,9 @@ export const chapterDB = {
       name: d.name,
       description: d.description,
       order: d.order,
-      content: d.content,
+      content: d.content_board || d.content,
       videoUrl: d.video_url || undefined,
+      topics: d.topics as Topic[] | undefined,
       mcqs: [],
     };
   },

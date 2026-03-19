@@ -1,5 +1,5 @@
-// User Types
 export type UserRole = 'student' | 'teacher' | 'admin' | 'parent';
+export type Board = 'CBSE' | 'STATE';
 
 export interface User {
   id: string;
@@ -7,6 +7,7 @@ export interface User {
   email: string;
   password: string;
   role: UserRole;
+  board?: Board;
   avatar?: string;
   createdAt: Date;
   isPremium?: boolean;
@@ -15,7 +16,6 @@ export interface User {
   schoolId?: string;
 }
 
-// Subject and Chapter Types
 export interface Subject {
   id: string;
   name: string;
@@ -23,20 +23,35 @@ export interface Subject {
   icon: string;
   color: string;
   grade: number;
+  boards_supported?: Board[];
   chapters: Chapter[];
 }
 
 export interface Chapter {
   id: string;
   subjectId: string;
-  name: string;
+  name: string | { [key in Board]?: string };
   description: string;
   order: number;
-  content: string;
+  content: string | { [key in Board]?: ChapterContent };
   videoUrl?: string;
   mcqs: MCQ[];
+  topics?: Topic[];
   isLocked?: boolean;
   isCompleted?: boolean;
+}
+
+export interface Topic {
+  id: string;
+  name: string;
+  content: { [key in Board]?: ChapterContent };
+}
+
+export interface ChapterContent {
+  explanation: string;
+  mcq: MCQ[];
+  short_questions?: string[];
+  extra_questions?: string[];
 }
 
 export interface MCQ {

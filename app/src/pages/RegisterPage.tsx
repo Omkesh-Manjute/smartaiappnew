@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { BookOpen, Eye, EyeOff, GraduationCap, School, Users, UserCircle } from 'lucide-react';
-import type { UserRole } from '@/types';
+import type { UserRole, Board } from '@/types';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<UserRole>('student');
+  const [board, setBoard] = useState<Board>('CBSE');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,7 +38,7 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const success = await register(name, email, password, role);
+      const success = await register(name, email, password, role, undefined, role === 'student' ? board : undefined);
       if (success) {
         toast.success('Account created successfully!');
         navigate(`/${role}/dashboard`);
@@ -182,6 +183,21 @@ const RegisterPage = () => {
                   </div>
                 </RadioGroup>
               </div>
+
+              {role === 'student' && (
+                <div className="space-y-2">
+                  <Label htmlFor="board">Educational Board</Label>
+                  <select
+                    id="board"
+                    value={board}
+                    onChange={(e) => setBoard(e.target.value as Board)}
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="CBSE">CBSE Board</option>
+                    <option value="STATE">Maharashtra State Board</option>
+                  </select>
+                </div>
+              )}
 
               <Button
                 type="submit"
