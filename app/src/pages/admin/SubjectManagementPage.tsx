@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { chapterDB, subjectDB, testDB } from '@/services/supabaseDB';
+import { chapterDB, mcqDB, subjectDB, testDB } from '@/services/supabaseDB';
 import { subjectDB as localSubjectDB, testDB as localTestDB } from '@/services/database';
 import { generateSubjectBlueprint } from '@/services/geminiAPI';
 import { Button } from '@/components/ui/button';
