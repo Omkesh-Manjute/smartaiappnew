@@ -297,9 +297,11 @@ const ChapterPage = () => {
                     }
 
                     return (
-                      <ReactMarkdown className="text-gray-700 leading-relaxed text-lg">
-                        {displayContent}
-                      </ReactMarkdown>
+                      <div className="text-gray-700 leading-relaxed text-lg">
+                        <ReactMarkdown>
+                          {displayContent}
+                        </ReactMarkdown>
+                      </div>
                     );
                   })()}
                 </div>
