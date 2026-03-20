@@ -70,7 +70,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 };
 
-const APP_VERSION = '1.0.1'; // Increment this to force-clear data on all devices
+const APP_VERSION = '1.0.2'; // Force-clear old data on all devices again to ensure complete cleanup
 
 function App() {
   // Global one-time reset for all users to clear corrupted/persistent data

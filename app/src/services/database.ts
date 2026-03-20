@@ -424,11 +424,11 @@ export const initializeSampleData = () => {
     return;
   }
 
-  // NOTE: Subjects are loaded from cloud/local storage, not from seed data
-  // Only initialize if no subjects exist at all
+  // NOTE: Subjects are loaded from cloud/local storage. 
+  // Auto-seeding of class6Subjects is disabled to prevent data from reappearing after delete.
   const existingSubjects = localStorage.getItem(DB_KEYS.SUBJECTS);
-  if (!existingSubjects || JSON.parse(existingSubjects).length === 0) {
-    localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(class6Subjects));
+  if (!existingSubjects) {
+     localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify([]));
   }
 
   // Sample Users
