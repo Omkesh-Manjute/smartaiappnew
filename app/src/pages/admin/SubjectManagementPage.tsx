@@ -24,9 +24,7 @@ import {
   Edit2,
   Save,
   X,
-  Database,
 } from 'lucide-react';
-import { seedSampleData } from '@/services/supabaseDB';
 import type { Chapter, Subject, Test } from '@/types';
 
 const colorOptions = [
@@ -76,7 +74,7 @@ const SubjectManagementPage = () => {
   const [testUploadFile, setTestUploadFile] = useState<File | null>(null);
   const [contentUploadFile, setContentUploadFile] = useState<File | null>(null);
   const [isImportingContent, setIsImportingContent] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
+
 
   const sortedSubjects = useMemo(
     () => [...subjects].sort((a, b) => {
@@ -759,21 +757,6 @@ const SubjectManagementPage = () => {
       toast.error('Failed to import content. Check console for details.');
     } finally {
       setIsImportingContent(false);
-    }
-  };
-
-  const handleSeedCloudData = async () => {
-    if (!window.confirm('This will seed the cloud database with initial sample data. Continue?')) return;
-    setIsSeeding(true);
-    try {
-      await seedSampleData();
-      toast.success('Cloud seeding complete!');
-      await loadSubjects();
-    } catch (error) {
-      console.error('Seeding failed:', error);
-      toast.error('Cloud seeding failed');
-    } finally {
-      setIsSeeding(false);
     }
   };
 
