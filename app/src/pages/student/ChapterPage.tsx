@@ -356,7 +356,7 @@ const ChapterPage = () => {
                             let explanation = '';
                             
                             if (topic.content) {
-                              const tContent = (topic.content as Record<string, any>)[boardKey] || (topic.content as any)['CBSE'];
+                              const tContent = (topic.content as Record<Board, any>)[boardKey as Board] || (topic.content as any)['CBSE'];
                               explanation = tContent?.explanation || (topic as any).explanation || '';
                             } else if ((topic as any).explanation) {
                               explanation = (topic as any).explanation;
