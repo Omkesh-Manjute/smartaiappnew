@@ -1,0 +1,194 @@
+{
+  "class": "6",
+  "subject": "Science",
+  "chapter_id": "CH01",
+  "chapter_name": {
+    "cbse": "Food: Where Does It Come From",
+    "state": "Food and Nutrition"
+  },
+  "topics": [
+    {
+      "topic_name": "Need and Sources of Food",
+      "explanation": "Food is essential for all living beings. It provides energy, helps in growth and protects from diseases. Food mainly comes from two sources: plants and animals. Plants provide cereals, fruits, vegetables while animals provide milk, eggs, meat and honey.",
+      "key_points": [
+        "Food gives energy and growth",
+        "Main sources: plants and animals",
+        "Plants are primary source",
+        "Animals depend on plants"
+      ],
+      "mcq": [
+        {
+          "question": "Food is needed for?",
+          "options": ["Energy", "Growth", "Protection", "All"],
+          "answer": "All"
+        },
+        {
+          "question": "Main sources of food?",
+          "options": ["Plants", "Animals", "Both", "None"],
+          "answer": "Both"
+        },
+        {
+          "question": "Milk comes from?",
+          "options": ["Plants", "Animals", "Soil", "Water"],
+          "answer": "Animals"
+        },
+        {
+          "question": "Honey is made by?",
+          "options": ["Cow", "Bee", "Plant", "Fish"],
+          "answer": "Bee"
+        }
+      ],
+      "short_questions": [
+        {
+          "question": "Why do we need food?",
+          "answer": "For energy, growth and protection"
+        },
+        {
+          "question": "Name two sources of food",
+          "answer": "Plants and animals"
+        }
+      ]
+    },
+    {
+      "topic_name": "Plant Parts as Food",
+      "explanation": "We eat different parts of plants such as roots, stems, leaves, fruits, flowers and seeds. For example, carrot is root, potato is stem, spinach is leaf, and wheat is seed.",
+      "key_points": [
+        "Different plant parts are eaten",
+        "Roots: carrot, radish",
+        "Stem: potato, ginger",
+        "Leaves: spinach",
+        "Seeds: wheat, rice"
+      ],
+      "mcq": [
+        {
+          "question": "Carrot is?",
+          "options": ["Root", "Stem", "Leaf", "Fruit"],
+          "answer": "Root"
+        },
+        {
+          "question": "Potato is?",
+          "options": ["Root", "Stem", "Leaf", "Fruit"],
+          "answer": "Stem"
+        },
+        {
+          "question": "Spinach is?",
+          "options": ["Leaf", "Root", "Seed", "Fruit"],
+          "answer": "Leaf"
+        },
+        {
+          "question": "Wheat is?",
+          "options": ["Seed", "Root", "Leaf", "Flower"],
+          "answer": "Seed"
+        }
+      ],
+      "short_questions": [
+        {
+          "question": "Name two roots we eat",
+          "answer": "Carrot and radish"
+        },
+        {
+          "question": "Which part of plant is cabbage?",
+          "answer": "Leaf"
+        }
+      ]
+    },
+    {
+      "topic_name": "Animal Products as Food",
+      "explanation": "Animals also provide food products such as milk, eggs, meat and honey. Milk from cow, buffalo and goat is used to make butter, curd and cheese.",
+      "key_points": [
+        "Milk, eggs, meat are animal products",
+        "Milk gives many products",
+        "Honey is made by bees"
+      ],
+      "mcq": [
+        {
+          "question": "Milk is?",
+          "options": ["Plant product", "Animal product", "Mineral", "None"],
+          "answer": "Animal product"
+        },
+        {
+          "question": "Egg comes from?",
+          "options": ["Plant", "Animal", "Water", "Air"],
+          "answer": "Animal"
+        },
+        {
+          "question": "Paneer is made from?",
+          "options": ["Water", "Milk", "Fruit", "Plant"],
+          "answer": "Milk"
+        }
+      ],
+      "short_questions": [
+        {
+          "question": "Name two animal food items",
+          "answer": "Milk and eggs"
+        }
+      ]
+    },
+    {
+      "topic_name": "Food Habits of Animals",
+      "explanation": "Animals are classified based on their eating habits. Herbivores eat plants, carnivores eat animals, and omnivores eat both plants and animals.",
+      "key_points": [
+        "Herbivores eat plants",
+        "Carnivores eat animals",
+        "Omnivores eat both"
+      ],
+      "mcq": [
+        {
+          "question": "Cow is?",
+          "options": ["Carnivore", "Herbivore", "Omnivore", "None"],
+          "answer": "Herbivore"
+        },
+        {
+          "question": "Lion eats?",
+          "options": ["Plants", "Animals", "Both", "None"],
+          "answer": "Animals"
+        },
+        {
+          "question": "Human is?",
+          "options": ["Herbivore", "Carnivore", "Omnivore", "None"],
+          "answer": "Omnivore"
+        },
+        {
+          "question": "Goat is?",
+          "options": ["Carnivore", "Herbivore", "Omnivore", "None"],
+          "answer": "Herbivore"
+        }
+      ],
+      "short_questions": [
+        {
+          "question": "Define herbivores",
+          "answer": "Animals that eat only plants"
+        },
+        {
+          "question": "Give example of omnivore",
+          "answer": "Human"
+        }
+      ]
+    },
+    {
+      "topic_name": "Extra Practice (Exam Level)",
+      "mcq": [
+        {
+          "question": "Rice comes from?",
+          "options": ["Wheat plant", "Paddy plant", "Sugarcane", "Potato"],
+          "answer": "Paddy plant"
+        },
+        {
+          "question": "Mustard gives?",
+          "options": ["Oil", "Milk", "Water", "None"],
+          "answer": "Oil"
+        },
+        {
+          "question": "Which is carnivore?",
+          "options": ["Cow", "Tiger", "Goat", "Deer"],
+          "answer": "Tiger"
+        }
+      ],
+      "long_questions": [
+        "Explain sources of food with examples",
+        "Describe different plant parts used as food",
+        "Explain types of animals based on food habits"
+      ]
+    }
+  ]
+}
