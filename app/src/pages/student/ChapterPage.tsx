@@ -376,32 +376,13 @@ const ChapterPage = () => {
                               <span 
                                 key={sidx}
                                 id={isHighlighted ? 'current-tts-word' : undefined}
-                                className={`transition-all duration-300 rounded inline-block ${
+                                className={`transition-all duration-300 rounded ${
                                   isHighlighted 
                                     ? 'bg-yellow-200 text-indigo-900 px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
                                     : ''
                                 }`}
                               >
-                                <ReactMarkdown
-                                  components={{
-                                    h3: ({ children }) => <h3 className="text-xl font-bold mt-6 mb-3 text-indigo-700">{children}</h3>,
-                                    p: ({ children }) => <span className="text-gray-700 leading-relaxed whitespace-pre-wrap">{children}</span>,
-                                    ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">{children}</ul>,
-                                    ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">{children}</ol>,
-                                    li: ({ children }) => <li className="ml-4">{children}</li>,
-                                    table: ({ children }) => (
-                                      <div className="overflow-x-auto my-6 rounded-xl border border-gray-200">
-                                        <table className="min-w-full divide-y divide-gray-200">{children}</table>
-                                      </div>
-                                    ),
-                                    thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
-                                    th: ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
-                                    td: ({ children }) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-t border-gray-100">{children}</td>,
-                                    strong: ({ children }) => <strong className="font-bold text-indigo-900 bg-indigo-50 px-1 rounded">{children}</strong>,
-                                  }}
-                                >
-                                  {sentence}
-                                </ReactMarkdown>
+                                {sentence}
                               </span>
                             );
                           })}
@@ -487,7 +468,7 @@ const ChapterPage = () => {
                                     <span 
                                       key={sidx}
                                       id={isHighlighted ? 'current-tts-word' : undefined}
-                                      className={`transition-all duration-300 rounded inline-block ${
+                                      className={`transition-all duration-300 rounded ${
                                         isHighlighted 
                                           ? 'bg-yellow-200 text-indigo-900 px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
                                           : ''
