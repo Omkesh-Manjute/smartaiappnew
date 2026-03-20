@@ -86,9 +86,35 @@ const ChapterPage = () => {
       setIsTranslating(true);
       try {
         const activeBoard = user?.board || 'CBSE';
-        const contentToTranslate = typeof chapter.content === 'string' 
-          ? chapter.content 
-          : (chapter.content[activeBoard]?.explanation || '');
+        let contentToTranslate = '';
+        
+        // Try topics first
+        if (chapter.topics && chapter.topics.length > 0) {
+          contentToTranslate = chapter.topics.map(t => {
+            let tContent = '';
+            if (t.content) {
+              const boardContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
+              tContent = boardContent?.explanation || '';
+            }
+            return tContent || (t as any).explanation || '';
+          }).join(' ');
+        }
+        
+        // Fallback to legacy content
+        if (!contentToTranslate) {
+          const rawContent = chapter.content;
+          if (typeof rawContent === 'string') {
+            contentToTranslate = rawContent;
+          } else if (rawContent) {
+            contentToTranslate = rawContent[activeBoard]?.explanation || '';
+          }
+        }
+        
+        if (!contentToTranslate) {
+          toast.error('No content available to translate');
+          setIsTranslating(false);
+          return;
+        }
           
         const translated = await translateContent(contentToTranslate, 'hi');
         setTranslatedContent((prev) => ({ ...prev, hi: translated }));
@@ -115,16 +141,28 @@ const ChapterPage = () => {
       // Concatenate all topic explanations for continuous speech
       if (chapter.topics && chapter.topics.length > 0) {
         fullText = chapter.topics.map(t => {
-          const tContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
-          return tContent?.explanation || (t as any).explanation || '';
+          let tContent = '';
+          if (t.content) {
+            const boardContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
+            tContent = boardContent?.explanation || '';
+          }
+          return tContent || (t as any).explanation || '';
         }).join(' ');
-      } else {
+      }
+      
+      // If no content from topics, fall back to legacy content
+      if (!fullText) {
         const rawContent = chapter.content;
         if (typeof rawContent === 'string') {
           fullText = rawContent;
-        } else {
+        } else if (rawContent) {
           fullText = rawContent[activeBoard]?.explanation || '';
         }
+      }
+      
+      if (!fullText) {
+        toast.error('No content available to read aloud');
+        return;
       }
       
       const cleanedText = cleanTextForTTS(fullText);
@@ -375,29 +413,58 @@ const ChapterPage = () => {
                       return <MarkdownContent content={translatedContent['hi']} />;
                     }
 
-                    // Render topics if available for better structure
-                    if (chapter.topics && chapter.topics.length > 0) {
-                      // Flatten all topic explanations into a single list of segments for highlighting
-                      const allSegments: { topicId: string, topicName: string, sentences: string[], isNewTopic: boolean }[] = [];
-                      
-                      chapter.topics.forEach((topic, tidx) => {
-                        const boardKey = (user?.board || 'CBSE') as Board;
-                        let explanation = '';
-                        if (topic.content) {
-                          const tContent = (topic.content as Record<Board, any>)?.[boardKey] || (topic.content as any)?.['CBSE'];
-                          explanation = tContent?.explanation || (topic as any).explanation || '';
-                        } else if ((topic as any).explanation) {
-                          explanation = (topic as any).explanation;
-                        }
+                      // Render topics if available for better structure
+                      if (chapter.topics && chapter.topics.length > 0) {
+                        // Flatten all topic explanations into a single list of segments for highlighting
+                        const allSegments: { topicId: string, topicName: string, sentences: string[], isNewTopic: boolean }[] = [];
                         
-                        const topicSentences = explanation.match(/[^.!?।]+[.!?/]?\s*/g) || [explanation];
-                        allSegments.push({
-                          topicId: topic.id || `t-${tidx}`,
-                          topicName: topic.name,
-                          sentences: topicSentences,
-                          isNewTopic: true
+                        let hasContent = false;
+                        
+                        chapter.topics.forEach((topic, tidx) => {
+                          const boardKey = (user?.board || 'CBSE') as Board;
+                          let explanation = '';
+                          if (topic.content) {
+                            const tContent = (topic.content as Record<Board, any>)?.[boardKey] || (topic.content as any)?.['CBSE'];
+                            explanation = tContent?.explanation || (topic as any).explanation || '';
+                          } else if ((topic as any).explanation) {
+                            explanation = (topic as any).explanation;
+                          }
+                          
+                          if (explanation) hasContent = true;
+                          const topicSentences = explanation.match(/[^.!?।]+[.!?/]?\s*/g) || [explanation];
+                          allSegments.push({
+                            topicId: topic.id || `t-${tidx}`,
+                            topicName: topic.name,
+                            sentences: topicSentences,
+                            isNewTopic: true
+                          });
                         });
-                      });
+
+                        if (!hasContent) {
+                          // Fallback to legacy content if topics have no content
+                          const rawContent = chapter.content;
+                          let displayContent = '';
+                          if (typeof rawContent === 'string') {
+                            displayContent = rawContent;
+                          } else if (rawContent) {
+                            displayContent = rawContent[activeBoard]?.explanation || rawContent['CBSE']?.explanation || '';
+                          }
+                          
+                          if (!displayContent) {
+                            return (
+                              <div className="text-center py-8 text-gray-500">
+                                <p>No content available for this chapter.</p>
+                                <p className="text-sm mt-2">Please check back later for study materials.</p>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div className="text-gray-700 leading-relaxed text-lg">
+                              <MarkdownContent content={displayContent} />
+                            </div>
+                          );
+                        }
 
                       let globalSentenceIdx = 0;
 
@@ -457,13 +524,22 @@ const ChapterPage = () => {
                     let displayContent = '';
                     if (typeof rawContent === 'string') {
                       displayContent = rawContent;
-                    } else {
+                    } else if (rawContent) {
                       displayContent = rawContent[activeBoard]?.explanation || rawContent['CBSE']?.explanation || '';
+                    }
+
+                    if (!displayContent && !chapter.topics?.length) {
+                      return (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>No content available for this chapter.</p>
+                          <p className="text-sm mt-2">Please check back later for study materials.</p>
+                        </div>
+                      );
                     }
 
                     return (
                       <div className="text-gray-700 leading-relaxed text-lg">
-                        <MarkdownContent content={displayContent} />
+                        {displayContent && <MarkdownContent content={displayContent} />}
                       </div>
                     );
                   })()}
