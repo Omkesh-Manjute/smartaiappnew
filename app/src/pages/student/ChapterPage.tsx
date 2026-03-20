@@ -138,25 +138,30 @@ const ChapterPage = () => {
       const activeBoard = (user?.board || 'CBSE') as Board;
       let fullText = '';
       
-      // Concatenate all topic explanations for continuous speech
-      if (chapter.topics && chapter.topics.length > 0) {
-        fullText = chapter.topics.map(t => {
-          let tContent = '';
-          if (t.content) {
-            const boardContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
-            tContent = boardContent?.explanation || '';
+      // Use translated content if language is Hindi
+      if (contentLang === 'hi' && translatedContent['hi']) {
+        fullText = translatedContent['hi'];
+      } else {
+        // Concatenate all topic explanations for continuous speech
+        if (chapter.topics && chapter.topics.length > 0) {
+          fullText = chapter.topics.map(t => {
+            let tContent = '';
+            if (t.content) {
+              const boardContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
+              tContent = boardContent?.explanation || '';
+            }
+            return tContent || (t as any).explanation || '';
+          }).join(' ');
+        }
+        
+        // If no content from topics, fall back to legacy content
+        if (!fullText) {
+          const rawContent = chapter.content;
+          if (typeof rawContent === 'string') {
+            fullText = rawContent;
+          } else if (rawContent) {
+            fullText = rawContent[activeBoard]?.explanation || '';
           }
-          return tContent || (t as any).explanation || '';
-        }).join(' ');
-      }
-      
-      // If no content from topics, fall back to legacy content
-      if (!fullText) {
-        const rawContent = chapter.content;
-        if (typeof rawContent === 'string') {
-          fullText = rawContent;
-        } else if (rawContent) {
-          fullText = rawContent[activeBoard]?.explanation || '';
         }
       }
       
@@ -166,9 +171,8 @@ const ChapterPage = () => {
       }
       
       const cleanedText = cleanTextForTTS(fullText);
-      // Pass the current content language to ensure correct voice selection
-      const langHint = contentLang === 'hi' ? 'hi-IN' : 'en-US';
-      speak(cleanedText, langHint);
+      // Explicitly pass the content language for voice selection
+      speak(cleanedText, contentLang === 'hi' ? 'hi-IN' : 'en-US');
     }
   };
 
