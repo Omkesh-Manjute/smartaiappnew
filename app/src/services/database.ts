@@ -424,7 +424,8 @@ export const initializeSampleData = () => {
     return;
   }
 
-  // Seed initial subjects ONLY IF empty
+  // NOTE: Subjects are loaded from cloud/local storage, not from seed data
+  // Only initialize if no subjects exist at all
   const existingSubjects = localStorage.getItem(DB_KEYS.SUBJECTS);
   if (!existingSubjects || JSON.parse(existingSubjects).length === 0) {
     localStorage.setItem(DB_KEYS.SUBJECTS, JSON.stringify(class6Subjects));

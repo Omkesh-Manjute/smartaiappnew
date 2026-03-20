@@ -179,19 +179,32 @@ const SubjectManagementPage = () => {
   const loadSubjects = async () => {
     setIsLoading(true);
     try {
+      // Get deleted subject IDs from localStorage
+      const deletedSubjectIds = JSON.parse(localStorage.getItem('smart_learning_deleted_subjects') || '[]');
+      
       // 1. Prioritize Cloud Data - The single source of truth for synced data
       try {
         const cloudData = await subjectDB.getAll();
-        const normalizedCloud = cloudData.map(normalizeSubject);
+        // Filter out deleted subjects and normalize
+        const normalizedCloud = cloudData
+          .filter(subject => !deletedSubjectIds.includes(subject.id))
+          .map(normalizeSubject);
         setSubjects(normalizedCloud);
         
         // Update local storage to match cloud (sync)
         localStorage.setItem('smart_learning_subjects', JSON.stringify(normalizedCloud));
+        
+        // Clear deleted subjects tracking if cloud sync succeeded
+        if (normalizedCloud.length === cloudData.length) {
+          localStorage.removeItem('smart_learning_deleted_subjects');
+        }
       } catch (cloudError) {
         console.warn('Cloud load failed, using local fallback:', cloudError);
         // 2. Fallback to Local only if cloud is unreachable
         const localData = localSubjectDB.getAll();
-        setSubjects(localData.map(normalizeSubject));
+        // Filter out deleted subjects from local data too
+        const filteredLocalData = localData.filter(subject => !deletedSubjectIds.includes(subject.id));
+        setSubjects(filteredLocalData.map(normalizeSubject));
         toast.info('Showing local data. Cloud sync unavailable.');
       }
     } catch (error) {
@@ -273,7 +286,14 @@ const SubjectManagementPage = () => {
   const deleteSubject = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
     try {
-      // 1. Always attempt cloud delete
+      // 1. Track deleted subject ID in localStorage to prevent reappearing after refresh
+      const deletedSubjectIds = JSON.parse(localStorage.getItem('smart_learning_deleted_subjects') || '[]');
+      if (!deletedSubjectIds.includes(id)) {
+        deletedSubjectIds.push(id);
+        localStorage.setItem('smart_learning_deleted_subjects', JSON.stringify(deletedSubjectIds));
+      }
+
+      // 2. Always attempt cloud delete
       let cloudDeleted = false;
       try {
         await subjectDB.delete(id);
@@ -282,20 +302,85 @@ const SubjectManagementPage = () => {
         console.warn('Cloud subject delete failed:', error);
       }
 
-      // 2. Always clear local storage to prevent reappearing
+      // 3. Clear from local storage
       localSubjectDB.delete(id);
 
-      // 3. Update UI state
+      // 4. Update UI state
       setSubjects((prev) => prev.filter((subject) => subject.id !== id));
+      
+      // 5. Sync localStorage to remove the deleted subject
+      const updatedSubjects = subjects.filter(s => s.id !== id);
+      localStorage.setItem('smart_learning_subjects', JSON.stringify(updatedSubjects));
       
       if (cloudDeleted) {
         toast.success('Subject deleted from cloud and local storage');
       } else {
-        toast.info('Subject removed from local view. Cloud sync failed.');
+        toast.info('Subject removed. Cloud sync failed - will retry on next load.');
       }
     } catch (error) {
       console.error('Failed to delete subject:', error);
       toast.error('Could not delete subject');
+    }
+  };
+
+  const clearAllSubjects = async () => {
+    if (!window.confirm('Are you sure you want to DELETE ALL subjects and test data? This cannot be undone!')) return;
+    if (!window.confirm('This will permanently delete ALL subjects from cloud and local storage. Continue?')) return;
+    
+    setIsLoading(true);
+    try {
+      // 1. Track all current subject IDs as deleted
+      const allSubjectIds = subjects.map(s => s.id);
+      localStorage.setItem('smart_learning_deleted_subjects', JSON.stringify(allSubjectIds));
+      
+      // 2. Delete all from cloud
+      let cloudDeletedCount = 0;
+      let cloudFailedCount = 0;
+      for (const id of allSubjectIds) {
+        try {
+          await subjectDB.delete(id);
+          cloudDeletedCount++;
+        } catch (error) {
+          console.warn(`Cloud delete failed for subject ${id}:`, error);
+          cloudFailedCount++;
+        }
+      }
+      
+      // 3. Delete all tests from cloud
+      let testDeletedCount = 0;
+      try {
+        const allTests = await testDB.getAll();
+        for (const test of allTests) {
+          try {
+            await testDB.delete(test.id);
+            testDeletedCount++;
+          } catch (error) {
+            console.warn(`Cloud delete failed for test ${test.id}:`, error);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to get tests for deletion:', error);
+      }
+      
+      // 4. Clear local storage
+      localStorage.setItem('smart_learning_subjects', JSON.stringify([]));
+      localStorage.removeItem('smart_learning_tests');
+      localStorage.removeItem('smart_learning_deleted_subjects');
+      
+      // 5. Update UI state
+      setSubjects([]);
+      
+      // 6. Show result
+      if (cloudFailedCount === 0) {
+        toast.success(`All subjects and ${testDeletedCount} tests deleted permanently`);
+      } else {
+        toast.warning(`Deleted ${cloudDeletedCount} subjects, ${cloudFailedCount} failed. Will retry on next load.`);
+      }
+    } catch (error) {
+      console.error('Failed to clear all subjects:', error);
+      toast.error('Failed to clear subjects. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -780,6 +865,16 @@ const SubjectManagementPage = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Add Subject
               </Button>
+              {subjects.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => void clearAllSubjects()}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete All
+                </Button>
+              )}
             </div>
           </div>
         </div>
