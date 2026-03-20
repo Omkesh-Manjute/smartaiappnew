@@ -109,21 +109,25 @@ const ChapterPage = () => {
     if (isSpeaking) {
       stop();
     } else {
-      const activeBoard = user?.board || 'CBSE';
-      let contentToClean = '';
+      const activeBoard = (user?.board || 'CBSE') as Board;
+      let fullText = '';
       
-      if (contentLang === 'hi' && translatedContent['hi']) {
-        contentToClean = translatedContent['hi'];
+      // Concatenate all topic explanations for continuous speech
+      if (chapter.topics && chapter.topics.length > 0) {
+        fullText = chapter.topics.map(t => {
+          const tContent = (t.content as Record<Board, any>)?.[activeBoard] || (t.content as any)?.['CBSE'];
+          return tContent?.explanation || (t as any).explanation || '';
+        }).join(' ');
       } else {
         const rawContent = chapter.content;
         if (typeof rawContent === 'string') {
-          contentToClean = rawContent;
+          fullText = rawContent;
         } else {
-          contentToClean = rawContent[activeBoard]?.explanation || '';
+          fullText = rawContent[activeBoard]?.explanation || '';
         }
       }
       
-      const cleanedText = cleanTextForTTS(contentToClean);
+      const cleanedText = cleanTextForTTS(fullText);
       speak(cleanedText, contentLang);
     }
   };
@@ -318,29 +322,54 @@ const ChapterPage = () => {
                   {(() => {
                     const activeBoard = (user?.board || 'CBSE') as Board;
                     
-                    // Helper to render markdown with premium styling
-                    const MarkdownContent = ({ content }: { content: string }) => (
-                      <ReactMarkdown
-                        components={{
-                          h3: ({ children }) => <h3 className="text-xl font-bold mt-6 mb-3 text-indigo-700">{children}</h3>,
-                          p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed whitespace-pre-wrap">{children}</p>,
-                          ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">{children}</ol>,
-                          li: ({ children }) => <li className="ml-4">{children}</li>,
-                          table: ({ children }) => (
-                            <div className="overflow-x-auto my-6 rounded-xl border border-gray-200">
-                              <table className="min-w-full divide-y divide-gray-200">{children}</table>
-                            </div>
-                          ),
-                          thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
-                          th: ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
-                          td: ({ children }) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-t border-gray-100">{children}</td>,
-                          strong: ({ children }) => <strong className="font-bold text-indigo-900 bg-indigo-50 px-1 rounded">{children}</strong>,
-                        }}
-                      >
-                        {content}
-                      </ReactMarkdown>
-                    );
+                    // Helper to render markdown with premium styling and TTS highlighting
+                    const MarkdownContent = ({ content }: { content: string }) => {
+                      // Split into sentences for TTS highlighting
+                      const sentences = content.match(/[^.!?।]+[.!?/]?\s*/g) || [content];
+                      
+                      return (
+                        <div className="space-y-1">
+                          {sentences.map((sentence, sidx) => {
+                            // Calculate global sentence index across topics (simplified for now)
+                            // In a real app with many topics, we'd need a more complex index tracker
+                            const isHighlighted = isSpeaking && currentSentenceIndex === sidx;
+
+                            return (
+                              <span 
+                                key={sidx}
+                                id={isHighlighted ? 'current-tts-word' : undefined}
+                                className={`transition-all duration-300 rounded inline-block ${
+                                  isHighlighted 
+                                    ? 'bg-yellow-200 text-indigo-900 px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
+                                    : ''
+                                }`}
+                              >
+                                <ReactMarkdown
+                                  components={{
+                                    h3: ({ children }) => <h3 className="text-xl font-bold mt-6 mb-3 text-indigo-700">{children}</h3>,
+                                    p: ({ children }) => <span className="text-gray-700 leading-relaxed whitespace-pre-wrap">{children}</span>,
+                                    ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">{children}</ul>,
+                                    ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">{children}</ol>,
+                                    li: ({ children }) => <li className="ml-4">{children}</li>,
+                                    table: ({ children }) => (
+                                      <div className="overflow-x-auto my-6 rounded-xl border border-gray-200">
+                                        <table className="min-w-full divide-y divide-gray-200">{children}</table>
+                                      </div>
+                                    ),
+                                    thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                                    th: ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
+                                    td: ({ children }) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-t border-gray-100">{children}</td>,
+                                    strong: ({ children }) => <strong className="font-bold text-indigo-900 bg-indigo-50 px-1 rounded">{children}</strong>,
+                                  }}
+                                >
+                                  {sentence}
+                                </ReactMarkdown>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      );
+                    };
 
                     if (contentLang === 'hi' && translatedContent['hi']) {
                       return <MarkdownContent content={translatedContent['hi']} />;
