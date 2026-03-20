@@ -329,53 +329,42 @@ const SubjectManagementPage = () => {
     
     setIsLoading(true);
     try {
-      // 1. Track all current subject IDs as deleted
-      const allSubjectIds = subjects.map(s => s.id);
-      localStorage.setItem('smart_learning_deleted_subjects', JSON.stringify(allSubjectIds));
+      // 1. Clear ALL local data keys
+      const keysToClear = [
+        'smart_learning_subjects',
+        'smart_learning_tests',
+        'smart_learning_test_attempts',
+        'smart_learning_chapters',
+        'smart_learning_deleted_subjects',
+        'smart_learning_progress',
+        'smart_learning_study_plans',
+        'smart_learning_concept_mastery',
+        'smart_learning_voice_practice'
+      ];
       
-      // 2. Delete all from cloud
-      let cloudDeletedCount = 0;
-      let cloudFailedCount = 0;
+      keysToClear.forEach(key => localStorage.removeItem(key));
+      
+      // 2. Set seeded flag to true so it doesn't re-seed
+      localStorage.setItem('smart_learning_is_seeded', 'true');
+
+      // 3. Clear cloud data (Subjects) - We'll rely on the manual SQL run for this one-time total wipe
+      // but keep the loop for future app-level total clears
+      const allSubjectIds = subjects.map(s => s.id);
       for (const id of allSubjectIds) {
         try {
           await subjectDB.delete(id);
-          cloudDeletedCount++;
         } catch (error) {
           console.warn(`Cloud delete failed for subject ${id}:`, error);
-          cloudFailedCount++;
         }
       }
-      
-      // 3. Delete all tests from cloud
-      let testDeletedCount = 0;
-      try {
-        const allTests = await testDB.getAll();
-        for (const test of allTests) {
-          try {
-            await testDB.delete(test.id);
-            testDeletedCount++;
-          } catch (error) {
-            console.warn(`Cloud delete failed for test ${test.id}:`, error);
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to get tests for deletion:', error);
-      }
-      
-      // 4. Clear local storage
-      localStorage.setItem('smart_learning_subjects', JSON.stringify([]));
-      localStorage.removeItem('smart_learning_tests');
-      localStorage.removeItem('smart_learning_deleted_subjects');
-      
-      // 5. Update UI state
+
       setSubjects([]);
+      toast.success('All data cleared locally. Database wipe initiated.');
       
-      // 6. Show result
-      if (cloudFailedCount === 0) {
-        toast.success(`All subjects and ${testDeletedCount} tests deleted permanently`);
-      } else {
-        toast.warning(`Deleted ${cloudDeletedCount} subjects, ${cloudFailedCount} failed. Will retry on next load.`);
-      }
+      // 4. Force a page reload after reset to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error('Failed to clear all subjects:', error);
       toast.error('Failed to clear subjects. Please try again.');
