@@ -1131,7 +1131,7 @@ const SubjectManagementPage = () => {
                             <h3 className="text-xl font-bold text-white mb-1">
                               {typeof subject.name === 'string' 
                                 ? subject.name 
-                                : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'New Subject')}
+                                : ((subject.name as any)?.[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'New Subject')}
                             </h3>
                             <Badge className="bg-black/20 hover:bg-black/30 text-white border-0">
                               Grade {subject.grade}
@@ -1160,7 +1160,7 @@ const SubjectManagementPage = () => {
                         <p className="text-gray-600 text-sm leading-relaxed">
                           {typeof subject.description === 'string' 
                             ? subject.description 
-                            : ((subject.description as any)?.[user?.board || 'CBSE'] || (subject.description as any)?.CBSE || 'No description available.')}
+                            : ((subject.description as any)?.[user?.board || 'CBSE'] || (subject.description as any)?.CBSE || (subject.description as any)?.STATE || 'No description available.')}
                         </p>
 
                         <div className="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-hidden">
@@ -1247,12 +1247,12 @@ const SubjectManagementPage = () => {
                                         <>
                                           <div className="flex-1 min-w-0 pr-4">
                                             <p className="text-sm font-bold text-gray-800 truncate">
-                                              #{chapter.order} {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'New Chapter')}
+                                              #{chapter.order} {typeof chapter.name === 'string' ? chapter.name : ((chapter.name as any)?.[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || (chapter.name as any)?.STATE || 'New Chapter')}
                                             </p>
                                             <p className="text-[10px] text-gray-400 font-medium truncate uppercase tracking-tighter">
-                                              {(typeof chapter.description === 'string' 
+                                              {typeof chapter.description === 'string' 
                                                 ? chapter.description 
-                                                : (chapter.description as any)?.[user?.board || 'CBSE'] || (chapter.description as any)?.CBSE) || 'Regular Content'}
+                                                : ((chapter.description as any)?.[user?.board || 'CBSE'] || (chapter.description as any)?.CBSE || (chapter.description as any)?.STATE || 'Regular Content')}
                                             </p>
                                           </div>
                                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
