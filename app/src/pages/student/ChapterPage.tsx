@@ -166,7 +166,9 @@ const ChapterPage = () => {
       }
       
       const cleanedText = cleanTextForTTS(fullText);
-      speak(cleanedText, contentLang);
+      // Pass the current content language to ensure correct voice selection
+      const langHint = contentLang === 'hi' ? 'hi-IN' : 'en-US';
+      speak(cleanedText, langHint);
     }
   };
 

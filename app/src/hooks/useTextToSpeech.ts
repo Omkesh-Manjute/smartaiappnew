@@ -84,25 +84,25 @@ export const useTextToSpeech = (): UseTextToSpeechReturn => {
       const aLang = a.lang.toLowerCase();
       const bLang = b.lang.toLowerCase();
 
-      // 1. Prioritize Microsoft Online Natural voices (if in Edge)
-      const aNatural = aName.includes('online') || aName.includes('natural');
-      const bNatural = bName.includes('online') || bName.includes('natural');
-      if (aNatural && !bNatural) return -1;
-      if (!aNatural && bNatural) return 1;
-
-      // 2. Prioritize Google voices (if in Chrome)
-      const aGoogle = aName.includes('google');
-      const bGoogle = bName.includes('google');
-      if (aGoogle && !bGoogle) return -1;
-      if (!aGoogle && bGoogle) return 1;
-
-      // 3. For English, prioritize Indian English accents
+      // 1. For English, prioritize Indian English accents (en-IN)
       if (!isHindi) {
         const aIN = aLang.includes('in');
         const bIN = bLang.includes('in');
         if (aIN && !bIN) return -1;
         if (!aIN && bIN) return 1;
       }
+
+      // 2. Prioritize Microsoft Online Natural voices (if in Edge)
+      const aNatural = aName.includes('online') || aName.includes('natural');
+      const bNatural = bName.includes('online') || bName.includes('natural');
+      if (aNatural && !bNatural) return -1;
+      if (!aNatural && bNatural) return 1;
+
+      // 3. Prioritize Google voices (if in Chrome)
+      const aGoogle = aName.includes('google');
+      const bGoogle = bName.includes('google');
+      if (aGoogle && !bGoogle) return -1;
+      if (!aGoogle && bGoogle) return 1;
 
       return 0;
     });
