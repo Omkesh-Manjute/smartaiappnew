@@ -27,12 +27,16 @@ const TestPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allTests, userAttempts] = await Promise.all([
-          testDB.getAll(),
-          user ? testAttemptDB.getByStudent(user.id) : Promise.resolve([])
-        ]);
+        // Filter out tests whose subjects are deleted
+        const deletedSubjectIds = JSON.parse(localStorage.getItem('smart_learning_deleted_subjects') || '[]');
         
-        setTests(allTests.filter((t) => t.isActive));
+        const validTests = allTests.filter((t) => {
+          const isActive = t.isActive;
+          const isNotOrphaned = !deletedSubjectIds.includes(t.subjectId);
+          return isActive && isNotOrphaned;
+        });
+
+        setTests(validTests);
         setAttempts(userAttempts);
       } catch (error) {
         console.error("Failed to load test data:", error);
