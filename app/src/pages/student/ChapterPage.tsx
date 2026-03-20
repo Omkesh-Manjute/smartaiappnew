@@ -219,14 +219,28 @@ const ChapterPage = () => {
             </button>
             <div>
               <h1 className="text-lg font-bold">
-                {typeof chapter.name === 'string' 
-                  ? chapter.name 
-                  : (chapter.name[user?.board || 'CBSE'] || chapter.name['CBSE'] || 'Chapter')}
+                {(() => {
+                  const nameObj = chapter.name;
+                  if (typeof nameObj === 'string') {
+                    try {
+                      const parsed = JSON.parse(nameObj);
+                      return parsed[user?.board || 'CBSE'] || parsed['CBSE'] || nameObj;
+                    } catch { return nameObj; }
+                  }
+                  return nameObj[user?.board || 'CBSE'] || nameObj['CBSE'] || 'Chapter';
+                })()}
               </h1>
               <p className="text-sm text-gray-500">
-                {typeof subject.name === 'string' 
-                  ? subject.name 
-                  : (subject.name[user?.board || 'CBSE'] || subject.name['CBSE'] || 'Subject')}
+                {(() => {
+                  const subNameObj = subject.name;
+                  if (typeof subNameObj === 'string') {
+                    try {
+                      const parsed = JSON.parse(subNameObj);
+                      return parsed[user?.board || 'CBSE'] || parsed['CBSE'] || subNameObj;
+                    } catch { return subNameObj; }
+                  }
+                  return subNameObj[user?.board || 'CBSE'] || subNameObj['CBSE'] || 'Subject';
+                })()}
               </p>
             </div>
           </div>
@@ -252,9 +266,16 @@ const ChapterPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                   <h2 className="text-xl font-semibold">
-                    {typeof chapter.name === 'string' 
-                      ? chapter.name 
-                      : (chapter.name[user?.board || 'CBSE'] || chapter.name['CBSE'] || 'Chapter')}
+                    {(() => {
+                      const nameObj = chapter.name;
+                      if (typeof nameObj === 'string') {
+                        try {
+                          const parsed = JSON.parse(nameObj);
+                          return parsed[user?.board || 'CBSE'] || parsed['CBSE'] || nameObj;
+                        } catch { return nameObj; }
+                      }
+                      return nameObj[user?.board || 'CBSE'] || nameObj['CBSE'] || 'Chapter';
+                    })()}
                   </h2>
                   <div className="flex items-center gap-2">
                     <Button
@@ -330,11 +351,16 @@ const ChapterPage = () => {
                       return (
                         <div className="space-y-8">
                           {chapter.topics.map((topic, tidx) => {
-                            const topicContent = typeof topic.content === 'object' 
-                              ? (topic.content[activeBoard] || topic.content['CBSE']) 
-                              : null;
+                            // Robust content extraction for topics
+                            const boardKey = user?.board || 'CBSE';
+                            let explanation = '';
                             
-                            const explanation = topicContent?.explanation || '';
+                            if (topic.content) {
+                              const tContent = topic.content[boardKey as Board] || topic.content['CBSE'];
+                              explanation = tContent?.explanation || (topic as any).explanation || '';
+                            } else if ((topic as any).explanation) {
+                              explanation = (topic as any).explanation;
+                            }
                             
                             return (
                               <section key={topic.id || tidx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -345,23 +371,6 @@ const ChapterPage = () => {
                                   {topic.name}
                                 </h3>
                                 <MarkdownContent content={explanation} />
-                                
-                                {topicContent?.short_questions && topicContent.short_questions.length > 0 && (
-                                  <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                                    <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-2">
-                                      <HelpCircle className="w-4 h-4" />
-                                      Quick Check
-                                    </h4>
-                                    <div className="space-y-3">
-                                      {topicContent.short_questions.map((sq, sidx) => (
-                                        <div key={sidx} className="text-sm">
-                                          <p className="font-semibold text-amber-800">Q: {sq.question}</p>
-                                          <p className="text-amber-700 italic">A: {sq.answer}</p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
                               </section>
                             );
                           })}
