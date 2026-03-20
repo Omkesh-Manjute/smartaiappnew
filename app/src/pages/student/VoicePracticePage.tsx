@@ -274,7 +274,9 @@ const VoicePracticePage = () => {
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
     analyserRef.current.getByteFrequencyData(dataArray);
     const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    setAudioLevel(Math.min(100, average / 1.5));
+    // Boost the visualization for low volumes
+    const boostedLevel = Math.min(100, (average / 128) * 100 * 2); 
+    setAudioLevel(boostedLevel);
     if (isListening) {
       animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
     }
@@ -286,7 +288,8 @@ const VoicePracticePage = () => {
     if (!SpeechRecognition) return null;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    // Use manual segmentation for word/sentence drills to prevent over-eager stopping
+    recognition.continuous = mode === 'paragraph';
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     
@@ -335,7 +338,7 @@ const VoicePracticePage = () => {
             console.log('Silence detected, stopping...');
             stopListening();
           }
-        }, 3000);
+        }, mode === 'word' ? 2000 : 5000); // More time for sentences/paragraphs
       }
     };
 
