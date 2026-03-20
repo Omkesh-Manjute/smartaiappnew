@@ -1,7 +1,5 @@
-// Forced redeploy trigger - Vercel build stability fix
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { tutorMessageDB, subjectDB, tutorDB } from '@/services/supabaseDB';
 import { getTutorResponse } from '@/services/geminiAPI';
@@ -10,201 +8,88 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import AIAvatar from './AIAvatar';
 import type { AvatarState } from './AIAvatar';
 import {
-  ChevronLeft,
   Send,
   Bot,
-  Sparkles,
-  BookOpen,
   Lightbulb,
-  Calculator,
-  FlaskConical,
+  GraduationCap,
+  ClipboardCheck,
+  HelpCircle,
   Loader2,
   Trash2,
   Volume2,
   Square,
-  Pause,
-  Play,
-  GraduationCap,
-  BrainCircuit,
-  ClipboardCheck,
-  HelpCircle,
-  Search,
+  ChevronDown,
+  Zap,
 } from 'lucide-react';
 import type { TutorMessage, Subject } from '@/types';
 
-const AI_TIPS = [
-  "Ask me to explain any concept you're struggling with",
-  "I can help solve math problems step by step",
-  "Request practice questions on any topic",
-  "Ask for study tips and techniques",
-  "Get explanations in simpler terms",
+const LEARNING_MODES: { id: TutorMode; label: string; icon: React.ElementType; description: string; gradient: string }[] = [
+  { id: 'simple', label: 'Simple', icon: Lightbulb, description: 'Easy explanations', gradient: 'from-amber-500 to-orange-500' },
+  { id: 'teacher', label: 'Teacher', icon: GraduationCap, description: 'Detailed teaching', gradient: 'from-blue-500 to-indigo-500' },
+  { id: 'exam', label: 'Exam Prep', icon: ClipboardCheck, description: 'Key points & practice', gradient: 'from-emerald-500 to-teal-500' },
+  { id: 'quiz', label: 'Quiz', icon: HelpCircle, description: 'Test yourself', gradient: 'from-pink-500 to-rose-500' },
 ];
 
-const LEARNING_MODES: { id: TutorMode; label: string; icon: React.ElementType; description: string }[] = [
-  { id: 'simple', label: 'Explain Simply', icon: Lightbulb, description: 'Easy language, short explanations' },
-  { id: 'teacher', label: 'Like Teacher', icon: GraduationCap, description: 'Structured, detailed explanations' },
-  { id: 'exam', label: 'Exam Prep', icon: ClipboardCheck, description: 'Key points, practice questions' },
-  { id: 'quiz', label: 'Quiz Mode', icon: HelpCircle, description: 'Test your understanding' },
+const quickPrompts = [
+  { text: 'Explain photosynthesis simply', mode: 'simple' },
+  { text: 'Help with quadratic equations', mode: 'simple' },
+  { text: 'What are the key topics for exams?', mode: 'exam' },
+  { text: 'Create a practice quiz', mode: 'quiz' },
 ];
-
-const renderAIResponse = (text: string, currentSpeakingId: string | null, currentSentenceIndex: number) => {
-  // Regex to split by sentences while keeping punctuation
-  const splitSentences = (str: string) => {
-    return str.match(/[^.!?।]+[.!?।]?\s*/g) || [str];
-  };
-
-  if (!text.includes('## Explanation')) {
-    const sentences = splitSentences(text);
-    return (
-      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-        {sentences.map((sentence, sIdx) => (
-          <span 
-            key={sIdx}
-            className={`transition-all duration-300 rounded ${
-              currentSpeakingId === 'active' && currentSentenceIndex === sIdx 
-                ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
-                : ''
-            }`}
-          >
-            {sentence}
-          </span>
-        ))}
-      </p>
-    );
-  }
-
-  const sections = text.split('## ').filter(Boolean);
-  let globalSentenceCounter = 0;
-  
-  return (
-    <div className="space-y-4 w-full">
-      {sections.map((section, idx) => {
-        const lines = section.trim().split('\n');
-        const title = lines[0].trim();
-        const contentLines = lines.slice(1).join('\n').trim();
-        
-        // Skip empty sections
-        if (!contentLines && !title) return null;
-
-        let Icon = Bot;
-        let bgClass = 'bg-purple-50/50';
-        let textClass = 'text-purple-700';
-        let borderClass = 'border-purple-100';
-
-        if (title.toLowerCase().includes('explanation')) {
-          Icon = BookOpen;
-          bgClass = 'bg-blue-50/50';
-          textClass = 'text-blue-700';
-          borderClass = 'border-blue-100';
-        } else if (title.toLowerCase().includes('example')) {
-          Icon = Lightbulb;
-          bgClass = 'bg-amber-50/50';
-          textClass = 'text-amber-700';
-          borderClass = 'border-amber-100';
-        } else if (title.toLowerCase().includes('key point')) {
-          Icon = Sparkles;
-          bgClass = 'bg-emerald-50/50';
-          textClass = 'text-emerald-700';
-          borderClass = 'border-emerald-100';
-        }
-
-        const sentences = splitSentences(contentLines);
-
-        return (
-          <div key={idx} className={`rounded-xl p-4 border shadow-sm ${bgClass} ${borderClass}`}>
-            <h4 className={`flex items-center gap-2 font-bold mb-3 pb-2 border-b ${borderClass} ${textClass}`}>
-              <Icon className="w-4 h-4" />
-              {title}
-            </h4>
-            <div className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">
-              {sentences.map((sentence, sIdx) => {
-                const currentIdx = globalSentenceCounter++;
-                return (
-                  <span 
-                    key={sIdx}
-                    className={`transition-all duration-300 rounded ${
-                      currentSpeakingId && currentSentenceIndex === currentIdx 
-                        ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium' 
-                        : ''
-                    }`}
-                  >
-                    {sentence}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 const TutorPage = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [messages, setMessages] = useState<TutorMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
   const [selectedMode, setSelectedMode] = useState<TutorMode>('teacher');
-  const [usage, setUsage] = useState<{ today: number, limit: number, isPremium: boolean }>({ today: 0, limit: 5, isPremium: false });
+  const [usage, setUsage] = useState<{ today: number; limit: number; isPremium: boolean }>({ today: 0, limit: 5, isPremium: false });
+  const [showModeMenu, setShowModeMenu] = useState(false);
   const [showTtsControls, setShowTtsControls] = useState<string | null>(null);
   const [voiceLang, setVoiceLang] = useState<'en' | 'hi'>('hi');
-  const [chapterSearch, setChapterSearch] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const {
-    speak, stop: stopSpeech, supported: ttsSupported, isSpeaking,
-    isPaused, pause: pauseSpeech, resume: resumeSpeech,
-    rate, setRate, currentSentenceIndex,
+    speak,
+    stop: stopSpeech,
+    supported: ttsSupported,
+    isSpeaking,
   } = useTextToSpeech();
   const [avatarState, setAvatarState] = useState<AvatarState>('idle');
 
   useEffect(() => {
-    // Wave on load
     setAvatarState('waving');
-    const timer = setTimeout(() => setAvatarState('idle'), 3000);
+    const timer = setTimeout(() => setAvatarState('idle'), 2500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (isTyping) {
-      setAvatarState('thinking');
-    } else if (isSpeaking) {
-      setAvatarState('talking');
-    } else {
-      setAvatarState('idle');
-    }
+    if (isTyping) setAvatarState('thinking');
+    else if (isSpeaking) setAvatarState('talking');
+    else setAvatarState('idle');
   }, [isTyping, isSpeaking]);
 
   useEffect(() => {
-    if (user) {
-      loadData();
-    }
+    if (user) loadData();
   }, [user]);
 
   const loadData = async () => {
     if (!user) return;
-
     try {
       const allSubjects = await subjectDB.getAll();
       setSubjects(allSubjects);
     } catch (error) {
-      console.error('Error loading subjects for tutor:', error);
+      console.error('Error loading subjects:', error);
     }
-
     try {
       const history = await tutorMessageDB.getByStudent(user.id);
       setMessages(history);
-      
       const usageData = await tutorDB.getUsage(user.id);
       setUsage(usageData);
     } catch (error) {
@@ -228,94 +113,71 @@ const TutorPage = () => {
       message: input,
       response: '',
       subjectId: selectedSubject || undefined,
-      chapterId: selectedChapter || undefined,
       sentAt: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
     try {
-      const recentMessages = messages.slice(-5).map(m => ({
+      const recentMessages = messages.slice(-5).map((m) => ({
         role: 'user' as const,
         content: m.message,
       }));
 
-      const subjectObj = selectedSubject
-        ? subjects.find(s => s.id === selectedSubject)
-        : undefined;
+      const subjectObj = selectedSubject ? subjects.find((s) => s.id === selectedSubject) : undefined;
+      const subjectName =
+        subjectObj?.name
+          ? typeof subjectObj.name === 'string'
+            ? subjectObj.name
+            : subjectObj.name[user?.board || 'CBSE'] || 'Subject'
+          : undefined;
 
-      const subjectName = subjectObj?.name
-        ? (typeof subjectObj.name === 'string' ? subjectObj.name : (subjectObj.name[user?.board || 'CBSE'] || 'Subject'))
-        : undefined;
-      
-      const chapterObj = selectedSubject && selectedChapter
-        ? subjects.find(s => s.id === selectedSubject)?.chapters.find(c => c.id === selectedChapter)
-        : undefined;
-
-      const chapterName = chapterObj?.name
-        ? (typeof chapterObj.name === 'string' ? chapterObj.name : (chapterObj.name[user?.board || 'CBSE'] || 'Chapter'))
-        : undefined;
-
-      // --- Layer 1: Local Search ---
-      const localResponse = await tutorDB.searchLocalContent(input, selectedSubject || undefined);
+      // Layer 1: Local Search
+      const localResponse = await tutorDB.searchLocalContent(currentInput, selectedSubject || undefined);
       if (localResponse) {
         const updatedMessage = { ...userMessage, response: localResponse };
-        setMessages((prev) =>
-          prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
-        );
+        setMessages((prev) => prev.map((m) => (m.id === userMessage.id ? updatedMessage : m)));
         void tutorMessageDB.create(updatedMessage);
         setIsTyping(false);
         return;
       }
 
-      // --- Layer 2: Usage Limits ---
+      // Layer 2: Usage Limits
       if (usage.today >= usage.limit) {
-        const limitMsg = `⚠️ Daily Limit Reached (${usage.today}/${usage.limit})\nUpgrade to continue unlimited learning`;
+        const limitMsg = `⚠️ Daily Limit Reached (${usage.today}/${usage.limit})\nUpgrade to Premium for unlimited access`;
         const updatedMessage = { ...userMessage, response: limitMsg };
-        setMessages((prev) =>
-          prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
-        );
+        setMessages((prev) => prev.map((m) => (m.id === userMessage.id ? updatedMessage : m)));
         setIsTyping(false);
-        toast.error('Limit reached');
+        toast.error('Daily limit reached');
         return;
       }
 
-      // --- Layer 3: AI API Call ---
-      const aiResponse = await getTutorResponse(input, {
+      // Layer 3: AI API Call
+      const aiResponse = await getTutorResponse(currentInput, {
         subject: subjectName,
-        chapter: chapterName,
         previousMessages: recentMessages,
         mode: selectedMode,
       });
 
-      // Increment usage if AI was called
       await tutorDB.incrementUsage(user.id);
-      setUsage(prev => ({ ...prev, today: prev.today + 1 }));
+      setUsage((prev) => ({ ...prev, today: prev.today + 1 }));
 
       const updatedMessage = { ...userMessage, response: aiResponse };
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
-      );
-
-      void tutorMessageDB.create(updatedMessage).catch((error) => {
-        console.error('Failed to save tutor message:', error);
-      });
+      setMessages((prev) => prev.map((m) => (m.id === userMessage.id ? updatedMessage : m)));
+      void tutorMessageDB.create(updatedMessage).catch(console.error);
     } catch (error: any) {
       console.error('Error getting AI response:', error);
-      const errText = error?.message || '';
       let friendlyMsg = '❌ Could not reach AI. Please try again.';
-      if (errText.includes('API key') || errText.includes('403') || errText.includes('401')) {
-        friendlyMsg = '🔑 Invalid or missing AI API key. Please check your settings or .env file.';
-      } else if (error.message?.includes('quota') || error.message?.includes('429')) {
-        friendlyMsg = '⏳ AI provider quota exceeded. Please wait a moment and try again.';
+      if (error?.message?.includes('API key') || error?.message?.includes('403')) {
+        friendlyMsg = '🔑 Invalid or missing AI API key. Please check settings.';
+      } else if (error?.message?.includes('quota') || error?.message?.includes('429')) {
+        friendlyMsg = '⏳ AI provider quota exceeded. Please wait and try again.';
       }
       const updatedMessage = { ...userMessage, response: friendlyMsg };
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMessage.id ? updatedMessage : m))
-      );
-      toast.error('AI Tutor: ' + friendlyMsg.slice(0, 60));
+      setMessages((prev) => prev.map((m) => (m.id === userMessage.id ? updatedMessage : m)));
     } finally {
       setIsTyping(false);
     }
@@ -323,495 +185,309 @@ const TutorPage = () => {
 
   const clearHistory = async () => {
     if (!user) return;
-    
-    // Optimistic UI update
     const previousMessages = [...messages];
     setMessages([]);
-    
     try {
-      const success = await tutorMessageDB.deleteByStudent(user.id);
-      if (success) {
-        toast.success('Chat history cleared permanently');
-      } else {
-        throw new Error('Failed to clear database');
-      }
+      await tutorMessageDB.deleteByStudent(user.id);
+      toast.success('Chat history cleared');
     } catch (error) {
-      console.error('Error clearing history:', error);
       setMessages(previousMessages);
-      toast.error('Failed to clear history from database');
+      toast.error('Failed to clear history');
     }
   };
 
-  const quickQuestions = [
-    { icon: Calculator, text: "Help with quadratic equations", subject: "math" },
-    { icon: FlaskConical, text: "Explain photosynthesis", subject: "science" },
-    { icon: BookOpen, text: "Grammar tips", subject: "english" },
-    { icon: BrainCircuit, text: "Study techniques", subject: null },
-  ];
-
-  const selectedSubjectData = subjects.find(s => s.id === selectedSubject);
-
   const handleTtsAction = (msgId: string, text: string) => {
     if (!ttsSupported) {
-      toast.error('Text-to-speech is not supported in this browser');
+      toast.error('Text-to-speech not supported');
       return;
     }
-
     if (isSpeaking && showTtsControls === msgId) {
       stopSpeech();
       setShowTtsControls(null);
       return;
     }
-
     setShowTtsControls(msgId);
-    
-    // Explicitly use the user-selected language preference
     speak(text, voiceLang);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <button onClick={() => navigate('/student/dashboard')} className="p-2 hover:bg-gray-100 rounded-lg">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold">AI Tutor</h1>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-500">Powered by Smart Learning</p>
-                  <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                  <p className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${usage.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {usage.isPremium ? 'PREMIUM' : `FREE PLAN (${usage.limit} questions/day)`}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col items-end">
-                <p className="text-[10px] font-medium text-gray-400">DAILY USAGE</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all ${usage.today >= usage.limit ? 'bg-red-500' : 'bg-purple-500'}`}
-                      style={{ width: `${Math.min((usage.today / usage.limit) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-600">{usage.today}/{usage.limit}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  const newLang = voiceLang === 'en' ? 'hi' : 'en';
-                  setVoiceLang(newLang);
-                  toast.success(`Voice set to ${newLang === 'hi' ? 'Hindi' : 'English'}`);
-                }}
-                className="hidden sm:flex px-2.5 py-1.5 text-xs font-bold rounded-lg border hover:bg-gray-50 items-center justify-center min-w-[50px]"
-                title="Toggle Voice Language (English / Hindi)"
-              >
-                {voiceLang === 'hi' ? '🇮🇳 HI' : '🇺🇸 EN'}
-              </button>
-              <button
-                onClick={clearHistory}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500"
-                title="Clear history"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-            </div>
-          </div>
-        </div>
-      </header>
+  const currentMode = LEARNING_MODES.find((m) => m.id === selectedMode) || LEARNING_MODES[1];
 
-      {/* Learning Mode Selector */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <p className="text-xs text-gray-500 mb-2 font-medium">Learning Mode</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {LEARNING_MODES.map((mode) => {
-              const Icon = mode.icon;
-              return (
-                <button
-                  key={mode.id}
-                  onClick={() => setSelectedMode(mode.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all border ${selectedMode === mode.id
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-md'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-                    }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {mode.label}
-                </button>
-              );
-            })}
+  return (
+    <div className="bg-gray-50 flex flex-col h-[calc(100vh-64px)]">
+      {/* Mode Selector Bar */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+          {/* Mode Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowModeMenu(!showModeMenu)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r ${currentMode.gradient} text-white shadow-sm transition-all hover:shadow-md`}
+            >
+              <currentMode.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{currentMode.label}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            <AnimatePresence>
+              {showModeMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowModeMenu(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-0 mt-2 z-50 bg-white rounded-2xl shadow-xl border p-2 min-w-[200px]"
+                  >
+                    {LEARNING_MODES.map((mode) => (
+                      <button
+                        key={mode.id}
+                        onClick={() => {
+                          setSelectedMode(mode.id);
+                          setShowModeMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
+                          selectedMode === mode.id
+                            ? 'bg-gray-100'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${mode.gradient} flex items-center justify-center`}>
+                          <mode.icon className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900">{mode.label}</p>
+                          <p className="text-xs text-gray-500">{mode.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
-            {LEARNING_MODES.find(m => m.id === selectedMode)?.description}
-          </p>
+
+          {/* Usage Indicator */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className={`px-2 py-1 rounded-full text-xs font-bold ${usage.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
+                {usage.isPremium ? 'PREMIUM' : `${usage.today}/${usage.limit}`}
+              </span>
+              <span className="text-xs text-gray-500 hidden sm:inline">queries</span>
+            </div>
+            <button
+              onClick={() => setVoiceLang(voiceLang === 'en' ? 'hi' : 'en')}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-bold"
+            >
+              {voiceLang === 'hi' ? '🇮🇳' : '🇺🇸'}
+            </button>
+            <button onClick={clearHistory} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Subject Filter */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex gap-2 overflow-x-auto">
+      {/* Subject Pills */}
+      <div className="bg-white border-b px-4 py-2 overflow-x-auto">
+        <div className="max-w-4xl mx-auto flex items-center gap-2">
+          <button
+            onClick={() => setSelectedSubject(null)}
+            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+              selectedSubject === null
+                ? 'bg-purple-100 text-purple-700 font-semibold'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All
+          </button>
+          {subjects.slice(0, 5).map((subject) => (
             <button
-              onClick={() => {
-                setSelectedSubject(null);
-                setSelectedChapter(null);
-              }}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${selectedSubject === null
-                  ? 'bg-purple-100 text-purple-700'
+              key={subject.id}
+              onClick={() => setSelectedSubject(subject.id)}
+              className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+                selectedSubject === subject.id
+                  ? 'bg-purple-100 text-purple-700 font-semibold'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+              }`}
             >
-              All Subjects
+              {typeof subject.name === 'string' ? subject.name : subject.name.CBSE || 'Subject'}
             </button>
-            {subjects.map((subject) => (
-              <button
-                key={subject.id}
-                onClick={() => {
-                  setSelectedSubject(subject.id);
-                  setSelectedChapter(null);
-                  setChapterSearch('');
-                }}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all font-medium border-b-2 ${selectedSubject === subject.id
-                    ? 'bg-purple-50 text-purple-700 border-purple-500 font-bold'
-                    : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
-                  }`}
-              >
-                {typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}
-              </button>
-            ))}
-          </div>
-
-          {selectedSubjectData && (
-            <div className="mt-3 pt-3 border-t">
-              <div className="flex items-center gap-2 mb-3">
-                <Search className="w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search chapters..."
-                  value={chapterSearch}
-                  onChange={(e) => setChapterSearch(e.target.value)}
-                  className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:border-purple-300 w-full sm:w-72 transition-all placeholder:text-gray-400"
-                />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                <button
-                  onClick={() => setSelectedChapter(null)}
-                  className={`px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all font-medium border-b-2 ${selectedChapter === null
-                      ? 'bg-blue-50 text-blue-700 border-blue-500 font-bold'
-                      : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
-                    }`}
-                >
-                  All Chapters
-                </button>
-                {selectedSubjectData.chapters
-                  .filter(c => {
-                    const name = typeof c.name === 'string' ? c.name : ((c.name as any)[user?.board || 'CBSE'] || (c.name as any).CBSE || 'Chapter');
-                    return name.toLowerCase().includes(chapterSearch.toLowerCase());
-                  })
-                  .map((chapter) => (
-                  <button
-                    key={chapter.id}
-                    onClick={() => setSelectedChapter(chapter.id)}
-                    className={`px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all font-medium border-b-2 ${selectedChapter === chapter.id
-                        ? 'bg-blue-50 text-blue-700 border-blue-500 font-bold'
-                        : 'bg-white text-gray-600 border-transparent hover:bg-gray-50'
-                      }`}
-                  >
-                    {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        <ScrollArea className="h-[calc(100vh-450px)]" ref={scrollRef}>
-          <div className="space-y-4">
-            {/* 3D Avatar Display */}
-            <div className="mb-4 flex flex-col items-center justify-center">
-              <div className="w-full max-w-[120px] aspect-square transition-all duration-500">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Welcome State */}
+          {messages.length === 0 && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-8">
+              {/* Avatar */}
+              <div className="w-24 h-24 mx-auto mb-6">
                 <AIAvatar state={avatarState} />
               </div>
-            </div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Hello! I'm your AI Tutor 👋
+              </h2>
+              <p className="text-gray-500 mb-8 max-w-md mx-auto">
+                I can help you with any subject. Ask me questions about science, math, english, or anything else!
+              </p>
 
-            {messages.length === 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center pt-2 pb-8"
-              >
-                <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-purple-500/10 border border-purple-100 max-w-md w-full relative overflow-hidden group">
-                  {/* Decorative top gradient */}
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 group-hover:h-3 transition-all duration-300" />
-                  
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-pink-600 mb-2">
-                      Hello! I'm your AI Tutor
-                    </h2>
-                    <p className="text-gray-500 mb-6 text-sm">Powered by Smart Learning</p>
-                    
-                    <div className="inline-flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-full mb-8 border border-purple-100/50">
-                      <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-                      <span className="text-purple-700 text-sm font-semibold tracking-wide">
-                        Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
-                      </span>
-                    </div>
-                  </div>
+              {/* Mode Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 max-w-2xl mx-auto">
+                {LEARNING_MODES.map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setSelectedMode(mode.id)}
+                    className={`p-4 rounded-2xl border-2 transition-all ${
+                      selectedMode === mode.id
+                        ? `border-transparent bg-gradient-to-br ${mode.gradient} text-white shadow-lg`
+                        : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
+                    }`}
+                  >
+                    <mode.icon className={`w-6 h-6 mx-auto mb-2 ${selectedMode === mode.id ? 'text-white' : 'text-gray-600'}`} />
+                    <p className={`font-semibold text-sm ${selectedMode === mode.id ? 'text-white' : 'text-gray-900'}`}>{mode.label}</p>
+                  </button>
+                ))}
+              </div>
 
-                  <p className="text-gray-600 mb-4 font-medium text-center">I can help you with any subject. Try asking:</p>
-                  
-                  <div className="grid grid-cols-1 gap-3 max-w-sm mx-auto">
-                    {quickQuestions.slice(0, 3).map((q, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setInput(q.text);
-                          if (q.subject) {
-                            const sub = subjects.find((s) => {
-                              const sName = typeof s.name === 'string' ? s.name : (s.name[user?.board || 'CBSE'] || 'Subject');
-                              return sName.toLowerCase().includes(q.subject!);
-                            });
-                            if (sub) setSelectedSubject(sub.id);
-                          }
-                        }}
-                        className="flex items-center gap-4 p-3.5 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-purple-200 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-200 text-left group/btn"
-                      >
-                        <div className="bg-white p-2.5 rounded-xl shadow-sm text-purple-500 group-hover/btn:scale-110 group-hover/btn:bg-purple-50 transition-transform duration-200">
-                          <q.icon className="w-5 h-5" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover/btn:text-purple-700 transition-colors">
-                          {q.text}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+              {/* Quick Prompts */}
+              <div className="flex flex-wrap justify-center gap-2 max-w-xl mx-auto">
+                {quickPrompts.map((prompt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setInput(prompt.text)}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-all shadow-sm"
+                  >
+                    {prompt.text}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-                  <div className="mt-8 text-center">
-                    <p className="text-xs text-gray-400 mb-3 px-4 uppercase tracking-wider font-semibold">Quick Tips</p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {AI_TIPS.slice(0, 4).map((tip, index) => (
-                        <span
-                          key={index}
-                          className="px-3.5 py-1.5 bg-gray-50 hover:bg-purple-50 border border-gray-100 hover:border-purple-200 text-gray-600 hover:text-purple-700 text-[11px] font-medium rounded-full cursor-pointer transition-all duration-200 shadow-sm"
-                          onClick={() => setInput(tip)}
-                        >
-                          {tip}
-                        </span>
-                      ))}
-                    </div>
+          {/* Messages */}
+          {messages.map((msg) => (
+            <div key={msg.id} className="space-y-4">
+              {/* User Message */}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+                <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-sm px-4 py-3 shadow-lg">
+                    <p className="text-sm">{msg.message}</p>
                   </div>
+                  <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm flex-shrink-0">
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback className="bg-blue-500 text-white text-xs font-bold">{user?.name?.[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
                 </div>
               </motion.div>
-            )}
 
-            {messages.map((msg) => (
-              <div key={msg.id}>
-                {/* User Message */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex justify-end mb-3"
-                >
-                  <div className="flex flex-col items-end gap-1 max-w-[80%]">
-                    <div className="flex items-start gap-2">
-                      <div className="bg-blue-500 text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm">
-                        <p>{msg.message}</p>
-                      </div>
-                      <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm">
-                        <AvatarImage src={user?.avatar} />
-                        <AvatarFallback>{user?.name[0]}</AvatarFallback>
-                      </Avatar>
+              {/* AI Response */}
+              {msg.response && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
+                  <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%]">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <Bot className="w-4 h-4 text-white" />
                     </div>
-
-                    {/* Fun Grammar Tip UI Simulation */}
-                    {msg.message.length > 10 && msg.message.indexOf(' ') > 0 && (
-                      <div
-                        className="mr-10 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
-                      >
-                        💡 Grammar Tip Available
-                      </div>
-                    )}
+                    <div className="bg-white border rounded-2xl rounded-bl-sm px-4 py-3 shadow-lg space-y-3">
+                      {msg.response.includes('Daily Limit Reached') ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-red-600 font-bold bg-red-50 p-3 rounded-xl text-sm">
+                            ⚠️ Daily Limit Reached
+                          </div>
+                          <button className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl text-sm">
+                            🔓 Upgrade to Premium
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{msg.response}</div>
+                          
+                          {/* TTS Button */}
+                          <div className="flex items-center gap-2 pt-2 border-t">
+                            <button
+                              onClick={() => handleTtsAction(msg.id, msg.response)}
+                              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                isSpeaking && showTtsControls === msg.id
+                                  ? 'bg-red-100 text-red-600 border border-red-200'
+                                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              }`}
+                            >
+                              {isSpeaking && showTtsControls === msg.id ? (
+                                <>
+                                  <Square className="w-4 h-4 fill-current" /> Stop
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="w-4 h-4" /> Listen
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setInput('Explain this more simply')}
+                              className="px-3 py-2 bg-gray-100 rounded-xl text-xs font-medium text-gray-600 hover:bg-gray-200"
+                            >
+                              <Zap className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
+              )}
+            </div>
+          ))}
 
-                {/* AI Response */}
-                {msg.response && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex justify-start"
-                  >
-                    <div className="flex items-start gap-2 max-w-[80%]">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                        <Bot className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="bg-white border rounded-2xl rounded-tl-sm p-4 space-y-4 shadow-sm min-w-[280px]">
-                        {msg.response.includes('Daily Limit Reached') ? (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 text-red-600 font-bold bg-red-50 p-3 rounded-xl border border-red-100 text-sm">
-                              ⚠️ Daily Limit Reached ({usage.limit}/{usage.limit})
-                            </div>
-                            <p className="text-gray-600 text-sm font-medium">Upgrade to continue unlimited learning</p>
-                            <div className="flex flex-col gap-2">
-                              {/* Assuming non-existing paths, just UI placeholders for now */}
-                              <button onClick={() => toast.info('Redirecting to upgrade...')} className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity">
-                                🔓 Upgrade Now
-                              </button>
-                              <button onClick={() => {
-                                setUsage(prev => ({ ...prev, limit: prev.limit + 1 }));
-                                toast.success('Unlocked 1 extra question!');
-                              }} className="w-full py-2.5 bg-white border-2 border-purple-100 text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition-colors flex justify-center items-center gap-2">
-                                🎁 Watch Ad <span className="text-xs font-normal opacity-70">(Unlock 1 question)</span>
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {renderAIResponse(msg.response, showTtsControls === msg.id ? 'active' : null, currentSentenceIndex)}
-
-                            {/* TTS Controls */}
-                            <div className="border-t pt-3 space-y-3">
-                              <button
-                                onClick={() => handleTtsAction(msg.id, msg.response)}
-                                className="w-full flex justify-center items-center gap-2 text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-4 py-3 rounded-xl transition-all shadow-sm"
-                                type="button"
-                              >
-                                {isSpeaking && showTtsControls === msg.id ? (
-                                  <>
-                                    <Square className="w-5 h-5 fill-current" />
-                                    Stop Voice
-                                  </>
-                                ) : (
-                                  <>
-                                    <Volume2 className="w-5 h-5" />
-                                    ▶️ Listen with AI Voice
-                                  </>
-                                )}
-                              </button>
-
-                              {/* Expanded TTS Controls */}
-                              {showTtsControls === msg.id && isSpeaking && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  className="flex items-center gap-3 bg-purple-50/50 rounded-xl p-3 border border-purple-100"
-                                >
-                                  <button
-                                    onClick={() => isPaused ? resumeSpeech() : pauseSpeech()}
-                                    className="p-2 rounded-full bg-white text-purple-600 hover:bg-purple-100 transition-colors shadow-sm border border-purple-100"
-                                    type="button"
-                                  >
-                                    {isPaused ? <Play className="w-4 h-4 fill-current ml-0.5" /> : <Pause className="w-4 h-4 fill-current" />}
-                                  </button>
-                                  <div className="flex items-center gap-3 flex-1 px-1">
-                                    <span className="text-xs font-bold text-purple-700 whitespace-nowrap">Speed</span>
-                                    <Slider
-                                      value={[rate]}
-                                      onValueChange={([val]) => setRate(val)}
-                                      min={0.75}
-                                      max={1.25}
-                                      step={0.25}
-                                      className="w-full cursor-pointer"
-                                    />
-                                    <span className="text-xs font-black text-purple-700 w-8 text-right bg-white px-1.5 py-0.5 rounded border border-purple-100">{rate.toFixed(2)}x</span>
-                                  </div>
-                                </motion.div>
-                              )}
-                            </div>
-
-                            {/* Quick Actions */}
-                            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 mt-2">
-                              <button onClick={() => { setInput('Can you repeat that and give me another example?'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">🔁 Repeat</button>
-                              <button onClick={() => { setInput('Explain this more simply.'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">✏️ Simplify</button>
-                              <button onClick={() => { setInput('Can you ask me a follow-up test question?'); sendMessage(); }} className="px-3 py-1.5 text-xs font-semibold bg-gray-50 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5 shadow-sm">❓ Ask Follow-up</button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            ))}
-
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
-              >
-                <div className="flex items-start gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="bg-white border rounded-2xl rounded-tl-sm px-4 py-3">
-                    <div className="flex gap-1">
+          {/* Typing Indicator */}
+          {isTyping && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+              <div className="flex items-end gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-white border rounded-2xl rounded-bl-sm px-4 py-3 shadow-lg">
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
                       <motion.div
+                        key={i}
                         animate={{ y: [0, -5, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.5 }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
                         className="w-2 h-2 bg-gray-400 rounded-full"
                       />
-                      <motion.div
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.5, delay: 0.1 }}
-                        className="w-2 h-2 bg-gray-400 rounded-full"
-                      />
-                      <motion.div
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.5, delay: 0.2 }}
-                        className="w-2 h-2 bg-gray-400 rounded-full"
-                      />
-                    </div>
+                    ))}
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </div>
-        </ScrollArea>
+              </div>
+            </motion.div>
+          )}
+        </div>
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex gap-2">
+      <div className="bg-white border-t px-4 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-purple-500/30 transition-all">
             <Input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !isTyping && sendMessage()}
-              placeholder={selectedSubject
-                ? `Ask about ${selectedSubjectData?.name}...`
-                : "Ask me anything..."}
-              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && !isTyping && input.trim() && sendMessage()}
+              placeholder="Ask me anything..."
+              className="flex-1 bg-transparent border-0 shadow-none text-base focus-visible:ring-0 px-0"
               disabled={isTyping}
             />
             <Button
               onClick={sendMessage}
               disabled={!input.trim() || isTyping}
-              className="bg-gradient-to-r from-purple-500 to-pink-500"
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl px-4"
             >
-              {isTyping ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">
-            AI Tutor is powered by Smart Learning • Mode: {LEARNING_MODES.find(m => m.id === selectedMode)?.label}
+            Powered by AI • {currentMode.label} Mode
           </p>
         </div>
       </div>
