@@ -316,14 +316,14 @@ const ChapterPage = () => {
 
                 <div className="prose prose-indigo max-w-none dark:prose-invert">
                   {(() => {
-                    const activeBoard = user?.board || 'CBSE';
+                    const activeBoard = (user?.board || 'CBSE') as Board;
                     
                     // Helper to render markdown with premium styling
                     const MarkdownContent = ({ content }: { content: string }) => (
                       <ReactMarkdown
                         components={{
                           h3: ({ children }) => <h3 className="text-xl font-bold mt-6 mb-3 text-indigo-700">{children}</h3>,
-                          p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed">{children}</p>,
+                          p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed whitespace-pre-wrap">{children}</p>,
                           ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">{children}</ul>,
                           ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">{children}</ol>,
                           li: ({ children }) => <li className="ml-4">{children}</li>,
