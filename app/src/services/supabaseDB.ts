@@ -2113,6 +2113,8 @@ export const seedSampleData = async () => {
 
   // 0. Cleanup existing data (requested by user for fresh start)
   console.log('Cleaning up existing data...');
+  await supabase.from('test_attempts').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await supabase.from('tests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   await supabase.from('mcqs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   await supabase.from('chapters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   await supabase.from('subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');

@@ -69,7 +69,28 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 };
 
+const APP_VERSION = '1.0.1'; // Increment this to force-clear data on all devices
+
 function App() {
+  // Global one-time reset for all users to clear corrupted/persistent data
+  useEffect(() => {
+    const lastVersion = localStorage.getItem('smart_learning_app_version');
+    if (lastVersion !== APP_VERSION) {
+      console.log('New version detected. Clearing old data...');
+      // Preserve auth if available, clear everything else
+      const currentUser = localStorage.getItem('smart_learning_current_user');
+      const users = localStorage.getItem('smart_learning_users');
+      
+      localStorage.clear();
+      
+      if (currentUser) localStorage.setItem('smart_learning_current_user', currentUser);
+      if (users) localStorage.setItem('smart_learning_users', users);
+      
+      localStorage.setItem('smart_learning_app_version', APP_VERSION);
+      window.location.reload();
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <GamificationProvider>
