@@ -30,7 +30,7 @@ const SubjectsPage = () => {
     const loadData = async () => {
       try {
         const data = await subjectDB.getAll();
-        const activeBoard = user?.board || 'CBSE';
+        const activeBoard = (user?.board || 'CBSE') as Board;
         
         console.log('Fetched subjects:', data); // Debug log
         
@@ -40,7 +40,7 @@ const SubjectsPage = () => {
 
         const filteredSubjects = data.filter((s) => {
           // Filter by board
-          const supportsBoard = !activeBoard || !s.boards_supported || s.boards_supported.length === 0 || s.boards_supported.includes(activeBoard as any);
+          const supportsBoard = !activeBoard || !s.boards_supported || s.boards_supported.length === 0 || s.boards_supported.includes(activeBoard);
           // Filter out deleted ones
           const isNotDeleted = !deletedSubjectIds.includes(s.id);
           return supportsBoard && isNotDeleted;
