@@ -108,7 +108,9 @@ const SubjectsPage = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold">
-                  {typeof selectedSubject.name === 'string' ? selectedSubject.name : (selectedSubject.name[user?.board || 'CBSE'] || 'Subject')}
+                  {typeof selectedSubject.name === 'string' 
+                    ? selectedSubject.name 
+                    : (selectedSubject.name[user?.board || 'CBSE'] || (selectedSubject.name as any)?.CBSE || 'Subject')}
                 </h1>
                 <p className="text-sm text-gray-500">{selectedSubject.chapters.length} chapters</p>
               </div>
@@ -174,7 +176,9 @@ const SubjectsPage = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">
-                              {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+                              {typeof chapter.name === 'string' 
+                                ? chapter.name 
+                                : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'Chapter')}
                             </h3>
                             {isCompleted && (
                               <Badge className="bg-green-100 text-green-700">
@@ -183,7 +187,9 @@ const SubjectsPage = () => {
                             )}
                           </div>
                           <p className="text-sm text-gray-500">
-                            {typeof chapter.description === 'string' ? chapter.description : (chapter.description as any)?.[user?.board || 'CBSE'] || ''}
+                            {typeof chapter.description === 'string' 
+                              ? chapter.description 
+                              : (chapter.description as any)?.[user?.board || 'CBSE'] || (chapter.description as any)?.CBSE || ''}
                           </p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
                             <span className="flex items-center gap-1">
@@ -249,10 +255,14 @@ const SubjectsPage = () => {
                 </div>
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold mb-1">
-                    {typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}
+                    {typeof subject.name === 'string' 
+                      ? subject.name 
+                      : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'Subject')}
                   </h3>
                   <p className="text-sm text-gray-500 mb-3">
-                    {typeof subject.description === 'string' ? subject.description : (subject.description?.[user?.board || 'CBSE'] || 'No description')}
+                    {typeof subject.description === 'string' 
+                      ? subject.description 
+                      : (subject.description?.[user?.board || 'CBSE'] || (subject.description as any)?.CBSE || 'No description')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">

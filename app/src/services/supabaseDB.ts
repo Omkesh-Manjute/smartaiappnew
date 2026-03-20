@@ -2111,6 +2111,13 @@ export const seedSampleData = async () => {
     tests: { total: 0, success: 0, fail: 0 },
   };
 
+  // 0. Cleanup existing data (requested by user for fresh start)
+  console.log('Cleaning up existing data...');
+  await supabase.from('mcqs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await supabase.from('chapters').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await supabase.from('subjects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  console.log('Cleanup complete.');
+
   // 1. Seed Subjects, Chapters, and MCQs
   const allSubjects = [...class5Subjects, ...class6Subjects];
   for (const subject of allSubjects) {

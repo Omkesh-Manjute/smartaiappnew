@@ -219,9 +219,15 @@ const ChapterPage = () => {
             </button>
             <div>
               <h1 className="text-lg font-bold">
-                {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+                {typeof chapter.name === 'string' 
+                  ? chapter.name 
+                  : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'Chapter')}
               </h1>
-              <p className="text-sm text-gray-500">{typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')}</p>
+              <p className="text-sm text-gray-500">
+                {typeof subject.name === 'string' 
+                  ? subject.name 
+                  : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'Subject')}
+              </p>
             </div>
           </div>
         </div>
@@ -246,7 +252,9 @@ const ChapterPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                   <h2 className="text-xl font-semibold">
-                    {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || 'Chapter')}
+                    {typeof chapter.name === 'string' 
+                      ? chapter.name 
+                      : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'Chapter')}
                   </h2>
                   <div className="flex items-center gap-2">
                     <Button
@@ -297,7 +305,7 @@ const ChapterPage = () => {
                       if (typeof rawContent === 'string') {
                         displayContent = rawContent;
                       } else {
-                        displayContent = rawContent[activeBoard]?.explanation || '';
+                        displayContent = rawContent[activeBoard]?.explanation || (rawContent as any)?.CBSE?.explanation || '';
                       }
                     }
                     

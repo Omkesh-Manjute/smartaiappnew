@@ -262,8 +262,8 @@ const SubjectManagementPage = () => {
   const startEditSubject = (subject: Subject) => {
     setEditingSubjectId(subject.id);
     setNewSubject({
-      name: typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || ''),
-      description: typeof subject.description === 'string' ? subject.description : (subject.description.CBSE || ''),
+      name: typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || ''),
+      description: typeof subject.description === 'string' ? subject.description : ((subject.description as any)?.[user?.board || 'CBSE'] || (subject.description as any)?.CBSE || ''),
       icon: subject.icon,
       color: subject.color,
       grade: subject.grade,
@@ -325,13 +325,18 @@ const SubjectManagementPage = () => {
 
     try {
       const mode = await createChapterWithFallback(chapter);
-      setSubjects((prev) =>
-        prev.map((item) =>
-          item.id === subject.id
-            ? { ...item, chapters: [...item.chapters, chapter] }
-            : item
-        )
+      
+      // Update local subjects list immediately
+      const updatedSubjects = subjects.map((item) =>
+        item.id === subject.id
+          ? { ...item, chapters: [...item.chapters, chapter] }
+          : item
       );
+      setSubjects(updatedSubjects);
+
+      // Sync to localStorage
+      localStorage.setItem('smart_learning_subjects', JSON.stringify(updatedSubjects));
+
       setChapterDrafts((prev) => ({
         ...prev,
         [subject.id]: { name: '', description: '' },
@@ -362,14 +367,17 @@ const SubjectManagementPage = () => {
         await localSubjectDB.update(subjectId, { ...subject, chapters: updatedChapters });
       }
 
-      setSubjects((prev) =>
-        prev.map((s) =>
-          s.id === subjectId
-            ? { ...s, chapters: s.chapters.filter((c) => c.id !== chapterId) }
-            : s
-        )
+      const updatedSubjects = subjects.map((s) =>
+        s.id === subjectId
+          ? { ...s, chapters: s.chapters.filter((c) => c.id !== chapterId) }
+          : s
       );
-      toast.success(mode === 'cloud' ? 'Chapter deleted from all sync' : 'Chapter deleted (local)');
+      setSubjects(updatedSubjects);
+
+      // Persist to localStorage to prevent refresh rollback
+      localStorage.setItem('smart_learning_subjects', JSON.stringify(updatedSubjects));
+
+      toast.success(mode === 'cloud' ? 'Chapter deleted (Sync complete)' : 'Chapter deleted (local)');
     } catch (error) {
       toast.error('Failed to delete chapter');
     }
@@ -377,8 +385,9 @@ const SubjectManagementPage = () => {
 
   const startEditChapter = (chapter: Chapter) => {
     setEditingChapterId(chapter.id);
-    const name = typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || '');
-    const description = typeof chapter.description === 'string' ? chapter.description : (chapter.description.CBSE || '');
+    setEditingChapterId(chapter.id);
+    const name = typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || '');
+    const description = typeof chapter.description === 'string' ? chapter.description : ((chapter.description as any)?.[user?.board || 'CBSE'] || (chapter.description as any)?.CBSE || '');
     setEditingChapterData({ name, description });
   };
 
@@ -780,19 +789,6 @@ const SubjectManagementPage = () => {
               <h1 className="text-xl font-bold">Subject & Chapter Management</h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                onClick={handleSeedCloudData} 
-                className="text-purple-600 border-purple-200 hover:bg-purple-50"
-                disabled={isSeeding}
-              >
-                {isSeeding ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Database className="w-4 h-4 mr-2" />
-                )}
-                Seed Cloud Data
-              </Button>
               <Button onClick={() => {
                 setEditingSubjectId(null);
                 setNewSubject({ name: '', description: '', icon: '[BK]', color: 'bg-blue-500', grade: 10 });
@@ -1055,7 +1051,9 @@ const SubjectManagementPage = () => {
                           </div>
                           <div>
                             <h3 className="text-xl font-bold text-white mb-1">
-                              {typeof subject.name === 'string' ? subject.name : (subject.name.CBSE || 'New Subject')}
+                              {typeof subject.name === 'string' 
+                                ? subject.name 
+                                : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'New Subject')}
                             </h3>
                             <Badge className="bg-black/20 hover:bg-black/30 text-white border-0">
                               Grade {subject.grade}
@@ -1082,7 +1080,9 @@ const SubjectManagementPage = () => {
 
                       <div className="p-6 space-y-6">
                         <p className="text-gray-600 text-sm leading-relaxed">
-                          {typeof subject.description === 'string' ? subject.description : (subject.description?.CBSE || 'No description available.')}
+                          {typeof subject.description === 'string' 
+                            ? subject.description 
+                            : ((subject.description as any)?.[user?.board || 'CBSE'] || (subject.description as any)?.CBSE || 'No description available.')}
                         </p>
 
                         <div className="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-hidden">
@@ -1169,10 +1169,12 @@ const SubjectManagementPage = () => {
                                         <>
                                           <div className="flex-1 min-w-0 pr-4">
                                             <p className="text-sm font-bold text-gray-800 truncate">
-                                              #{chapter.order} {typeof chapter.name === 'string' ? chapter.name : (chapter.name.CBSE || 'New Chapter')}
+                                              #{chapter.order} {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'New Chapter')}
                                             </p>
                                             <p className="text-[10px] text-gray-400 font-medium truncate uppercase tracking-tighter">
-                                              {(typeof chapter.description === 'string' ? chapter.description : (chapter.description?.CBSE)) || 'Regular Content'}
+                                              {(typeof chapter.description === 'string' 
+                                                ? chapter.description 
+                                                : (chapter.description as any)?.[user?.board || 'CBSE'] || (chapter.description as any)?.CBSE) || 'Regular Content'}
                                             </p>
                                           </div>
                                           <div className="flex gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
