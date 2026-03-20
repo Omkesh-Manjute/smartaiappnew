@@ -24,7 +24,7 @@ import {
   Languages,
   Loader2,
 } from 'lucide-react';
-import type { Chapter, Subject } from '@/types';
+import type { Chapter, Subject, Board } from '@/types';
 
 const ChapterPage = () => {
   const navigate = useNavigate();
@@ -356,7 +356,7 @@ const ChapterPage = () => {
                             let explanation = '';
                             
                             if (topic.content) {
-                              const tContent = topic.content[boardKey as Board] || topic.content['CBSE'];
+                              const tContent = (topic.content as Record<string, any>)[boardKey] || (topic.content as any)['CBSE'];
                               explanation = tContent?.explanation || (topic as any).explanation || '';
                             } else if ((topic as any).explanation) {
                               explanation = (topic as any).explanation;
