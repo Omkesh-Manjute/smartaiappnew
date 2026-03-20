@@ -221,12 +221,12 @@ const ChapterPage = () => {
               <h1 className="text-lg font-bold">
                 {typeof chapter.name === 'string' 
                   ? chapter.name 
-                  : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'Chapter')}
+                  : (chapter.name[user?.board || 'CBSE'] || chapter.name['CBSE'] || 'Chapter')}
               </h1>
               <p className="text-sm text-gray-500">
                 {typeof subject.name === 'string' 
                   ? subject.name 
-                  : (subject.name[user?.board || 'CBSE'] || (subject.name as any)?.CBSE || 'Subject')}
+                  : (subject.name[user?.board || 'CBSE'] || subject.name['CBSE'] || 'Subject')}
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ const ChapterPage = () => {
                   <h2 className="text-xl font-semibold">
                     {typeof chapter.name === 'string' 
                       ? chapter.name 
-                      : (chapter.name[user?.board || 'CBSE'] || (chapter.name as any)?.CBSE || 'Chapter')}
+                      : (chapter.name[user?.board || 'CBSE'] || chapter.name['CBSE'] || 'Chapter')}
                   </h2>
                   <div className="flex items-center gap-2">
                     <Button
@@ -296,46 +296,91 @@ const ChapterPage = () => {
                 <div className="prose prose-indigo max-w-none dark:prose-invert">
                   {(() => {
                     const activeBoard = user?.board || 'CBSE';
-                    let displayContent = '';
                     
+                    // Helper to render markdown with premium styling
+                    const MarkdownContent = ({ content }: { content: string }) => (
+                      <ReactMarkdown
+                        components={{
+                          h3: ({ children }) => <h3 className="text-xl font-bold mt-6 mb-3 text-indigo-700">{children}</h3>,
+                          p: ({ children }) => <p className="mb-4 text-gray-700 leading-relaxed">{children}</p>,
+                          ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2 text-gray-700">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-700">{children}</ol>,
+                          li: ({ children }) => <li className="ml-4">{children}</li>,
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto my-6 rounded-xl border border-gray-200">
+                              <table className="min-w-full divide-y divide-gray-200">{children}</table>
+                            </div>
+                          ),
+                          thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                          th: ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
+                          td: ({ children }) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-t border-gray-100">{children}</td>,
+                          strong: ({ children }) => <strong className="font-bold text-indigo-900 bg-indigo-50 px-1 rounded">{children}</strong>,
+                        }}
+                      >
+                        {content}
+                      </ReactMarkdown>
+                    );
+
                     if (contentLang === 'hi' && translatedContent['hi']) {
-                      displayContent = translatedContent['hi'];
-                    } else {
-                      const rawContent = chapter.content;
-                      if (typeof rawContent === 'string') {
-                        displayContent = rawContent;
-                      } else {
-                        displayContent = rawContent[activeBoard]?.explanation || (rawContent as any)?.CBSE?.explanation || '';
-                      }
+                      return <MarkdownContent content={translatedContent['hi']} />;
                     }
-                    
-                    // Split into sentences (preserving punctuation and spacing) for TTS highlighting
-                    const sentences = displayContent.match(/[^.!?।]+[.!?।]?\s*/g) || [displayContent];
-                    
+
+                    // Render topics if available for better structure
+                    if (chapter.topics && chapter.topics.length > 0) {
+                      return (
+                        <div className="space-y-8">
+                          {chapter.topics.map((topic, tidx) => {
+                            const topicContent = typeof topic.content === 'object' 
+                              ? (topic.content[activeBoard] || topic.content['CBSE']) 
+                              : null;
+                            
+                            const explanation = topicContent?.explanation || '';
+                            
+                            return (
+                              <section key={topic.id || tidx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                                  <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                                    {tidx + 1}
+                                  </span>
+                                  {topic.name}
+                                </h3>
+                                <MarkdownContent content={explanation} />
+                                
+                                {topicContent?.short_questions && topicContent.short_questions.length > 0 && (
+                                  <div className="mt-4 p-4 bg-amber-50 rounded-xl border border-amber-100">
+                                    <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-2">
+                                      <HelpCircle className="w-4 h-4" />
+                                      Quick Check
+                                    </h4>
+                                    <div className="space-y-3">
+                                      {topicContent.short_questions.map((sq, sidx) => (
+                                        <div key={sidx} className="text-sm">
+                                          <p className="font-semibold text-amber-800">Q: {sq.question}</p>
+                                          <p className="text-amber-700 italic">A: {sq.answer}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </section>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    // Fallback to legacy content structure
+                    const rawContent = chapter.content;
+                    let displayContent = '';
+                    if (typeof rawContent === 'string') {
+                      displayContent = rawContent;
+                    } else {
+                      displayContent = rawContent[activeBoard]?.explanation || rawContent['CBSE']?.explanation || '';
+                    }
+
                     return (
                       <div className="text-gray-700 leading-relaxed text-lg">
-                        {sentences.map((sentence, idx) => {
-                          const isHighlighted = isSpeaking && currentSentenceIndex === idx;
-                          return (
-                            <span 
-                              key={idx}
-                              id={isHighlighted ? 'current-tts-word' : undefined}
-                              className={`transition-all duration-300 rounded inline-block ${
-                                isHighlighted 
-                                  ? 'bg-yellow-200 text-black px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
-                                  : ''
-                              }`}
-                            >
-                              <ReactMarkdown 
-                                components={{
-                                  p: ({children}) => <>{children}</>,
-                                }}
-                              >
-                                {sentence}
-                              </ReactMarkdown>
-                            </span>
-                          );
-                        })}
+                        <MarkdownContent content={displayContent} />
                       </div>
                     );
                   })()}
