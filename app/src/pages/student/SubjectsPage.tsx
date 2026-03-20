@@ -35,14 +35,15 @@ const SubjectsPage = () => {
         console.log('Fetched subjects:', data); // Debug log
         
         // Final fallback: If data is empty but we have local subjects, use them for now
-        if (data.length === 0) {
-          console.warn('No subjects in cloud');
-        }
+        // Filter out deleted subjects tracking if exists in localStorage
+        const deletedSubjectIds = JSON.parse(localStorage.getItem('smart_learning_deleted_subjects') || '[]');
 
         const filteredSubjects = data.filter((s) => {
-          // If boards_supported is empty or undefined, assume it supports all boards or at least default to showing it
+          // Filter by board
           const supportsBoard = !activeBoard || !s.boards_supported || s.boards_supported.length === 0 || s.boards_supported.includes(activeBoard as any);
-          return supportsBoard;
+          // Filter out deleted ones
+          const isNotDeleted = !deletedSubjectIds.includes(s.id);
+          return supportsBoard && isNotDeleted;
         });
         
         setSubjects(filteredSubjects);
