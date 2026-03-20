@@ -144,7 +144,7 @@ const TestAttemptPage = () => {
 
   if (!test) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -152,7 +152,7 @@ const TestAttemptPage = () => {
 
   if (!isStarted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-gray-50 flex items-center justify-center p-4 min-h-[calc(100vh-200px)]">
         <Card className="max-w-md w-full">
           <CardContent className="p-6 text-center">
             <Target className="w-16 h-16 mx-auto mb-4 text-blue-500" />
@@ -198,7 +198,7 @@ const TestAttemptPage = () => {
 
   if (isCompleted && result) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-gray-50 flex items-center justify-center p-4 min-h-[calc(100vh-200px)]">
         <Card className="max-w-4xl w-full">
           <CardContent className="p-6 text-center">
             <motion.div
@@ -329,7 +329,7 @@ const TestAttemptPage = () => {
   const answeredCount = answers.filter((a) => a !== -1).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

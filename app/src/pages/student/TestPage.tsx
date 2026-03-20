@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  ChevronLeft,
   Clock,
   Target,
   TrendingUp,
@@ -73,26 +72,9 @@ const TestPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/student/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="text-xl font-bold">Tests</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="bg-gray-50">
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           {stats.map((stat, index) => (
@@ -199,7 +181,7 @@ const TestPage = () => {
             </Card>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 };
