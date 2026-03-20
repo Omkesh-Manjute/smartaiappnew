@@ -377,32 +377,77 @@ const ChapterPage = () => {
 
                     // Render topics if available for better structure
                     if (chapter.topics && chapter.topics.length > 0) {
+                      // Flatten all topic explanations into a single list of segments for highlighting
+                      const allSegments: { topicId: string, topicName: string, sentences: string[], isNewTopic: boolean }[] = [];
+                      
+                      chapter.topics.forEach((topic, tidx) => {
+                        const boardKey = (user?.board || 'CBSE') as Board;
+                        let explanation = '';
+                        if (topic.content) {
+                          const tContent = (topic.content as Record<Board, any>)?.[boardKey] || (topic.content as any)?.['CBSE'];
+                          explanation = tContent?.explanation || (topic as any).explanation || '';
+                        } else if ((topic as any).explanation) {
+                          explanation = (topic as any).explanation;
+                        }
+                        
+                        const topicSentences = explanation.match(/[^.!?।]+[.!?/]?\s*/g) || [explanation];
+                        allSegments.push({
+                          topicId: topic.id || `t-${tidx}`,
+                          topicName: topic.name,
+                          sentences: topicSentences,
+                          isNewTopic: true
+                        });
+                      });
+
+                      let globalSentenceIdx = 0;
+
                       return (
                         <div className="space-y-8">
-                          {chapter.topics.map((topic, tidx) => {
-                            // Robust content extraction for topics
-                            const boardKey = user?.board || 'CBSE';
-                            let explanation = '';
-                            
-                            if (topic.content) {
-                              const tContent = (topic.content as Record<Board, any>)[boardKey as Board] || (topic.content as any)['CBSE'];
-                              explanation = tContent?.explanation || (topic as any).explanation || '';
-                            } else if ((topic as any).explanation) {
-                              explanation = (topic as any).explanation;
-                            }
-                            
-                            return (
-                              <section key={topic.id || tidx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                  <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
-                                    {tidx + 1}
-                                  </span>
-                                  {topic.name}
-                                </h3>
-                                <MarkdownContent content={explanation} />
-                              </section>
-                            );
-                          })}
+                          {allSegments.map((segment, segIdx) => (
+                            <section key={segment.topicId} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                              <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                                <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                                  {segIdx + 1}
+                                </span>
+                                {segment.topicName}
+                              </h3>
+                              <div className="space-y-1">
+                                {segment.sentences.map((sentence, sidx) => {
+                                  const currentIdx = globalSentenceIdx++;
+                                  const isHighlighted = isSpeaking && currentSentenceIndex === currentIdx;
+
+                                  return (
+                                    <span 
+                                      key={sidx}
+                                      id={isHighlighted ? 'current-tts-word' : undefined}
+                                      className={`transition-all duration-300 rounded inline-block ${
+                                        isHighlighted 
+                                          ? 'bg-yellow-200 text-indigo-900 px-1 shadow-sm font-medium border-l-4 border-yellow-400' 
+                                          : ''
+                                      }`}
+                                    >
+                                      <ReactMarkdown
+                                        components={{
+                                          p: ({ children }) => <span className="text-gray-700 leading-relaxed whitespace-pre-wrap">{children}</span>,
+                                          strong: ({ children }) => <strong className="font-bold text-indigo-900 bg-indigo-50 px-1 rounded">{children}</strong>,
+                                          table: ({ children }) => (
+                                            <div className="overflow-x-auto my-6 rounded-xl border border-gray-200">
+                                              <table className="min-w-full divide-y divide-gray-200">{children}</table>
+                                            </div>
+                                          ),
+                                          thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                                          th: ({ children }) => <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
+                                          td: ({ children }) => <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-t border-gray-100">{children}</td>,
+                                        }}
+                                      >
+                                        {sentence}
+                                      </ReactMarkdown>
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          ))}
                         </div>
                       );
                     }
