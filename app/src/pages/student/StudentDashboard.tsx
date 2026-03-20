@@ -292,7 +292,7 @@ const StudentDashboard = () => {
                         <h3 className="font-bold text-gray-900 truncate">
                           {typeof subject.name === 'string' 
                             ? subject.name 
-                            : (subject.name[selectedBoard || 'CBSE'] || (subject.name as any)?.CBSE || subject.name.CBSE)}
+                            : (subject.name[selectedBoard || (user?.board as Board) || 'CBSE'] || (subject.name as any)?.CBSE || subject.name.CBSE || 'Subject')}
                         </h3>
                         <p className="text-xs text-gray-500">{subject.chapters.length} chapters</p>
                         <div className="mt-2 text-xs">

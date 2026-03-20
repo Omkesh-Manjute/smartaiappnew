@@ -106,8 +106,9 @@ const HeatmapPage = () => {
     const suggestions: { text: string; action: () => void; icon: React.ElementType; color: string }[] = [];
 
     weakSubjects.slice(0, 3).forEach(({ subject }) => {
+      const subjectName = typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject');
       suggestions.push({
-        text: `Practice ${typeof subject.name === 'string' ? subject.name : (subject.name[user?.board || 'CBSE'] || 'Subject')} in Battle Quiz`,
+        text: `Practice ${subjectName} in Battle Quiz`,
         action: () => navigate('/student/battle'),
         icon: Swords,
         color: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -122,8 +123,9 @@ const HeatmapPage = () => {
     });
 
     if (weakSubjects.length > 0) {
+      const subjectName = typeof weakSubjects[0].subject.name === 'string' ? weakSubjects[0].subject.name : (weakSubjects[0].subject.name[user?.board || 'CBSE'] || 'Subject');
       suggestions.push({
-        text: `Ask AI Tutor about ${typeof weakSubjects[0].subject.name === 'string' ? weakSubjects[0].subject.name : (weakSubjects[0].subject.name[user?.board || 'CBSE'] || 'Subject')}`,
+        text: `Ask AI Tutor about ${subjectName}`,
         action: () => navigate('/student/tutor'),
         icon: Bot,
         color: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -247,7 +249,7 @@ const HeatmapPage = () => {
                                   mastery >= 60 ? 'bg-yellow-100 text-yellow-700' :
                                     mastery >= 40 ? 'bg-orange-100 text-orange-700' :
                                       'bg-red-100 text-red-700'
-                                }`}>
+                                 }`}>
                                 {getMasteryLabel(mastery)}
                               </span>
                             </div>
@@ -273,7 +275,7 @@ const HeatmapPage = () => {
                                     className="p-2 rounded-lg bg-gray-50"
                                   >
                                     <p className="text-xs text-gray-600 truncate">
-                                      {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE)}
+                                      {typeof chapter.name === 'string' ? chapter.name : (chapter.name[user?.board || 'CBSE'] || chapter.name.CBSE || 'Chapter')}
                                     </p>
                                     <div className="flex items-center gap-2 mt-1">
                                       <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
