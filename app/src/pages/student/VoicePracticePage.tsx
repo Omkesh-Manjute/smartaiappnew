@@ -85,6 +85,7 @@ interface SpeechRecognitionInstance extends EventTarget {
   start(): void;
   stop(): void;
   abort(): void;
+  maxAlternatives?: number;
 }
 
 declare global {
@@ -287,36 +288,42 @@ const VoicePracticePage = () => {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
     
     const isHindi = /[\u0900-\u097F]/.test(activePromptText);
     recognition.lang = isHindi ? 'hi-IN' : 'en-US';
+    console.log('Recognition lang set to:', recognition.lang);
 
     recognition.onstart = () => {
       setIsListening(true);
       setIsRecordingComplete(false);
-      toast.success('Listening... Speak now!');
+      console.log('Speech recognition started');
+      toast.success('Listening... Speak now! 📢');
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      console.log('Speech recognition result:', event.results);
       let finalText = '';
       let interimText = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const text = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalText += `${text} `;
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalText += `${result[0].transcript} `;
         } else {
-          interimText += `${text} `;
+          interimText += `${result[0].transcript} `;
         }
       }
 
       if (finalText.trim()) {
         finalTranscriptRef.current = `${finalTranscriptRef.current} ${finalText}`.trim();
         setTranscript(finalTranscriptRef.current);
+        console.log('Final transcript:', finalTranscriptRef.current);
       }
 
       interimRef.current = interimText.trim();
       setInterimTranscript(interimRef.current);
+      console.log('Interim transcript:', interimRef.current);
 
       // Reset silence timer on speech
       if (silenceTimerRef.current) {
@@ -324,10 +331,11 @@ const VoicePracticePage = () => {
       }
       if (finalText.trim() || interimText.trim()) {
         silenceTimerRef.current = window.setTimeout(() => {
-          if (isListening && interimRef.current.trim()) {
+          if (isListening) {
+            console.log('Silence detected, stopping...');
             stopListening();
           }
-        }, 2000);
+        }, 3000);
       }
     };
 
@@ -335,14 +343,20 @@ const VoicePracticePage = () => {
       console.error('Speech recognition error:', event.error);
       if (event.error === 'not-allowed') {
         setMicPermission('denied');
-        toast.error('Microphone access denied. Please allow microphone in browser settings.');
-      } else if (event.error !== 'aborted') {
-        toast.error(`Recognition error: ${event.error}`);
+        toast.error('Microphone access denied. Please allow in browser settings.');
+      } else if (event.error === 'no-speech') {
+        console.log('No speech detected - this is normal on mobile sometimes');
+        // Don't show error, just continue listening
+      } else if (event.error === 'aborted') {
+        // User stopped it, ignore
+      } else {
+        toast.error(`Recognition error: ${event.error}. Please try again.`);
       }
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      console.log('Speech recognition ended. Final:', finalTranscriptRef.current, 'Interim:', interimRef.current);
       setIsListening(false);
       setAudioLevel(0);
       if (animationFrameRef.current) {
@@ -350,11 +364,13 @@ const VoicePracticePage = () => {
       }
       
       const spoken = `${finalTranscriptRef.current} ${interimRef.current}`.trim();
-      if (spoken && !isRecordingComplete) {
+      console.log('Total spoken text:', spoken);
+      
+      if (spoken && spoken.length > 0 && !isRecordingComplete) {
         setIsRecordingComplete(true);
         void evaluateAttempt(spoken);
-      } else if (!spoken) {
-        toast.error('No speech detected. Please try again and speak clearly.');
+      } else if (!spoken || spoken.length === 0) {
+        toast.error('No speech detected. Please speak clearly and try again. 📢');
       }
     };
 
@@ -376,11 +392,15 @@ const VoicePracticePage = () => {
   };
 
   const startListening = async () => {
+    // Check if on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('Starting voice recording. Mobile:', isMobile);
+
+    // Reinitialize recognition each time for mobile compatibility
+    recognitionRef.current = initRecognition();
+    
     if (!recognitionRef.current) {
-      recognitionRef.current = initRecognition();
-    }
-    if (!recognitionRef.current) {
-      toast.error('Speech recognition not available');
+      toast.error('Speech recognition not available. Please use Chrome or Edge browser.');
       return;
     }
     if (!activePromptText.trim()) {
@@ -392,13 +412,24 @@ const VoicePracticePage = () => {
     sessionStartRef.current = Date.now();
 
     try {
-      // Request microphone permission
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone permission with mobile-friendly settings
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
+      });
       streamRef.current = stream;
       setMicPermission('granted');
       
       // Setup audio visualization
       await setupAudioVisualization(stream);
+      
+      // Small delay for mobile browsers
+      if (isMobile) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       
       // Start recognition
       recognitionRef.current.start();
@@ -406,7 +437,9 @@ const VoicePracticePage = () => {
       console.error('Microphone access error:', error);
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
         setMicPermission('denied');
-        toast.error('Microphone access denied. Please allow microphone in browser settings.');
+        toast.error('Microphone access denied. Please allow microphone access and refresh the page.');
+      } else if (error.name === 'NotFoundError') {
+        toast.error('No microphone found. Please connect a microphone and try again.');
       } else {
         toast.error('Could not start microphone. Please try again.');
       }
@@ -623,20 +656,22 @@ const VoicePracticePage = () => {
             {/* Record Button with Audio Visualization */}
             <div className="text-center py-6">
               {/* Audio Level Bars */}
-              <div className="flex items-end justify-center gap-1 h-12 mb-4">
+              <div className="flex items-end justify-center gap-1 h-12 mb-6">
                 {[...Array(20)].map((_, i) => (
                   <motion.div
                     key={i}
-                    animate={{ height: isListening ? [8, Math.random() * 40 + 10, 8] : 8 }}
+                    animate={{ 
+                      height: isListening ? [10, audioLevel > 0 ? 20 + Math.random() * (audioLevel / 3) : 10, 10] : 10 }
+                    }
                     transition={{ 
                       repeat: isListening ? Infinity : 0, 
-                      duration: 0.3 + Math.random() * 0.2,
-                      delay: i * 0.05 
+                      duration: 0.2 + Math.random() * 0.15,
+                      delay: i * 0.03 
                     }}
-                    className={`w-1.5 rounded-full transition-colors ${
+                    className={`w-2 rounded-full transition-colors ${
                       isListening 
                         ? audioLevel > 50 ? 'bg-red-500' : audioLevel > 25 ? 'bg-amber-500' : 'bg-emerald-500'
-                        : 'bg-gray-300'
+                        : 'bg-gray-200'
                     }`}
                   />
                 ))}
@@ -644,26 +679,56 @@ const VoicePracticePage = () => {
 
               {/* Record Button */}
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={isListening ? stopListening : startListening}
                 disabled={!activePromptText.trim() || micPermission === 'denied'}
-                className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-28 h-28 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                   isListening 
-                    ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/40' 
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/40'
+                    ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/40 animate-pulse' 
+                    : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/40 active:scale-95'
                 }`}
               >
                 {isListening ? (
-                  <Square className="w-8 h-8 text-white fill-current" />
+                  <>
+                    <Square className="w-10 h-10 text-white fill-current mb-1" />
+                    <span className="text-white text-xs font-medium">STOP</span>
+                  </>
                 ) : (
-                  <Mic className="w-10 h-10 text-white" />
+                  <>
+                    <Mic className="w-12 h-12 text-white mb-1" />
+                    <span className="text-white text-xs font-medium">TAP</span>
+                  </>
                 )}
               </motion.button>
 
-              <p className={`mt-4 font-semibold ${isListening ? 'text-rose-600 animate-pulse' : 'text-gray-600'}`}>
-                {isListening ? 'Recording... Tap to stop' : 'Tap to start speaking'}
-              </p>
+              <div className="mt-6 space-y-1">
+                <p className={`text-base font-semibold ${isListening ? 'text-rose-600' : 'text-gray-700'}`}>
+                  {isListening ? '🎙️ Recording... Speak Now!' : '👆 Tap to Start Speaking'}
+                </p>
+                {isListening && (
+                  <p className="text-sm text-gray-500 animate-pulse">
+                    Say the highlighted text clearly
+                  </p>
+                )}
+                {!isListening && (
+                  <p className="text-xs text-gray-400">
+                    Make sure your microphone is enabled
+                  </p>
+                )}
+              </div>
+
+              {/* Troubleshooting tips */}
+              {micPermission !== 'denied' && !isListening && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-xl text-left">
+                  <p className="text-xs font-medium text-blue-700 mb-1">💡 Tips for better recognition:</p>
+                  <ul className="text-xs text-blue-600 space-y-0.5">
+                    <li>• Speak clearly and at normal pace</li>
+                    <li>• Use Chrome or Edge browser</li>
+                    <li>• Allow microphone when prompted</li>
+                    <li>• Be in a quiet environment</li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Live Transcript */}
@@ -779,16 +844,23 @@ const VoicePracticePage = () => {
           <Card>
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3">Recent Practice</h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {history.slice(-5).reverse().map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm truncate flex-1 mr-2">{item.question}</span>
-                    <Badge className={
-                      item.score >= 80 ? 'bg-emerald-100 text-emerald-700' :
-                      item.score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                    }>
-                      {item.score}%
-                    </Badge>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {history.slice(-8).reverse().map((item) => (
+                  <div key={item.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.question}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(item.practicedAt).toLocaleDateString()} • {new Date(item.practicedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <Badge className={`flex-shrink-0 ${item.score >= 80 ? 'bg-emerald-100 text-emerald-700' : item.score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.score}%
+                      </Badge>
+                    </div>
+                    {item.recordedAnswer && (
+                      <p className="text-xs text-gray-500 mt-2 italic">You said: "{item.recordedAnswer}"</p>
+                    )}
                   </div>
                 ))}
               </div>

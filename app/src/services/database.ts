@@ -4,7 +4,6 @@ import type {
   ConceptMastery, VoicePractice, TutorMessage, ParentChild,
   School, Notification, Badge
 } from '@/types';
-import { class6Subjects } from '@/data/class6Data';
 
 const DB_KEYS = {
   USERS: 'smart_learning_users',
