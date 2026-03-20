@@ -27,6 +27,11 @@ const TestPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        const [allTests, userAttempts] = await Promise.all([
+          testDB.getAll(),
+          user ? testAttemptDB.getByStudent(user.id) : Promise.resolve([])
+        ]);
+        
         // Filter out tests whose subjects are deleted
         const deletedSubjectIds = JSON.parse(localStorage.getItem('smart_learning_deleted_subjects') || '[]');
         
