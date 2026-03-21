@@ -55,6 +55,7 @@ const StudentDashboard = () => {
       checkAchievements('study');
 
       // Load subjects and filter by Grade 6 (per user request)
+      // Force refresh from DB to avoid ghost subjects
       const allSubjects = await subjectDB.getAll();
       const class6Subjects = allSubjects.filter(s => s.grade === 6);
       setSubjects(class6Subjects);

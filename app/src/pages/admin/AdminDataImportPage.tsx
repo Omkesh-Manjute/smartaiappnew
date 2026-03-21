@@ -50,14 +50,15 @@ const AdminDataImportPage = () => {
         if (isSubject) {
           // Subject Import Logic with smarter matching
           const gradeNum = Number(item.grade || item.class || 6);
-          const subjectName = (item.subject_name || item.subject || 'New Subject').toLowerCase();
+          const subjectName = (item.subject_name || item.subject || 'Science').toLowerCase();
           
           let existingSubject = allSubjects.find(s => {
             const sName = typeof s.name === 'string' ? s.name : (s.name.CBSE || '');
             return s.grade === gradeNum && (sName.toLowerCase().includes(subjectName) || subjectName.includes(sName.toLowerCase()));
           });
 
-          const subjectId = existingSubject?.id || item.id || `subj_science_${gradeNum}`;
+          // Priority: Existing DB ID > item ID > generated ID
+          const subjectId = existingSubject?.id || (gradeNum === 6 && subjectName.includes('science') ? 'subj_science_6' : (item.id || `subj_${subjectName.replace(/\s+/g, '_')}_${gradeNum}`));
           const subjectData: Subject = {
             id: subjectId,
             name: item.subject_name || item.subject || 'New Subject',
