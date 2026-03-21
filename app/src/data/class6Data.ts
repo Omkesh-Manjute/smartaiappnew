@@ -211,14 +211,23 @@ export const class6Subjects: Subject[] = [
             name: 'What are Nutrients',
             content: {
               CBSE: {
-                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
-                mcq: [{ id: 'T2-Q1', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1, explanation: 'Nutrients are good for us.', difficulty: 'easy' }],
-                short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
+                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy. The main nutrients are carbohydrates, proteins, fats, vitamins and minerals.",
+                mcq: [
+                  { id: 'sci-6-ch2-T1-Q1-cbse', question: "Nutrients are?", options: ["Waste", "Useful substances", "Water only", "None"], correctAnswer: 1, explanation: "Nutrients are essential substances for the body.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T1-Q2-cbse', question: "Main nutrients are?", options: ["Carbs, proteins", "Fruits only", "Water only", "None"], correctAnswer: 0, explanation: "Carbohydrates, proteins, fats, vitamins, and minerals are the main nutrients.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What are nutrients?", answer: "Substances in food needed for growth and energy" }
+                ]
               },
               STATE: {
-                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy.",
-                mcq: [{ id: 'T2-Q1-S', question: 'Nutrients are?', options: ['Waste', 'Useful substances', 'Water only', 'None'], correctAnswer: 1, explanation: 'Nutrients are good for us.', difficulty: 'easy' }],
-                short_questions: [{ question: 'What are nutrients?', answer: 'Substances in food needed for growth and energy' }]
+                explanation: "Nutrients are the important substances present in food that help our body grow, get energy and stay healthy. The main nutrients are carbohydrates, proteins, fats, vitamins and minerals.",
+                mcq: [
+                  { id: 'sci-6-ch2-T1-Q1-state', question: "Nutrients are?", options: ["Waste", "Useful substances", "Water only", "None"], correctAnswer: 1, explanation: "Nutrients are essential substances for the body.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What are nutrients?", answer: "Substances in food needed for growth and energy" }
+                ]
               }
             }
           },
@@ -227,14 +236,25 @@ export const class6Subjects: Subject[] = [
             name: 'Types of Nutrients',
             content: {
               CBSE: {
-                explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
-                mcq: [{ id: 'T2-Q2', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Protein builds body.', difficulty: 'easy' }],
-                short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
+                explanation: "There are five main nutrients: carbohydrates, proteins, fats, vitamins and minerals. Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
+                mcq: [
+                  { id: 'sci-6-ch2-T2-Q1-cbse', question: "Energy giving nutrient?", options: ["Protein", "Carbohydrate", "Vitamin", "Mineral"], correctAnswer: 1, explanation: "Carbohydrates provide energy.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T2-Q2-cbse', question: "Growth nutrient?", options: ["Protein", "Fat", "Vitamin", "Water"], correctAnswer: 0, explanation: "Proteins are for growth.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T2-Q3-cbse', question: "Protective nutrient?", options: ["Vitamins", "Carbs", "Fats", "None"], correctAnswer: 0, explanation: "Vitamins and minerals protect the body.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "Name five nutrients", answer: "Carbohydrates, proteins, fats, vitamins, minerals" }
+                ]
               },
               STATE: {
-                explanation: "Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
-                mcq: [{ id: 'T2-Q2-S', question: 'Growth nutrient?', options: ['Protein', 'Fat', 'Vitamin', 'Water'], correctAnswer: 0, explanation: 'Protein builds body.', difficulty: 'easy' }],
-                short_questions: [{ question: 'Name five nutrients', answer: 'Carbohydrates, proteins, fats, vitamins, minerals' }]
+                explanation: "There are five main nutrients: carbohydrates, proteins, fats, vitamins and minerals. Carbohydrates and fats give energy, proteins help in growth, and vitamins and minerals protect the body.",
+                mcq: [
+                  { id: 'sci-6-ch2-T2-Q1-state', question: "Energy giving nutrient?", options: ["Protein", "Carbohydrate", "Vitamin", "Mineral"], correctAnswer: 1, explanation: "Carbohydrates provide energy.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T2-Q2-state', question: "Growth nutrient?", options: ["Protein", "Fat", "Vitamin", "Water"], correctAnswer: 0, explanation: "Proteins are for growth.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "Name five nutrients", answer: "Carbohydrates, proteins, fats, vitamins, minerals" }
+                ]
               }
             }
           },
@@ -243,12 +263,18 @@ export const class6Subjects: Subject[] = [
             name: 'Carbohydrates and Fats',
             content: {
               CBSE: {
-                explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
-                mcq: [{ id: 'T2-Q3', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'Oil has fat.', difficulty: 'easy' }]
+                explanation: "Carbohydrates and fats are energy giving nutrients. Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
+                mcq: [
+                  { id: 'sci-6-ch2-T3-Q1-cbse', question: "Carbohydrates give?", options: ["Energy", "Growth", "Protection", "None"], correctAnswer: 0, explanation: "Carbs are energy giving nutrients.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T3-Q2-cbse', question: "Fat is found in?", options: ["Oil", "Water", "Air", "Soil"], correctAnswer: 0, explanation: "Oil is a source of fat.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T3-Q3-cbse', question: "Starch is?", options: ["Carbohydrate", "Protein", "Vitamin", "Mineral"], correctAnswer: 0, explanation: "Starch is a type of carbohydrate.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
-                mcq: [{ id: 'T2-Q3-S', question: 'Fat is found in?', options: ['Oil', 'Water', 'Air', 'Soil'], correctAnswer: 0, explanation: 'Oil has fat.', difficulty: 'easy' }]
+                explanation: "Carbohydrates and fats are energy giving nutrients. Carbohydrates are found in rice, wheat and sugar, while fats are found in butter, oil and ghee.",
+                mcq: [
+                  { id: 'sci-6-ch2-T3-Q1-state', question: "Carbohydrates give?", options: ["Energy", "Growth", "Protection", "None"], correctAnswer: 0, explanation: "Carbs are energy giving nutrients.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -257,12 +283,17 @@ export const class6Subjects: Subject[] = [
             name: 'Proteins',
             content: {
               CBSE: {
-                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
-                mcq: [{ id: 'T2-Q4', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0, explanation: 'Protein for growth.', difficulty: 'easy' }]
+                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues. Foods like eggs, milk, pulses and meat are rich in proteins.",
+                mcq: [
+                  { id: 'sci-6-ch2-T4-Q1-cbse', question: "Protein helps in?", options: ["Growth", "Energy", "Heat", "None"], correctAnswer: 0, explanation: "Proteins are for growth and repair.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T4-Q2-cbse', question: "Protein rich food?", options: ["Rice", "Milk", "Water", "Salt"], correctAnswer: 1, explanation: "Milk is a good source of protein.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues.",
-                mcq: [{ id: 'T2-Q4-S', question: 'Protein helps in?', options: ['Growth', 'Energy', 'Heat', 'None'], correctAnswer: 0, explanation: 'Protein for growth.', difficulty: 'easy' }]
+                explanation: "Proteins are body-building nutrients. They help in growth and repair of damaged body tissues. Foods like eggs, milk, pulses and meat are rich in proteins.",
+                mcq: [
+                  { id: 'sci-6-ch2-T4-Q1-state', question: "Protein helps in?", options: ["Growth", "Energy", "Heat", "None"], correctAnswer: 0, explanation: "Proteins are for growth and repair.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -271,12 +302,17 @@ export const class6Subjects: Subject[] = [
             name: 'Vitamins and Minerals',
             content: {
               CBSE: {
-                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
-                mcq: [{ id: 'T2-Q5', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0, explanation: 'Vit A for eyes.', difficulty: 'easy' }]
+                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy. For example, Vitamin A helps eyesight and calcium strengthens bones.",
+                mcq: [
+                  { id: 'sci-6-ch2-T5-Q1-cbse', question: "Vitamin A helps?", options: ["Eyes", "Heart", "Skin", "None"], correctAnswer: 0, explanation: "Vitamin A is essential for healthy eyesight.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T5-Q2-cbse', question: "Calcium is for?", options: ["Bones", "Hair", "Eyes", "None"], correctAnswer: 0, explanation: "Calcium is needed for strong bones.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy.",
-                mcq: [{ id: 'T2-Q5-S', question: 'Vitamin A helps?', options: ['Eyes', 'Heart', 'Skin', 'None'], correctAnswer: 0, explanation: 'Vit A for eyes.', difficulty: 'easy' }]
+                explanation: "Vitamins and minerals protect the body from diseases and keep it healthy. For example, Vitamin A helps eyesight and calcium strengthens bones.",
+                mcq: [
+                  { id: 'sci-6-ch2-T5-Q1-state', question: "Vitamin A helps?", options: ["Eyes", "Heart", "Skin", "None"], correctAnswer: 0, explanation: "Vitamin A is essential for healthy eyesight.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -285,14 +321,23 @@ export const class6Subjects: Subject[] = [
             name: 'Balanced Diet',
             content: {
               CBSE: {
-                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
-                mcq: [],
-                short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
+                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage. It keeps our body healthy and prevents diseases.",
+                mcq: [
+                  { id: 'sci-6-ch2-T6-Q1-cbse', question: "Balanced diet contains?", options: ["Only carbs", "All nutrients", "Only protein", "None"], correctAnswer: 1, explanation: "Balanced diet has all required nutrients.", difficulty: 'easy' },
+                  { id: 'sci-6-ch2-T6-Q2-cbse', question: "Balanced diet prevents?", options: ["Disease", "Sleep", "Growth", "None"], correctAnswer: 0, explanation: "Balanced diet keeps you healthy and prevents disease.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What is balanced diet?", answer: "Diet with all nutrients in correct amount" }
+                ]
               },
               STATE: {
-                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage.",
-                mcq: [],
-                short_questions: [{ question: 'What is balanced diet?', answer: 'Diet with all nutrients in correct amount' }]
+                explanation: "A balanced diet is a diet that contains all nutrients in the right proportion along with water and roughage. It keeps our body healthy and prevents diseases.",
+                mcq: [
+                  { id: 'sci-6-ch2-T6-Q1-state', question: "Balanced diet contains?", options: ["Only carbs", "All nutrients", "Only protein", "None"], correctAnswer: 1, explanation: "Balanced diet has all required nutrients.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What is balanced diet?", answer: "Diet with all nutrients in correct amount" }
+                ]
               }
             }
           },
@@ -301,26 +346,47 @@ export const class6Subjects: Subject[] = [
             name: 'Deficiency Diseases',
             content: {
               CBSE: {
-                explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
-                mcq: [{ id: 'T2-Q7', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0, explanation: 'Vit C for scurvy.', difficulty: 'easy' }]
+                explanation: "If our body does not get proper nutrients for a long time, it leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C), rickets (Vitamin D).",
+                mcq: [
+                  { id: 'sci-6-ch2-T7-Q1-cbse', question: "Night blindness is due to?", options: ["Vitamin A", "Vitamin C", "Protein", "Fat"], correctAnswer: 0, explanation: "Lack of Vitamin A causes night blindness.", difficulty: 'medium' },
+                  { id: 'sci-6-ch2-T7-Q2-cbse', question: "Scurvy is due to?", options: ["Vitamin C", "Vitamin D", "Protein", "Iron"], correctAnswer: 0, explanation: "Lack of Vitamin C causes scurvy.", difficulty: 'medium' },
+                  { id: 'sci-6-ch2-T7-Q3-cbse', question: "Rickets is due to?", options: ["Vitamin D", "Vitamin A", "Fat", "None"], correctAnswer: 0, explanation: "Lack of Vitamin D causes rickets.", difficulty: 'medium' }
+                ],
+                extra_questions: [
+                  { question: "Explain deficiency diseases with examples", answer: "Diseases caused by lack of nutrients, e.g., Scurvy (Vit C)" },
+                  { question: "Why balanced diet is important?", answer: "It prevents deficiency diseases and maintains health." }
+                ]
               },
               STATE: {
-                explanation: "Lack of nutrients leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C).",
-                mcq: [{ id: 'T2-Q7-S', question: 'Scurvy is due to?', options: ['Vitamin C', 'Vitamin D', 'Protein', 'Iron'], correctAnswer: 0, explanation: 'Vit C for scurvy.', difficulty: 'easy' }]
+                explanation: "If our body does not get proper nutrients for a long time, it leads to deficiency diseases. Example: Night blindness (Vitamin A), scurvy (Vitamin C), rickets (Vitamin D).",
+                mcq: [
+                  { id: 'sci-6-ch2-T7-Q1-state', question: "Night blindness is due to?", options: ["Vitamin A", "Vitamin C", "Protein", "Fat"], correctAnswer: 0, explanation: "Lack of Vitamin A causes night blindness.", difficulty: 'medium' }
+                ]
               }
             }
           },
           {
             id: 'T8',
-            name: 'Extra Practice',
+            name: 'Extra Practice (Exam Level)',
             content: {
               CBSE: {
-                explanation: "Practice more to master the components of food.",
-                mcq: [{ id: 'T2-Q8', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0, explanation: 'Energy from carbs.', difficulty: 'easy' }]
+                explanation: "Review the key topics to prepare for your exams.",
+                mcq: [
+                  { id: 'sci-6-ch2-T8-Q1-cbse', question: "Energy giving nutrients?", options: ["Carbs & fats", "Proteins", "Vitamins", "None"], correctAnswer: 0, explanation: "Carbs and fats provide energy.", difficulty: 'medium' },
+                  { id: 'sci-6-ch2-T8-Q2-cbse', question: "Growth nutrient?", options: ["Protein", "Fat", "Water", "None"], correctAnswer: 0, explanation: "Proteins are the body-building nutrients.", difficulty: 'medium' },
+                  { id: 'sci-6-ch2-T8-Q3-cbse', question: "Protective nutrients?", options: ["Vitamins & minerals", "Carbs", "Fats", "None"], correctAnswer: 0, explanation: "Vitamins and minerals protect the body from disease.", difficulty: 'medium' }
+                ],
+                extra_questions: [
+                  { question: "Explain types of nutrients", answer: "Carbohydrates, fats, proteins, vitamins, minerals" },
+                  { question: "Write functions of proteins", answer: "Growth and repair of body tissues" },
+                  { question: "Explain balanced diet", answer: "A diet containing all nutrients in right proportion" }
+                ]
               },
               STATE: {
-                explanation: "Practice more to master the nutrition topics.",
-                mcq: [{ id: 'T2-Q8-S', question: 'Energy giving nutrients?', options: ['Carbs & fats', 'Proteins', 'Vitamins', 'None'], correctAnswer: 0, explanation: 'Energy from carbs.', difficulty: 'easy' }]
+                explanation: "Review the key topics to prepare for your exams.",
+                mcq: [
+                  { id: 'sci-6-ch2-T8-Q1-state', question: "Energy giving nutrients?", options: ["Carbs & fats", "Proteins", "Vitamins", "None"], correctAnswer: 0, explanation: "Carbs and fats provide energy.", difficulty: 'medium' }
+                ]
               }
             }
           }
