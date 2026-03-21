@@ -103,7 +103,7 @@ const AdminDataImportPage = () => {
               structuredContent += `${t.explanation || t.content || ''}\n\n`;
               
               if (Array.isArray(t.key_points)) {
-                structuredContent += `**Key Points:**\n${t.key_points.map((p: string) => `- ${p}`).join('\n')}\n\n`;
+                structuredContent += `**Key Points:**\n\n${t.key_points.map((p: string) => `- ${p}`).join('\n')}\n\n`;
               }
               
               if (Array.isArray(t.mcq)) {
@@ -131,7 +131,7 @@ const AdminDataImportPage = () => {
             subjectId: subjectId,
             name: name_board.CBSE,
             description: item.description || '',
-            order: Number(item.order || item.chapter_id?.replace(/\D/g, '') || 1),
+            order: Number(item.order || item.chapter_id?.replace(/\D/g, '') || (item.name?.match(/\d+/)?.[0] || 1)),
             content: structuredContent,
             name_board: name_board,
             content_board: {
