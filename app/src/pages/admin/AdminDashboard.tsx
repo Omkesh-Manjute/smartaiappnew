@@ -19,6 +19,7 @@ import {
   BarChart3,
   TrendingUp,
   Sparkles,
+  Database,
 } from 'lucide-react';
 import type { User } from '@/types';
 
