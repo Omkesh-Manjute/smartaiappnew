@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
 import { subjectDB, chapterDB } from '@/services/supabaseDB';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,11 +14,10 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import type { Subject, Chapter, Board } from '@/types';
+import type { Subject, Chapter } from '@/types';
 
 const AdminDataImportPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [jsonInput, setJsonInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
@@ -70,7 +67,6 @@ const AdminDataImportPage = () => {
           const chapterId = item.chapter_id || (item.chapter_name?.cbse ? `ch_science_${item.class}_${item.chapter_id.replace(/\D/g, '')}` : `ch_${Date.now()}`);
           
           // Construct Board-specific content
-          const content_board: Record<string, any> = {};
           const name_board: Record<string, string> = {};
           
           if (item.chapter_name) {
