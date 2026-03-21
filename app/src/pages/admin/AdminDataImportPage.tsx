@@ -38,90 +38,123 @@ const AdminDataImportPage = () => {
     setIsLoading(true);
 
     try {
+      const allSubjects = await subjectDB.getAll();
       const items = Array.isArray(previewData) ? previewData : [previewData];
       let subjectsProcessed = 0;
       let chaptersProcessed = 0;
 
       for (const item of items) {
-        // Detect if it's a Subject or a Chapter
-        const isSubject = item.grade || item.class;
+        const isSubject = (item.grade || item.class) && !item.topics;
         const isChapter = item.chapter_id || item.chapter_name || item.topics;
 
-        if (isSubject && !isChapter) {
-          // Subject Import Logic
-          const subjectId = item.id || `subj_${item.subject.toLowerCase()}_${item.class || item.grade}`;
+        if (isSubject) {
+          // Subject Import Logic with smarter matching
+          const gradeNum = Number(item.grade || item.class || 6);
+          const subjectName = (item.subject_name || item.subject || 'New Subject').toLowerCase();
+          
+          let existingSubject = allSubjects.find(s => {
+            const sName = typeof s.name === 'string' ? s.name : (s.name.CBSE || '');
+            return s.grade === gradeNum && (sName.toLowerCase().includes(subjectName) || subjectName.includes(sName.toLowerCase()));
+          });
+
+          const subjectId = existingSubject?.id || item.id || `subj_science_${gradeNum}`;
           const subjectData: Subject = {
             id: subjectId,
             name: item.subject_name || item.subject || 'New Subject',
             description: item.description || '',
             icon: item.icon || '[SCI]',
             color: item.color || 'bg-blue-500',
-            grade: Number(item.grade || item.class || 6),
+            grade: gradeNum,
             chapters: [],
           };
           await subjectDB.update(subjectId, subjectData).catch(() => subjectDB.create(subjectData));
           subjectsProcessed++;
         } else if (isChapter) {
           // Chapter Import Logic
-          const subjectId = item.subject_id || `subj_science_${item.class || 6}`;
-          const chapterId = item.chapter_id || (item.chapter_name?.cbse ? `ch_science_${item.class}_${item.chapter_id.replace(/\D/g, '')}` : `ch_${Date.now()}`);
+          const gradeNum = Number(item.class || item.grade || 6);
+          const subjectSearch = (item.subject || 'Science').toLowerCase();
           
-          // Construct Board-specific content
+          let targetSubject = allSubjects.find(s => {
+            const sName = typeof s.name === 'string' ? s.name : (s.name.CBSE || '');
+            return s.grade === gradeNum && (sName.toLowerCase().includes(subjectSearch) || subjectSearch.includes(sName.toLowerCase()));
+          });
+
+          const subjectId = targetSubject?.id || `subj_science_${gradeNum}`;
+          const chapterId = item.chapter_id || `ch_science_${gradeNum}_${Date.now()}`;
+          
+          // Construct Board-specific names
           const name_board: Record<string, string> = {};
-          
           if (item.chapter_name) {
-            name_board.CBSE = item.chapter_name.cbse || item.chapter_name.CBSE;
-            name_board.STATE = item.chapter_name.state || item.chapter_name.STATE;
+            name_board.CBSE = item.chapter_name.cbse || item.chapter_name.CBSE || item.chapter_name;
+            name_board.STATE = item.chapter_name.state || item.chapter_name.STATE || item.chapter_name;
+          } else {
+            name_board.CBSE = item.name || 'New Chapter';
+            name_board.STATE = item.name || 'New Chapter';
           }
 
+          // Build Structured Markdown Content and Extract MCQs
+          let structuredContent = "";
           const allMcqs: any[] = [];
+          
           if (Array.isArray(item.topics)) {
-             // Extract all MCQs for the general practice tab
-             item.topics.forEach((t: any) => {
-               if (Array.isArray(t.mcq)) {
-                 t.mcq.forEach((m: any, idx: number) => {
-                    let correctAnswer = m.answer;
-                    if (typeof correctAnswer === 'string' && m.options.includes(correctAnswer)) {
-                      correctAnswer = m.options.indexOf(correctAnswer);
-                    }
-                    allMcqs.push({
-                      id: m.id || `${chapterId}_mcq_${idx}_${Math.random().toString(36).slice(2,5)}`,
-                      question: m.question,
-                      options: m.options,
-                      correctAnswer: Number(correctAnswer) || 0,
-                      explanation: m.explanation || '',
-                    });
-                 });
-               }
-             });
+            item.topics.forEach((t: any, idx: number) => {
+              structuredContent += `### ${t.topic_name || `Topic ${idx+1}`}\n\n`;
+              structuredContent += `${t.explanation || t.content || ''}\n\n`;
+              
+              if (Array.isArray(t.key_points)) {
+                structuredContent += `**Key Points:**\n${t.key_points.map((p: string) => `- ${p}`).join('\n')}\n\n`;
+              }
+              
+              if (Array.isArray(t.mcq)) {
+                t.mcq.forEach((m: any, midx: number) => {
+                  let correctAnswer = m.answer;
+                  if (typeof correctAnswer === 'string' && m.options.includes(correctAnswer)) {
+                    correctAnswer = m.options.indexOf(correctAnswer);
+                  }
+                  allMcqs.push({
+                    id: m.id || `${chapterId}_mcq_${idx}_${midx}`,
+                    question: m.question,
+                    options: m.options,
+                    correctAnswer: Number(correctAnswer) || 0,
+                    explanation: m.explanation || '',
+                  });
+                });
+              }
+            });
+          } else {
+            structuredContent = item.explanation || item.content || '';
           }
 
           const chapterData: Partial<Chapter> & { content_board: any, name_board: any, topics: any } = {
             id: chapterId,
             subjectId: subjectId,
-            name: name_board.CBSE || item.name || 'New Chapter',
+            name: name_board.CBSE,
             description: item.description || '',
             order: Number(item.order || item.chapter_id?.replace(/\D/g, '') || 1),
-            content: item.explanation || '',
+            content: structuredContent,
             name_board: name_board,
             content_board: {
               CBSE: {
-                explanation: item.explanation || (item.topics?.[0]?.explanation || ''),
+                explanation: structuredContent,
                 mcq: allMcqs,
-                short_questions: item.topics?.[0]?.short_questions || []
+                short_questions: item.short_questions || []
               },
               STATE: {
-                explanation: item.explanation || (item.topics?.[0]?.explanation || ''),
+                explanation: structuredContent,
                 mcq: allMcqs,
-                short_questions: item.topics?.[0]?.short_questions || []
+                short_questions: item.short_questions || []
               }
             },
-            topics: item.topics || [],
+            topics: Array.isArray(item.topics) ? item.topics.map((t: any, i: number) => ({
+              id: t.id || `T${i+1}`,
+              name: t.topic_name || `Topic ${i+1}`,
+              content: {
+                CBSE: { explanation: t.explanation || '' },
+                STATE: { explanation: t.explanation || '' }
+              }
+            })) : [],
           };
 
-          // Using apply_migration for manual upsert to handle custom tables if needed, 
-          // but service classes are easier if they support upsert. 
-          // supabaseDB.ts Usually has update/create.
           await chapterDB.update(chapterId, chapterData as Chapter).catch(() => chapterDB.create(chapterData as Chapter));
           chaptersProcessed++;
         }
