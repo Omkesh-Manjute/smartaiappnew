@@ -290,9 +290,18 @@ const StudentDashboard = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 truncate">
-                          {typeof subject.name === 'string' 
-                            ? subject.name 
-                            : (subject.name[selectedBoard || (user?.board as Board) || 'CBSE'] || (subject.name as any)?.CBSE || subject.name.CBSE || 'Subject')}
+                          {(() => {
+                            const name = subject.name;
+                            if (typeof name === 'string') {
+                              try {
+                                const parsed = JSON.parse(name);
+                                return parsed[selectedBoard || (user?.board as Board) || 'CBSE'] || parsed.CBSE || name;
+                              } catch {
+                                return name;
+                              }
+                            }
+                            return (name as any)[selectedBoard || (user?.board as Board) || 'CBSE'] || (name as any).CBSE || 'Subject';
+                          })()}
                         </h3>
                         <p className="text-xs text-gray-500">{subject.chapters.length} chapters</p>
                         <div className="mt-2 text-xs">
