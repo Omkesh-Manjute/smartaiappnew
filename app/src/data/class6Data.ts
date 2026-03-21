@@ -407,10 +407,12 @@ export const class6Subjects: Subject[] = [
         order: 3,
         content: {
           CBSE: {
-            explanation: "## Fibre to Fabric (CBSE)\n\nClothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+            explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
             mcq: [
               { id: 'sci-6-ch3-q1-cbse', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn is the intermediate stage between fiber and fabric.', difficulty: 'easy' },
-              { id: 'sci-6-ch3-q2-cbse', question: 'Cotton is?', options: ['Natural', 'Synthetic', 'Metal', 'None'], correctAnswer: 0, explanation: 'Cotton is a natural fiber obtained from plants.', difficulty: 'easy' }
+              { id: 'sci-6-ch3-q2-cbse', question: 'Yarn is made from?', options: ['Fabric', 'Fibres', 'Cloth', 'None'], correctAnswer: 1, explanation: 'Fibres are twisted together to make yarn.', difficulty: 'easy' },
+              { id: 'sci-6-ch3-q3-cbse', question: 'Cotton is?', options: ['Natural', 'Synthetic', 'Metal', 'None'], correctAnswer: 0, explanation: 'Cotton is a natural fiber from plants.', difficulty: 'easy' },
+              { id: 'sci-6-ch3-q4-cbse', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is a man-made fiber.', difficulty: 'easy' }
             ],
             short_questions: [
               { question: "What is fibre?", answer: "A thin thread-like structure" },
@@ -418,10 +420,10 @@ export const class6Subjects: Subject[] = [
             ]
           },
           STATE: {
-            explanation: "## Clothing and Fibres (State Board)\n\nClothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+            explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
             mcq: [
-              { id: 'sci-6-ch3-q1-state', question: 'Yarn is made from?', options: ['Fabric', 'Fibres', 'Cloth', 'None'], correctAnswer: 1, explanation: 'Fibres are twisted together to make yarn.', difficulty: 'easy' },
-              { id: 'sci-6-ch3-q2-state', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is a man-made or synthetic fiber.', difficulty: 'easy' }
+              { id: 'sci-6-ch3-q1-state', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn is the intermediate stage between fiber and fabric.', difficulty: 'easy' },
+              { id: 'sci-6-ch3-q2-state', question: 'Yarn is made from?', options: ['Fabric', 'Fibres', 'Cloth', 'None'], correctAnswer: 1, explanation: 'Fibres are twisted together to make yarn.', difficulty: 'easy' }
             ],
             short_questions: [
               { question: "What is fibre?", answer: "A thin thread-like structure" },
@@ -435,12 +437,23 @@ export const class6Subjects: Subject[] = [
             name: 'Introduction to Fibre and Fabric',
             content: {
               CBSE: {
-                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
-                mcq: [{ id: 'T3-Q1', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn makes fabric.', difficulty: 'easy' }]
+                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+                mcq: [
+                  { id: 'sci-6-ch3-T1-Q1-cbse', question: "Fabric is made from?", options: ["Fibres", "Yarn", "Plastic", "Water"], correctAnswer: 1, explanation: "Yarn makes fabric.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T1-Q2-cbse', question: "Yarn is made from?", options: ["Fabric", "Fibres", "Cloth", "None"], correctAnswer: 1, explanation: "Fibres make yarn.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What is fibre?", answer: "A thin thread-like structure" }
+                ]
               },
               STATE: {
-                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres.",
-                mcq: [{ id: 'T3-Q1-S', question: 'Fabric is made from?', options: ['Fibres', 'Yarn', 'Plastic', 'Water'], correctAnswer: 1, explanation: 'Yarn makes fabric.', difficulty: 'easy' }]
+                explanation: "Clothes are made from fabrics, and fabrics are made from yarn. Yarn is made from fibres. Fibre is a thin thread-like structure. Thus, the sequence is Fibre → Yarn → Fabric.",
+                mcq: [
+                  { id: 'sci-6-ch3-T1-Q1-state', question: "Fabric is made from?", options: ["Fibres", "Yarn", "Plastic", "Water"], correctAnswer: 1, explanation: "Yarn makes fabric.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What is fibre?", answer: "A thin thread-like structure" }
+                ]
               }
             }
           },
@@ -449,12 +462,18 @@ export const class6Subjects: Subject[] = [
             name: 'Types of Fibres',
             content: {
               CBSE: {
-                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
-                mcq: [{ id: 'T3-Q2', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is man-made.', difficulty: 'easy' }]
+                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals like cotton, jute, wool and silk. Synthetic fibres are man-made like nylon and polyester.",
+                mcq: [
+                  { id: 'sci-6-ch3-T2-Q1-cbse', question: "Cotton is?", options: ["Natural", "Synthetic", "Metal", "None"], correctAnswer: 0, explanation: "Cotton is a natural fiber.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T2-Q2-cbse', question: "Nylon is?", options: ["Natural", "Synthetic", "Plant", "None"], correctAnswer: 1, explanation: "Nylon is synthetic.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T2-Q3-cbse', question: "Wool comes from?", options: ["Plant", "Animal", "Water", "Soil"], correctAnswer: 1, explanation: "Wool comes from animals.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals.",
-                mcq: [{ id: 'T3-Q2-S', question: 'Nylon is?', options: ['Natural', 'Synthetic', 'Plant', 'None'], correctAnswer: 1, explanation: 'Nylon is man-made.', difficulty: 'easy' }]
+                explanation: "Fibres are of two types: natural and synthetic. Natural fibres come from plants and animals like cotton, jute, wool and silk. Synthetic fibres are man-made like nylon and polyester.",
+                mcq: [
+                  { id: 'sci-6-ch3-T2-Q1-state', question: "Cotton is?", options: ["Natural", "Synthetic", "Metal", "None"], correctAnswer: 0, explanation: "Cotton is natural.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -463,12 +482,21 @@ export const class6Subjects: Subject[] = [
             name: 'Plant Fibres (Cotton and Jute)',
             content: {
               CBSE: {
-                explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
-                mcq: [{ id: 'T3-Q3', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1, explanation: 'Cotton from fruits.', difficulty: 'easy' }]
+                explanation: "Cotton is obtained from cotton plant fruits called cotton bolls, while jute is obtained from the stem of jute plant. These are important plant fibres used for making clothes.",
+                mcq: [
+                  { id: 'sci-6-ch3-T3-Q1-cbse', question: "Cotton is obtained from?", options: ["Stem", "Fruit", "Leaf", "Root"], correctAnswer: 1, explanation: "Cotton from bolls (fruit).", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T3-Q2-cbse', question: "Jute is obtained from?", options: ["Leaf", "Stem", "Root", "Flower"], correctAnswer: 1, explanation: "Jute from stem.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T3-Q3-cbse', question: "Jute is used for?", options: ["Plastic", "Bags", "Metal", "None"], correctAnswer: 1, explanation: "Bags are common jute products.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "Name two plant fibres", answer: "Cotton and jute" }
+                ]
               },
               STATE: {
-                explanation: "Cotton is obtained from cotton plant fruits while jute is obtained from the stem.",
-                mcq: [{ id: 'T3-Q3-S', question: 'Cotton is obtained from?', options: ['Stem', 'Fruit', 'Leaf', 'Root'], correctAnswer: 1, explanation: 'Cotton from fruits.', difficulty: 'easy' }]
+                explanation: "Cotton is obtained from cotton plant fruits called cotton bolls, while jute is obtained from the stem of jute plant. These are important plant fibres used for making clothes.",
+                mcq: [
+                  { id: 'sci-6-ch3-T3-Q1-state', question: "Cotton is obtained from?", options: ["Stem", "Fruit", "Leaf", "Root"], correctAnswer: 1, explanation: "Cotton from fruit.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -477,12 +505,20 @@ export const class6Subjects: Subject[] = [
             name: 'Spinning of Yarn',
             content: {
               CBSE: {
-                explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
-                mcq: [{ id: 'T3-Q4', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0, explanation: 'Charkha for spinning.', difficulty: 'easy' }]
+                explanation: "Spinning is the process of making yarn from fibres. Fibres are drawn out and twisted to form yarn. Tools like charkha and spinning machines are used.",
+                mcq: [
+                  { id: 'sci-6-ch3-T4-Q1-cbse', question: "Spinning means?", options: ["Making cloth", "Making yarn", "Cutting cloth", "None"], correctAnswer: 1, explanation: "Fiber to yarn is spinning.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T4-Q2-cbse', question: "Tool used for spinning?", options: ["Charkha", "Knife", "Hammer", "None"], correctAnswer: 0, explanation: "Charkha is for spinning.", difficulty: 'easy' }
+                ],
+                short_questions: [
+                  { question: "What is spinning?", answer: "Making yarn from fibres" }
+                ]
               },
               STATE: {
-                explanation: "Spinning is the process of making yarn from fibres. Tools like charkha are used.",
-                mcq: [{ id: 'T3-Q4-S', question: 'Tool used for spinning?', options: ['Charkha', 'Knife', 'Hammer', 'None'], correctAnswer: 0, explanation: 'Charkha for spinning.', difficulty: 'easy' }]
+                explanation: "Spinning is the process of making yarn from fibres. Fibres are drawn out and twisted to form yarn. Tools like charkha and spinning machines are used.",
+                mcq: [
+                  { id: 'sci-6-ch3-T4-Q1-state', question: "Spinning means?", options: ["Making cloth", "Making yarn", "Cutting cloth", "None"], correctAnswer: 1, explanation: "Fiber to yarn is spinning.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -491,12 +527,18 @@ export const class6Subjects: Subject[] = [
             name: 'Yarn to Fabric (Weaving and Knitting)',
             content: {
               CBSE: {
-                explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
-                mcq: [{ id: 'T3-Q5', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1, explanation: 'Two yarns for weaving.', difficulty: 'easy' }]
+                explanation: "Fabric is made from yarn by weaving or knitting. In weaving, two sets of yarn are interlaced. In knitting, a single yarn is used to make fabric.",
+                mcq: [
+                  { id: 'sci-6-ch3-T5-Q1-cbse', question: "Weaving uses?", options: ["One yarn", "Two yarns", "Water", "None"], correctAnswer: 1, explanation: "Two sets for weaving.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T5-Q2-cbse', question: "Knitting uses?", options: ["Two yarns", "One yarn", "Metal", "None"], correctAnswer: 1, explanation: "One yarn for knitting.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T5-Q3-cbse', question: "Weaving is done on?", options: ["Loom", "Charkha", "Knife", "None"], correctAnswer: 0, explanation: "Loom for weaving.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Fabric is made from yarn by weaving or knitting. Weaving uses two sets of yarn.",
-                mcq: [{ id: 'T3-Q5-S', question: 'Weaving uses?', options: ['One yarn', 'Two yarns', 'Water', 'None'], correctAnswer: 1, explanation: 'Two yarns for weaving.', difficulty: 'easy' }]
+                explanation: "Fabric is made from yarn by weaving or knitting. In weaving, two sets of yarn are interlaced. In knitting, a single yarn is used to make fabric.",
+                mcq: [
+                  { id: 'sci-6-ch3-T5-Q1-state', question: "Weaving uses?", options: ["One yarn", "Two yarns", "Water", "None"], correctAnswer: 1, explanation: "Two sets for weaving.", difficulty: 'easy' }
+                ]
               }
             }
           },
@@ -505,26 +547,42 @@ export const class6Subjects: Subject[] = [
             name: 'History of Clothing Material',
             content: {
               CBSE: {
-                explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
-                mcq: [{ id: 'T3-Q6', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0, explanation: 'No clothes then.', difficulty: 'easy' }]
+                explanation: "Earlier people used leaves, animal skins and bark for clothing. Later they learned to use plant fibres like cotton and animal fibres like wool. Now synthetic fibres are also used.",
+                mcq: [
+                  { id: 'sci-6-ch3-T6-Q1-cbse', question: "Early humans used?", options: ["Leaves", "Plastic", "Metal", "None"], correctAnswer: 0, explanation: "Leaves and skins were early clothes.", difficulty: 'easy' },
+                  { id: 'sci-6-ch3-T6-Q2-cbse', question: "Modern fibres include?", options: ["Nylon", "Leaves", "Skin", "None"], correctAnswer: 0, explanation: "Nylon is modern.", difficulty: 'easy' }
+                ]
               },
               STATE: {
-                explanation: "Earlier people used leaves and animal skins. Now synthetic fibres are also used.",
-                mcq: [{ id: 'T3-Q6-S', question: 'Early humans used?', options: ['Leaves', 'Plastic', 'Metal', 'None'], correctAnswer: 0, explanation: 'No clothes then.', difficulty: 'easy' }]
+                explanation: "Earlier people used leaves, animal skins and bark for clothing. Later they learned to use plant fibres like cotton and animal fibres like wool. Now synthetic fibres are also used.",
+                mcq: [
+                  { id: 'sci-6-ch3-T6-Q1-state', question: "Early humans used?", options: ["Leaves", "Plastic", "Metal", "None"], correctAnswer: 0, explanation: "Leaves and skins.", difficulty: 'easy' }
+                ]
               }
             }
           },
           {
             id: 'T7',
-            name: 'Extra Practice',
+            name: 'Extra Practice (Exam Level)',
             content: {
               CBSE: {
-                explanation: "Master the journey from fibre to fabric.",
-                mcq: [{ id: 'T3-Q7', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0, explanation: 'Cotton is natural.', difficulty: 'easy' }]
+                explanation: "Review the key topics to prepare for your exams.",
+                mcq: [
+                  { id: 'sci-6-ch3-T7-Q1-cbse', question: "Natural fibre?", options: ["Cotton", "Nylon", "Plastic", "None"], correctAnswer: 0, explanation: "Cotton is natural.", difficulty: 'medium' },
+                  { id: 'sci-6-ch3-T7-Q2-cbse', question: "Synthetic fibre?", options: ["Wool", "Silk", "Polyester", "None"], correctAnswer: 2, explanation: "Polyester is synthetic.", difficulty: 'medium' },
+                  { id: 'sci-6-ch3-T7-Q3-cbse', question: "Fabric is made from?", options: ["Yarn", "Fibre", "Water", "None"], correctAnswer: 0, explanation: "Yarn to fabric.", difficulty: 'medium' }
+                ],
+                extra_questions: [
+                  { question: "Explain the process of spinning", answer: "Making yarn from fibres by twisting" },
+                  { question: "Differentiate between natural and synthetic fibres", answer: "Natural from plants/animals, synthetic man-made" },
+                  { question: "Explain weaving and knitting", answer: "Weaving uses 2 yarns, knitting uses 1" }
+                ]
               },
               STATE: {
-                explanation: "Master the clothing and fibres topics.",
-                mcq: [{ id: 'T3-Q7-S', question: 'Natural fibre?', options: ['Cotton', 'Nylon', 'Plastic', 'None'], correctAnswer: 0, explanation: 'Cotton is natural.', difficulty: 'easy' }]
+                explanation: "Review the key topics to prepare for your exams.",
+                mcq: [
+                  { id: 'sci-6-ch3-T7-Q1-state', question: "Natural fibre?", options: ["Cotton", "Nylon", "Plastic", "None"], correctAnswer: 0, explanation: "Cotton is natural.", difficulty: 'medium' }
+                ]
               }
             }
           }
