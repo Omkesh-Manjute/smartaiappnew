@@ -252,6 +252,13 @@ const AdminDashboard = () => {
                 </span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
+              <Button onClick={() => navigate('/admin/import')} variant="outline" className="w-full justify-between border-green-200 bg-green-50/20 hover:bg-green-50">
+                <span className="flex items-center gap-2 text-green-700">
+                  <Database className="w-4 h-4" />
+                  Bulk Data Import (JSON)
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </CardContent>
           </Card>
 

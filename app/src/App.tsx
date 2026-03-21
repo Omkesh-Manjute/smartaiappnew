@@ -40,6 +40,7 @@ import UserManagementPage from '@/pages/admin/UserManagementPage';
 import SubjectManagementPage from '@/pages/admin/SubjectManagementPage';
 import AdminAISettingsPage from '@/pages/admin/AdminAISettingsPage';
 import AdminTestsPage from '@/pages/admin/AdminTestsPage';
+import AdminDataImportPage from '@/pages/admin/AdminDataImportPage';
 
 // Parent Pages
 import ParentDashboardPage from '@/pages/parent/ParentDashboardPage';
@@ -179,6 +180,11 @@ function App() {
             <Route path="/admin/ai-settings" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminAISettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/import" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDataImportPage />
               </ProtectedRoute>
             } />
             <Route path="/admin/tests" element={
